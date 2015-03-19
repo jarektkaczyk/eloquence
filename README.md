@@ -2,18 +2,32 @@
 
 [![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=master)](https://travis-ci.org/jarektkaczyk/eloquence)
 
-
-(WIP currently only `Mappable` - inspired by https://github.com/RomainLanz/laravel-attributes-mapper, much more to come soon!)
-
 Useful extensions for the Eloquent ORM.
 
-## Requirements
+:construction: **WIP** currently only `Mappable` (inspired by @RomainLanz) and `Formattable`
+If you want to know more about new extensions you can check our [Roadmap](#roadmap)!
+
+# Table of Contents
+
+* [Team Members](#team-members)
+* [Requirements](#requirements)
+* [Getting Started](#getting-started)
+* [Mappable](#mappable)
+  * [Explicit vs. Implicit mappings](#explicit-vs-implicit-mappings)
+* [Formattable](#formattable)
+* [Roadmap](#roadmap)
+
+# <a name="team-members"></a>Team Members
+
+* Jarek Tkaczyk ([SOFTonSOFA](http://softonsofa.com/)) <jarek@softonsofa.com>
+
+# <a name="requirements"></a>Requirements
 
 * This package requires PHP 5.4+
 
-## Usage
+# <a name="getting-started"></a>Getting Started
 
-### 1. Require the package in your `composer.json`:
+1. Require the package in your `composer.json`:
 
 ```
     "require": {
@@ -24,9 +38,13 @@ Useful extensions for the Eloquent ORM.
 
 ```
 
-### 2. Add trait to the model and define mappings:
+2. Add trait you want to use to the model.
 
-```
+# <a name="mappable"></a>Mappable
+
+Define mappings on the protected `$maps` variable like bellow.
+
+```php
 <?php namespace App;
 
 use Sofa\Eloquence\Mappable; // trait
@@ -49,9 +67,9 @@ class User extends \Eloquent {
     }
 ```
 
-### You can also add mapped attributes to the array representation of your model, just like any accessor:
+You can also add mapped attributes to the array representation of your model, just like any accessor:
 
-```
+```php
 <?php namespace App;
 
 use Sofa\Eloquence\Mappable; // trait
@@ -68,9 +86,9 @@ class User extends \Eloquent {
 }
 ```
 
-### You can get as well as set mapped attributes:
+You can get as well as set mapped attributes:
 
-```
+```php
 $user->profile->first_name; // 'Jarek Tkaczyk'
 $user->first_name = 'John Doe';
 
@@ -83,12 +101,12 @@ $user->push();
 ```
 
 
-## Explicit vs. Implicit mappings
+## <a name="explicit-vs-implicit-mappings"></a>Explicit vs. Implicit mappings
 
 `Mappable` offers 2 ways of defining mappings for your convenience.
 
 Let's compare equivalent mappings:
-```
+```php
 // Assuming User belongsTo Profile
 // and Profile hasOne Picture
 // profiles table: id, first_name, last_name
@@ -111,3 +129,36 @@ protected $maps = [
 ```
 
 As you notice behaviour is just the same. However there is slight difference - explicit mapping offers more flexibility, in that you can define custom key for mapped value (`picture_path`), while with implicit mapping you have to use real attribute name defined in the related model (`path`).
+
+# <a name="formattable"></a>Formattable
+
+Define format on the protected `$formats` variable like bellow.
+
+```php
+<?php namespace App;
+
+use Sofa\Eloquence\Formattable; // trait
+
+class User extends \Eloquent {
+
+    use Formattable;
+
+    protected $formats = [
+        'first_name' => 'strtolower|ucwords',
+        'last_name' => ['strtolower', 'ucwords'],
+        'slug' => '\Str@slug',
+    ];
+}
+```
+
+```php
+$user->first_name = 'john'; // Will set 'John'
+$user->last_name = 'doe'; // Will set 'Doe'
+$user->slug = 'Awesome package!'; // Will set 'awesome-package'
+```
+
+# <a name="roadmap"></a>Roadmap
+- [ ] Set validation rules directly on the model. [Ardent](https://github.com/laravelbook/ardent)
+- [ ] Set relations on an array. (e.g. `protected $relations = ['profile' => 'has_one'];`)
+
+...and much more to come soon!
