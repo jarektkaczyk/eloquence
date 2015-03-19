@@ -1,6 +1,6 @@
 <?php namespace Sofa\Eloquence;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Support\Arrayable;
 
 /**
  * @property array $maps
@@ -37,13 +37,9 @@ trait Mappable
     }
 
     /**
-     * Get the value of an attribute using its mutator for array conversion.
-     *
      * @codeCoverageIgnore
      *
-     * @param  string  $key
-     * @param  mixed   $value
-     * @return mixed
+     * @inheritdoc
      */
     protected function mutateAttributeForArray($key, $value)
     {

@@ -1,5 +1,8 @@
 # Sofa/Eloquence
 
+[![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=master)](https://travis-ci.org/jarektkaczyk/eloquence)
+
+
 (WIP currently only `Mappable` - inspired by https://github.com/RomainLanz/laravel-attributes-mapper, much more to come soon!)
 
 Useful extensions for the Eloquent ORM.
