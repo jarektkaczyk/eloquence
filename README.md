@@ -158,7 +158,7 @@ $user->slug = 'Awesome package!'; // Will set 'awesome-package'
 ```
 
 # <a name="roadmap"></a>Roadmap
-- [ ] Set validation rules directly on the model. [Ardent](https://github.com/laravelbook/ardent)
+- [ ] ~~Set validation rules directly on the model. [Ardent](https://github.com/laravelbook/ardent)~~
 - [ ] Set relations on an array. (e.g. `protected $relations = ['profile' => 'has_one'];`)
 
 ...and much more to come soon!
