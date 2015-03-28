@@ -42,23 +42,27 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 
 # <a name="mappable"></a>Mappable
 
-Define mappings on the protected `$maps` variable like bellow.
+Define mappings on the protected `$maps` variable like bellow. Use this extension in order to map your 1-1 relations AND/OR simple column aliasing (eg. if you work with legacy DB with fields like `FIELD_01` or `somereallyBad_and_long_name` - inspired by [@treythomas123](https://github.com/laravel/framework/pull/8200))
 
 ```php
 <?php namespace App;
 
 use Sofa\Eloquence\Mappable; // trait
+use Sofa\Eloquence\Contracts\Mappable as MappableContract; // interface
 
-class User extends \Eloquent {
+class User extends \Eloquent implements MappableContract {
 
     use Mappable;
 
     protected $maps = [
-      // implicit mapping:
+      // implicit relation mapping:
       'profile' => ['first_name', 'last_name'],
 
-      // explicit mapping:
-      'picture' => 'profile.piture_path'
+      // explicit relation mapping:
+      'picture' => 'profile.piture_path',
+
+      // simple alias
+      'dev_friendly_name' => 'badlynamedcolumn',
     ];
 
     public function profile()
@@ -98,6 +102,21 @@ $user->profile->first_name; // 'John Doe'
 $user->profile->save();
 // or simply use push:
 $user->push();
+```
+
+**NEW** Now you can also query the mappings:
+
+```php
+// simple alias
+User::where('dev_friendly_name', 'some_value')->toSql();
+// select * from users where badlynamedcolumn = 'some_value'
+
+// relation mapping
+User::where('first_name', 'Romain Lanz')->toSql(); // uses whereHas
+// select * from users where (
+//   select count(*) from profiles
+//    where users.profile_id = profiles.id and first_name = 'Romain Lanz'
+// ) >= 1
 ```
 
 

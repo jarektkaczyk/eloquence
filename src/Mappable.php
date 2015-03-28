@@ -7,6 +7,16 @@ use Illuminate\Contracts\Support\Arrayable;
  */
 trait Mappable
 {
+    /**
+     * @codeCoverageIgnore
+     *
+     * @param  \Illuminate\Database\Query\Builder $query
+     * @return \Sofa\Eloquence\Builder
+     */
+    public function newEloquentBuilder($query)
+    {
+        return new Builder($query);
+    }
 
     /**
      * @codeCoverageIgnore
