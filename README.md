@@ -4,7 +4,7 @@
 
 Useful extensions for the Eloquent ORM.
 
-:construction: **WIP** currently only `Mappable` (inspired by @RomainLanz) and `Formattable`
+:construction: **WIP** currently only `Mappable` (inspired by [@RomainLanz](https://github.com/RomainLanz)) and `Formattable`
 If you want to know more about new extensions you can check our [Roadmap](#roadmap)!
 
 # Table of Contents
@@ -177,7 +177,6 @@ $user->slug = 'Awesome package!'; // Will set 'awesome-package'
 ```
 
 # <a name="roadmap"></a>Roadmap
-- [ ] ~~Set validation rules directly on the model. [Ardent](https://github.com/laravelbook/ardent)~~
 - [ ] Set relations on an array. (e.g. `protected $relations = ['profile' => 'has_one'];`)
 
 ...and much more to come soon!
