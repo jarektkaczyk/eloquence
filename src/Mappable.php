@@ -8,6 +8,82 @@ use Illuminate\Contracts\Support\Arrayable;
 trait Mappable
 {
     /**
+     * Register hooks for the trait.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return void
+     */
+    public static function bootMappable()
+    {
+        foreach (['getAttribute', 'setAttribute', '__isset'] as $method) {
+            static::hook($method, "{$method}Mappable");
+        }
+    }
+
+    /**
+     * Register hook on getAttribute method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function getAttributeMappable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasMapping($key)) {
+                $value = $this->mapAttribute($key);
+            }
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Register hook on setAttribute method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function setAttributeMappable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasMapping($key)) {
+                return $this->setMappedAttribute($key, $value);
+            }
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Register hook on isset call.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function __issetMappable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasMapping($key)) {
+                return (bool) $this->mapAttribute($key);
+            }
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Create new Eloquence query builder for the instance.
+     *
      * @codeCoverageIgnore
      *
      * @param  \Illuminate\Database\Query\Builder $query
@@ -16,34 +92,6 @@ trait Mappable
     public function newEloquentBuilder($query)
     {
         return new Builder($query);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     *
-     * @inheritdoc
-     */
-    public function getAttribute($key)
-    {
-        if ($this->hasMapping($key)) {
-            return $this->mapAttribute($key);
-        }
-
-        return parent::getAttribute($key);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     *
-     * @inheritdoc
-     */
-    public function setAttribute($key, $value)
-    {
-        if ($this->hasMapping($key)) {
-            return $this->setMappedAttribute($key, $value);
-        }
-
-        parent::setAttribute($key, $value);
     }
 
     /**
@@ -161,9 +209,12 @@ trait Mappable
     {
         foreach ($this->maps as $related => $mappings) {
             if (is_array($mappings) && in_array($key, $mappings)) {
-                return "{$related}.{$key}";
+                $mapping = "{$related}.{$key}";
+                break;
             }
         }
+
+        return $mapping;
     }
 
     /**

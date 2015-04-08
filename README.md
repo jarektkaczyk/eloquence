@@ -4,7 +4,8 @@
 
 Useful extensions for the Eloquent ORM.
 
-:construction: **WIP** currently only `Mappable` (inspired by @RomainLanz) and `Formattable`
+:construction: **WIP** currently available extensions: `Mappable` and `Formattable`. For the time being, package does not follow semver.
+
 If you want to know more about new extensions you can check our [Roadmap](#roadmap)!
 
 # Table of Contents
@@ -15,11 +16,13 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 * [Mappable](#mappable)
   * [Explicit vs. Implicit mappings](#explicit-vs-implicit-mappings)
 * [Formattable](#formattable)
+* [Mixing extensions](#mix)
 * [Roadmap](#roadmap)
 
 # <a name="team-members"></a>Team Members
 
 * Jarek Tkaczyk ([SOFTonSOFA](http://softonsofa.com/)) <jarek@softonsofa.com>
+* Romain Lanz (https://github.com/RomainLanz) <lanz.romain@gmail.com>
 
 # <a name="requirements"></a>Requirements
 
@@ -28,17 +31,17 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 # <a name="getting-started"></a>Getting Started
 
 1. Require the package in your `composer.json`:
+    ```
+        "require": {
+            ...
+            "sofa/eloquence": "~0.3@dev",
+            ...
+        },
 
-```
-    "require": {
-        ...
-        "sofa/eloquence": "~0.1@dev",
-        ...
-    },
+    ```
 
-```
-
-2. Add trait you want to use to the model.
+2. Add `Eloquence` trait to the model - it's entry point for other extensions and is required for them to work.
+3. Add other traits, that you want to use.
 
 # <a name="mappable"></a>Mappable
 
@@ -47,19 +50,20 @@ Define mappings on the protected `$maps` variable like bellow. Use this extensio
 ```php
 <?php namespace App;
 
-use Sofa\Eloquence\Mappable; // trait
+use Sofa\Eloquence\Eloquence; // base trait
+use Sofa\Eloquence\Mappable; // extension trait
 use Sofa\Eloquence\Contracts\Mappable as MappableContract; // interface
 
 class User extends \Eloquent implements MappableContract {
 
-    use Mappable;
+    use Eloquence, Mappable;
 
     protected $maps = [
       // implicit relation mapping:
       'profile' => ['first_name', 'last_name'],
 
       // explicit relation mapping:
-      'picture' => 'profile.piture_path',
+      'picture' => 'profile.picture_path',
 
       // simple alias
       'dev_friendly_name' => 'badlynamedcolumn',
@@ -74,23 +78,15 @@ class User extends \Eloquent implements MappableContract {
 You can also add mapped attributes to the array representation of your model, just like any accessor:
 
 ```php
-<?php namespace App;
-
-use Sofa\Eloquence\Mappable; // trait
-
-class User extends \Eloquent {
-
-    use Mappable;
 
     protected $maps = [
-      'picture' => 'profile.piture_path'
+      'picture' => 'profile.picture_path'
     ];
 
     protected $appends = ['picture'];
-}
 ```
 
-You can get as well as set mapped attributes:
+You can get, as well as set, mapped attributes:
 
 ```php
 $user->profile->first_name; // 'Jarek Tkaczyk'
@@ -98,13 +94,13 @@ $user->first_name = 'John Doe';
 
 $user->profile->first_name; // 'John Doe'
 
-// remember to save related model in order to save the changes:
+// remember to save related model in order to persist the changes:
 $user->profile->save();
 // or simply use push:
 $user->push();
 ```
 
-**NEW** Now you can also query the mappings:
+**You can also query the mappings**:
 
 ```php
 // simple alias
@@ -147,7 +143,11 @@ protected $maps = [
 ];
 ```
 
-As you notice behaviour is just the same. However there is slight difference - explicit mapping offers more flexibility, in that you can define custom key for mapped value (`picture_path`), while with implicit mapping you have to use real attribute name defined in the related model (`path`).
+As you can notice, behaviour is just the same. However, there is slight difference - explicit mapping offers more flexibility, in that you can define custom key for mapped value (`picture_path`), while with implicit mapping you have to use real attribute name defined in the related model (`path`).
+
+Mappings work also with **form model binding**.
+
+**Important**: Mind that each mapping call requires the relation to be loaded, so you may need to use [eager loading](http://laravel.com/docs/5.0/eloquent#eager-loading) in order to avoid n+1 query issue.
 
 # <a name="formattable"></a>Formattable
 
@@ -156,28 +156,94 @@ Define format on the protected `$formats` variable like bellow.
 ```php
 <?php namespace App;
 
-use Sofa\Eloquence\Formattable; // trait
+use Sofa\Eloquence\Eloquence; // base trait
+use Sofa\Eloquence\Formattable; // extension trait
 
 class User extends \Eloquent {
 
-    use Formattable;
+    use Eloquence, Formattable;
 
     protected $formats = [
+        // internal or global functions
         'first_name' => 'strtolower|ucwords',
-        'last_name' => ['strtolower', 'ucwords'],
-        'slug' => '\Str@slug',
+        'last_name'  => ['strtolower', 'ucwords'],
+
+        // static methods
+        'slug'       => 'Illuminate\Support\Str::slug',
+
+        // instance methods
+        'short_name' => 'clip',
+
+        // passing additional parameters
+        'substring'  => 'substr:0,5',
     ];
+
+    public function clip($string)
+    {
+      return substr($string, 0, 12) . '...';
+    }
 }
 ```
 
 ```php
-$user->first_name = 'john'; // Will set 'John'
-$user->last_name = 'doe'; // Will set 'Doe'
-$user->slug = 'Awesome package!'; // Will set 'awesome-package'
+$user->first_name = 'john';
+$user->first_name; // 'John'
+
+$user->last_name = 'doe';
+$user->last_name; // 'Doe'
+
+$user->slug = 'Awesome package!';
+$user->slug; // 'awesome-package'
+
+$user->short_name = 'I\'m really too long for this attribute!';
+$user->short_name; // 'I\'m really t...'
+
+$user->substring = 'shorten me to 5 letters';
+$user->substring; // 'short'
 ```
 
+# <a name="mix"></a>Mixing extensions
+
+Feel free to mix the extensions, however mind that the **order of including traits matters**.
+
+```php
+<?php namespace App;
+
+use Sofa\Eloquence\Eloquence; // base trait
+use Sofa\Eloquence\Mappable; // extension trait
+use Sofa\Eloquence\Formattable; // extension trait
+use Sofa\Eloquence\Contracts\Mappable as MappableContract; // interface
+
+class User extends \Eloquent implements MappableContract {
+
+    use Eloquence, 
+    Mappable, Formattable; // order of these traits matters!
+
+    protected $maps = [
+      'picture' => 'profile.picture_path',
+    ];
+
+    protected $formats = [
+      'picture' => 'strtolower',
+    ];
+
+    public function profile()
+    {
+      return $this->belongsTo(Profile::class);
+    }
+    // ...
+}
+```
+
+```php
+$user = User::first();
+$user->picture; // some/path/to/file.jpg
+$user->picture = 'Path/To/Another/file.JPG'; // value formatted then mapped
+$user->profile->picture_path; // path/to/another/file.jpg
+```
+
+
 # <a name="roadmap"></a>Roadmap
-- [ ] ~~Set validation rules directly on the model. [Ardent](https://github.com/laravelbook/ardent)~~
 - [ ] Set relations on an array. (e.g. `protected $relations = ['profile' => 'has_one'];`)
 
 ...and much more to come soon!

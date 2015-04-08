@@ -21,17 +21,6 @@ class FormattableTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function it_parse_the_static_call()
-    {
-        list($class, $method) = $this->model->parseStaticCall('SomeClass@staticMethod');
-
-        $this->assertEquals('SomeClass', $class);
-        $this->assertEquals('staticMethod', $method);
-    }
-
-    /**
-     * @test
-     */
     public function it_allow_us_to_call_methods_with_a_pipe()
     {
         $this->assertEquals('Mister', $this->model->formatAttribute('title', 'miStER'));
@@ -69,29 +58,60 @@ class FormattableTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals('DEV', $this->model->formatAttribute('type', 'dev'));
     }
+
+    /** 
+     * @test
+     * @covers \Sofa\Eloquence\Formattable::parseMethodArguments
+     */
+    public function it_passes_additional_parameters_to_formatting_method()
+    {
+        $this->assertEquals('short', $this->model->formatAttribute('clipped', 'shorten me to 5 letters'));
+    }
+
+    /** 
+     * @test
+     * @covers \Sofa\Eloquence\Formattable::callSingleMethod
+     * @covers \Sofa\Eloquence\Formattable::isValidStaticMethod
+     * @expectedException \InvalidArgumentException
+     */
+    public function it_throws_exception_for_invalid_formatting_method()
+    {
+        $this->model->formatAttribute('wrong', 'value');
+    }
+
+    /** 
+     * @test
+     * @covers \Sofa\Eloquence\Formattable::hasFormatting
+     */
+    public function it_finds_formatting()
+    {
+        $this->assertTrue($this->model->hasFormatting('title'));
+        $this->assertFalse($this->model->hasFormatting('nothing_here'));
+    }
 }
 
 class FormattableModelStub
 {
     use Formattable {
-        isStaticClassCall  as protectedIsStaticClassCall;
-        parseStaticCall    as protectedParseStaticCall;
-        hasStaticMethod    as protectedHasStaticMethod;
-        hasClassMethod     as protectedHasClassMethod;
-        hasGlobalFunction  as protectedHasGlobalFunction;
-        callStaticMethod   as protectedCallStaticMethod;
-        callClassMethod    as protectedCallClassMethod;
-        callGlobalFunction as protectedCallGlobalFunction;
-        formatAttribute    as protectedFormatAttribute;
+        isStaticClassCall   as protectedIsStaticClassCall;
+        isValidStaticMethod as protectedIsValidStaticMethod;
+        hasClassMethod      as protectedHasClassMethod;
+        isGlobalFunction    as protectedIsGlobalFunction;
+        callStaticMethod    as protectedCallStaticMethod;
+        callClassMethod     as protectedCallClassMethod;
+        callGlobalFunction  as protectedCallGlobalFunction;
+        formatAttribute     as protectedFormatAttribute;
     }
 
     protected $formats = [
-        'title' => 'strtolower|ucwords',
-        'gender' => ['strtolower', 'ucwords'],
+        'title'      => 'strtolower|ucwords',
+        'gender'     => ['strtolower', 'ucwords'],
         'first_name' => 'ucwords',
-        'last_name' => 'strtolower',
-        'phone' => 'formatPhone',
-        'type' => 'Sofa\Eloquence\Tests\FormatterStub@uppercase',
+        'last_name'  => 'strtolower',
+        'phone'      => 'formatPhone',
+        'type'       => 'Sofa\Eloquence\Tests\FormatterStub@uppercase',
+        'clipped'    => 'substr:0,5',
+        'wrong'      => 'I\Dont\Exist@function'
     ];
 
     public function formatPhone($phone)
@@ -99,19 +119,14 @@ class FormattableModelStub
         return "({$phone})";
     }
 
-    public function parseStaticCall($method)
-    {
-        return $this->protectedParseStaticCall($method);
-    }
-
     public function isStaticClassCall($method)
     {
         return $this->protectedIsStaticClassCall($method);
     }
 
-    public function hasStaticMethod($method)
+    public function isValidStaticMethod($method)
     {
-        return $this->protectedHasStaticMethod($method);
+        return $this->protectedIsValidStaticMethod($method);
     }
 
     public function hasClassMethod($method)
@@ -119,9 +134,9 @@ class FormattableModelStub
         return $this->protectedHasClassMethod($method);
     }
 
-    public function hasGlobalFunction($method)
+    public function isGlobalFunction($method)
     {
-        return $this->protectedHasGlobalFunction($method);
+        return $this->protectedIsGlobalFunction($method);
     }
 
     public function callStaticMethod($method, $value)

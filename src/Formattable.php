@@ -1,31 +1,55 @@
 <?php namespace Sofa\Eloquence;
 
+use InvalidArgumentException;
+use ReflectionMethod;
+use ReflectionException;
+
 /**
  * @property array $formats
  */
 trait Formattable
 {
     /**
+     * Register hooks for the trait.
+     *
      * @codeCoverageIgnore
      *
-     * @inheritdoc
+     * @return void
      */
-    public function setAttribute($key, $value)
+    public static function bootFormattable()
     {
-        if ($this->hasFormating($key)) {
-            return $this->formatAttribute($key, $value);
+        foreach (['setAttribute'] as $method) {
+            static::hook($method, "{$method}Formattable");
         }
+    }
 
-        return parent::setAttribute($key, $value);
+    /**
+     * Register hook on setAttribute method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function setAttributeFormattable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasFormatting($key)) {
+                $value = $this->formatAttribute($key, $value);
+            }
+
+            return $next($value, $args);
+        };
     }
 
     /**
      * Determine whether a formating exists for an attribute.
      *
-     * @param string $key
+     * @param  string  $key
      * @return boolean
      */
-    public function hasFormating($key)
+    public function hasFormatting($key)
     {
         $formats = $this->getFormats();
 
@@ -35,15 +59,15 @@ trait Formattable
     /**
      * Format the attribute.
      *
-     * @param string $key
-     * @param string $value
+     * @param  string $key
+     * @param  string $value
      * @return string
      */
     protected function formatAttribute($key, $value)
     {
         $format = $this->getFormatForAttribute($key);
 
-        if ($this->hasMultipleMethod($format)) {
+        if ($this->hasMultipleMethods($format)) {
             return $this->callMultipleMethods($value, $format);
         }
 
@@ -53,28 +77,24 @@ trait Formattable
     /**
      * Determine if the format has multiple methods to call.
      *
-     * @param string $format
+     * @param  string $format
      * @return boolean
      */
-    protected function hasMultipleMethod($format)
+    protected function hasMultipleMethods($format)
     {
-        if (is_array($format) || preg_match('/[|]/', $format)) {
-            return true;
-        }
-
-        return false;
+        return is_array($format) || strpos($format, '|') !== false;
     }
 
     /**
      * Call all methods specified.
      *
-     * @param string       $value
-     * @param array|string $methods
+     * @param  string $value
+     * @param  array|string $methods
      * @return string
      */
     protected function callMultipleMethods($value, $methods)
     {
-        $methods = $this->transformToArray($methods);
+        $methods = $this->transformFormatToArray($methods);
 
         foreach ($methods as $method) {
             $value = $this->callSingleMethod($value, $method);
@@ -84,36 +104,61 @@ trait Formattable
     }
 
     /**
-     * Call method specified.
+     * Apply the formatting method.
      *
-     * @param string $value
-     * @param string $method
+     * @param  string $value
+     * @param  string $method
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     protected function callSingleMethod($value, $method)
     {
-        if ($this->isStaticClassCall($method) && $this->hasStaticMethod($method)) {
-            return $this->callStaticMethod($method, $value);
+        list($method, $args) = $this->parseMethodArguments($method);
+
+        array_unshift($args, $value);
+
+        if ($this->isGlobalFunction($method)) {
+            return $this->callGlobalFunction($method, $args);
         }
 
         if ($this->hasClassMethod($method)) {
-            return $this->callClassMethod($method, $value);
+            return $this->callClassMethod($method, $args);
         }
 
-        if ($this->hasGlobalFunction($method)) {
-            return $this->callGlobalFunction($method, $value);
+        if ($this->isStaticClassCall($method) && $this->isValidStaticMethod($method)) {
+            return $this->callStaticMethod($method, $args);
         }
 
-        throw new \Exception("Impossible to format the value {$value} - {$format} not found");
+        throw new InvalidArgumentException("Formatting method [{$method}] not found.");
+    }
+
+    /**
+     * Parse additional formatting arguments.
+     *
+     * @param  string $method
+     * @return array
+     */
+    protected function parseMethodArguments($method)
+    {
+        $args = [];
+
+        if (strpos($method, ':') !== false) {
+            list($method, $argsString) = explode(':', $method, 2);
+
+            $args = explode(',', $argsString);
+        }
+
+        return [$method, $args];
     }
 
     /**
      * Transform a string with a pipe to an array.
      *
-     * @param string $format
+     * @param  string $format
      * @return array
      */
-    protected function transformToArray($format)
+    protected function transformFormatToArray($format)
     {
         return (is_array($format)) ? $format : explode('|', $format);
     }
@@ -121,69 +166,76 @@ trait Formattable
     /**
      * Call a static method.
      *
-     * @param string $method
-     * @param string $value
+     * @param  string $method
+     * @param  array  $args
      * @return string
      */
-    protected function callStaticMethod($method, $value)
+    protected function callStaticMethod($method, $args)
     {
-        list($class, $action) = $this->parseStaticCall($method);
+        $method = str_replace('@', '::', $method);
 
-        return $class::$action($value);
+        return call_user_func_array($method, $args);
     }
 
     /**
      * Call a global PHP function.
      *
-     * @param string $function
-     * @param string $value
+     * @param  string $function
+     * @param  array  $args
      * @return string
      */
-    protected function callGlobalFunction($function, $value)
+    protected function callGlobalFunction($function, $args)
     {
-        return $function($value);
+        return call_user_func_array($function, $args);
     }
 
     /**
      * Call a specific class's method.
      *
-     * @param string $method
-     * @param string $value
+     * @param  string $method
+     * @param  array  $args
      * @return string
      */
-    protected function callClassMethod($method, $value)
+    protected function callClassMethod($method, $args)
     {
-        return $this->{$method}($value);
+        return call_user_func_array([$this, $method], $args);
     }
 
     /**
      * Determine whether the method is a static call.
      *
-     * @param string $method
+     * @param  string $method
      * @return boolean
      */
     protected function isStaticClassCall($method)
     {
-        return (boolean) preg_match('/([A-Za-z]+)[@]([A-Za-z]+)/', $method);
+        return strpos($method, '@') !== false;
     }
 
     /**
-     * Determine whether the method is a class static method.
+     * Determine whether the method is valid static method.
      *
-     * @param string $method
+     * @param  string  $method
      * @return boolean
      */
-    protected function hasStaticMethod($method)
+    protected function isValidStaticMethod($method)
     {
-        list($class, $action) = $this->parseStaticCall($method);
+        $method = str_replace('@', '::', $method);
 
-        return method_exists($class, $action);
+        try {
+            $function = new ReflectionMethod($method);
+
+            return $function->isStatic();
+
+        } catch (ReflectionException $e) {
+            return false;
+        }
     }
 
     /**
-     * Determine whether the method is a class method.
+     * Determine whether method exists on this instance.
      *
-     * @param string $method
+     * @param  string  $method
      * @return boolean
      */
     protected function hasClassMethod($method)
@@ -192,31 +244,20 @@ trait Formattable
     }
 
     /**
-     * Determine whether the method is a PHP global function.
+     * Determine whether the function is an internal or global function.
      *
-     * @param string $method
+     * @param  string  $function
      * @return boolean
      */
-    protected function hasGlobalFunction($method)
+    protected function isGlobalFunction($function)
     {
-        return function_exists($method);
-    }
-
-    /**
-     * Parse method's name.
-     *
-     * @param string $method
-     * @return string
-     */
-    protected function parseStaticCall($method)
-    {
-        return explode('@', $method);
+        return function_exists($function);
     }
 
     /**
      * Get the format type.
      *
-     * @param string $key
+     * @param  string $key
      * @return string
      */
     protected function getFormatForAttribute($key)
@@ -232,5 +273,18 @@ trait Formattable
     public function getFormats()
     {
         return (isset($this->formats)) ? $this->formats : [];
+    }
+
+    /**
+     * Set array of attribute mappings on the model.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param  array $mappings
+     * @return void
+     */
+    public function setFormats(array $formats)
+    {
+        $this->formats = $formats;
     }
 }

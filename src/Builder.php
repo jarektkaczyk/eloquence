@@ -52,7 +52,7 @@ class Builder extends EloquentBuilder
     {
         $model = $this->getModel();
 
-        if (is_string($column) && $model instanceof MappableContract && $model->hasMapping($column)) {
+        if ($model instanceof MappableContract && $model->hasMapping($column)) {
             $column = $model->getMappingForAttribute($column);
         }
 

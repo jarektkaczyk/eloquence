@@ -1,6 +1,7 @@
 <?php namespace Sofa\Eloquence\Tests;
 
 use Sofa\Eloquence\Builder;
+use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
 use Sofa\Eloquence\Contracts\Mappable as MappableContract;
 
@@ -10,11 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Mockery as m;
 
 class BuilderTest extends \PHPUnit_Framework_TestCase {
-
-    public function setUp()
-    {
-        $this->model = new ModelStub;
-    }
 
     /** 
      * @test
@@ -79,7 +75,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
 }
 
 class MappableStub extends Model implements MappableContract {
-    use Mappable;
+    use Eloquence, Mappable;
 
     protected $table = 'table';
     protected $maps = [

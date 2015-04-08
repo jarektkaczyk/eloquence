@@ -29,6 +29,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
     public function it_finds_mapped_attribute_using_implicit_array_notation()
     {
         $this->assertTrue($this->model->hasMapping('name'));
+        $this->assertFalse($this->model->hasMapping('bar'));
     }
 
     /** 
