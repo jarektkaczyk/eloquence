@@ -2,13 +2,16 @@
     "name": "sofa/eloquence",
     "description": "Extensions for the Eloquent ORM.",
     "license": "MIT",
+    "support": {
+        "issues": "https://github.com/jarektkaczyk/eloquence/issues",
+        "source": "https://github.com/jarektkaczyk/eloquence"
+    },
     "keywords": [
         "laravel",
         "eloquent",
         "orm",
         "database",
         "active record",
-        "activerecord",
         "sql"
     ],
     "authors": [
@@ -21,7 +24,8 @@
     ],
     "require": {
         "php": ">=5.4",
-        "illuminate/contracts": "~5.0"
+        "illuminate/contracts": "~5.0",
+        "illuminate/database": "~5.0"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.0",
@@ -38,5 +42,6 @@
         "psr-4": {
             "Sofa\\Eloquence\\Tests\\": "tests"
         }
-    }
+    },
+    "minimum-stability": "dev"
 }

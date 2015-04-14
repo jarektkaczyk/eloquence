@@ -8,6 +8,13 @@ use Illuminate\Contracts\Support\Arrayable;
 trait Mappable
 {
     /**
+     * Related mapped objects to save along with the mappable instance.
+     *
+     * @var array
+     */
+    protected $targetsToSave = [];
+
+    /**
      * Register hooks for the trait.
      *
      * @codeCoverageIgnore
@@ -16,159 +23,73 @@ trait Mappable
      */
     public static function bootMappable()
     {
-        foreach (['getAttribute', 'setAttribute', '__isset'] as $method) {
+        foreach ([
+                'getAttribute',
+                'setAttribute',
+                'save',
+                '__isset',
+                '__unset',
+                'customWhere'
+            ] as $method) {
             static::hook($method, "{$method}Mappable");
         }
     }
 
     /**
-     * Register hook on getAttribute method.
+     * Register hook on customWhere method.
      *
      * @codeCoverageIgnore
      *
      * @return \Closure
      */
-    public function getAttributeMappable()
+    public function customWhereMappable()
     {
-        return function ($next, $value, $args) {
+        return function ($next, $query, $args) {
             $key = $args->get('key');
 
             if ($this->hasMapping($key)) {
-                $value = $this->mapAttribute($key);
+                return call_user_func_array([$this, 'whereMapped'], array_merge([$query], $args->all()));
             }
 
-            return $next($value, $args);
+            return $next($query, $args);
         };
     }
 
     /**
-     * Register hook on setAttribute method.
+     * Custom where clause for mapped attributes.
      *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function setAttributeMappable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasMapping($key)) {
-                return $this->setMappedAttribute($key, $value);
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on isset call.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function __issetMappable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasMapping($key)) {
-                return (bool) $this->mapAttribute($key);
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Create new Eloquence query builder for the instance.
-     *
-     * @codeCoverageIgnore
-     *
-     * @param  \Illuminate\Database\Query\Builder $query
      * @return \Sofa\Eloquence\Builder
      */
-    public function newEloquentBuilder($query)
+    protected function whereMapped($query, $column, $operator, $value, $boolean)
     {
-        return new Builder($query);
+        $column = $this->getMappingForAttribute($column) ?: $column;
+
+        if ($this->nestedMapping($column)) {
+            list($target, $column) = $this->parseMapping($column);
+
+            return $query
+                ->has($target, '>=', 1, $boolean, $this->getMappedWhereConstraint($column, $operator, $value))
+                ->with($target);
+        }
+
+        return $query->where($column, $operator, $value, $boolean);
     }
 
     /**
+     * Get the relation constraint closure.
+     *
      * @codeCoverageIgnore
      *
-     * @inheritdoc
+     * @param  string  $column
+     * @param  string  $operator
+     * @param  string  $value
+     * @return \Closure
      */
-    protected function mutateAttributeForArray($key, $value)
+    protected function getMappedWhereConstraint($column, $operator, $value)
     {
-        if ($this->hasMapping($key)) {
-            $value = $this->mapAttribute($key);
-
-            return $value instanceof Arrayable ? $value->toArray() : $value;
-        }
-
-        return parent::mutateAttributeForArray($key, $value);
-    }
-
-    /**
-     * Determine whether a mapping exists for an attribute.
-     *
-     * @param  string $key
-     * @return boolean
-     */
-    public function hasMapping($key)
-    {
-        return $this->hasExplicitMapping($key) || $this->hasImplicitMapping($key);
-    }
-
-    /**
-     * Set value of a mapped attribute.
-     *
-     * @param string $key
-     * @param mixed  $value
-     */
-    protected function setMappedAttribute($key, $value)
-    {
-        $segments = explode('.', $this->getMappingForAttribute($key));
-
-        $attribute = array_pop($segments);
-
-        $target = $this->getTarget($this, $segments);
-
-        $target->{$attribute} = $value;
-    }
-
-    /**
-     * Map an attribute to a value.
-     *
-     * @param  string $key
-     * @return mixed
-     */
-    protected function mapAttribute($key)
-    {
-        $segments = explode('.', $this->getMappingForAttribute($key));
-
-        return $this->getTarget($this, $segments);
-    }
-
-    /**
-     * Get mapped value.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model $target
-     * @param  array  $segments
-     * @return mixed
-     */
-    protected function getTarget($target, array $segments)
-    {
-        foreach ($segments as $segment) {
-            if (! $target) {
-                return;
-            }
-
-            $target = $target->{$segment};
-        }
-
-        return $target;
+        return function ($q) use ($column, $operator, $value) {
+            $q->where($column, $operator, $value);
+        };
     }
 
     /**
@@ -189,32 +110,42 @@ trait Mappable
     }
 
     /**
-     * Get the key for explicit mapping.
+     * Determine whether the mapping points to relation.
      *
-     * @param  string $key
-     * @return string
+     * @param  string $mapping
+     * @return boolean
      */
-    protected function getExplicitMapping($key)
+    protected function nestedMapping($mapping)
     {
-        return $this->maps[$key];
+        return strpos($mapping, '.') !== false;
     }
 
     /**
-     * Get the key for implicit mapping.
+     * Get the target relation and column from the mapping.
+     *
+     * @param  string $mapping
+     * @return array
+     */
+    protected function parseMapping($mapping)
+    {
+        $segments = explode('.', $mapping);
+
+        $column = array_pop($segments);
+
+        $target = implode('.', $segments);
+
+        return [$target, $column];
+    }
+
+    /**
+     * Determine whether a mapping exists for an attribute.
      *
      * @param  string $key
-     * @return string|null
+     * @return boolean
      */
-    protected function getImplicitMapping($key)
+    public function hasMapping($key)
     {
-        foreach ($this->maps as $related => $mappings) {
-            if (is_array($mappings) && in_array($key, $mappings)) {
-                $mapping = "{$related}.{$key}";
-                break;
-            }
-        }
-
-        return $mapping;
+        return $this->hasExplicitMapping($key) || $this->hasImplicitMapping($key);
     }
 
     /**
@@ -248,13 +179,237 @@ trait Mappable
     }
 
     /**
+     * Get the key for explicit mapping.
+     *
+     * @param  string $key
+     * @return string
+     */
+    protected function getExplicitMapping($key)
+    {
+        return $this->maps[$key];
+    }
+
+    /**
+     * Get the key for implicit mapping.
+     *
+     * @param  string $key
+     * @return string|null
+     */
+    protected function getImplicitMapping($key)
+    {
+        foreach ($this->maps as $related => $mappings) {
+            if (is_array($mappings) && in_array($key, $mappings)) {
+                $mapping = "{$related}.{$key}";
+                break;
+            }
+        }
+
+        return $mapping;
+    }
+
+    /**
+     * Register hook on getAttribute method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function getAttributeMappable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasMapping($key)) {
+                $value = $this->mapAttribute($key);
+            }
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Map an attribute to a value.
+     *
+     * @param  string $key
+     * @return mixed
+     */
+    protected function mapAttribute($key)
+    {
+        $segments = explode('.', $this->getMappingForAttribute($key));
+
+        return $this->getTarget($this, $segments);
+    }
+
+    /**
+     * Get mapped value.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model $target
+     * @param  array  $segments
+     * @return mixed
+     */
+    protected function getTarget($target, array $segments)
+    {
+        foreach ($segments as $segment) {
+            if (!$target) {
+                return;
+            }
+
+            $target = $target->{$segment};
+        }
+
+        return $target;
+    }
+
+    /**
+     * Register hook on setAttribute method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function setAttributeMappable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasMapping($key)) {
+                return $this->setMappedAttribute($key, $value);
+            }
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Set value of a mapped attribute.
+     *
+     * @param string $key
+     * @param mixed  $value
+     */
+    protected function setMappedAttribute($key, $value)
+    {
+        $segments = explode('.', $this->getMappingForAttribute($key));
+
+        $attribute = array_pop($segments);
+
+        if ($target = $this->getTarget($this, $segments)) {
+            $this->targetsToSave[] = $target;
+
+            $target->{$attribute} = $value;
+        }
+    }
+
+    /**
+     * Register hook on save method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function saveMappable()
+    {
+        return function ($next, $value, $args) {
+            $this->saveMapped();
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Save mapped relations.
+     *
+     * @return void
+     */
+    protected function saveMapped()
+    {
+        foreach (array_unique($this->targetsToSave) as $target) {
+            $target->save();
+        }
+
+        $this->targetsToSave = [];
+    }
+
+    /**
+     * Register hook on isset call.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function __issetMappable()
+    {
+        return function ($next, $isset, $args) {
+            $key = $args->get('key');
+
+            if (!$isset && $this->hasMapping($key)) {
+                return (bool) $this->mapAttribute($key);
+            }
+
+            return $next($isset, $args);
+        };
+    }
+
+    /**
+     * Register hook on unset call.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function __unsetMappable()
+    {
+        return function ($next, $value, $args) {
+            $key = $args->get('key');
+
+            if ($this->hasMapping($key)) {
+                return $this->forget($key);
+            }
+
+            return $next($value, $args);
+        };
+    }
+
+    /**
+     * Unset mapped attribute.
+     *
+     * @param  string $key
+     * @return void
+     */
+    protected function forget($key)
+    {
+        $mapping = $this->getMappingForAttribute($key);
+
+        list($target, $attribute) = $this->parseMapping($mapping);
+
+        $target = $target ? $this->getTarget($this, explode('.', $target)) : $this;
+
+        unset($target->{$attribute});
+    }
+
+    /**
+     * @codeCoverageIgnore
+     *
+     * @inheritdoc
+     */
+    protected function mutateAttributeForArray($key, $value)
+    {
+        if ($this->hasMapping($key)) {
+            $value = $this->mapAttribute($key);
+
+            return $value instanceof Arrayable ? $value->toArray() : $value;
+        }
+
+        return parent::mutateAttributeForArray($key, $value);
+    }
+
+    /**
      * Get the array of attribute mappings.
      *
      * @return array
      */
     public function getMaps()
     {
-        return (isset($this->maps)) ? $this->maps : [];
+        return (property_exists($this, 'maps')) ? $this->maps : [];
     }
 
     /**

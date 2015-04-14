@@ -11,7 +11,43 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase {
 		EloquenceStub::clearHooks();
 	}
 
-	/** 
+	/**
+	 * @test
+	 * @covers \Sofa\Eloquence\Eloquence::newEloquentBuilder
+	 */
+	public function it_uses_custom_builder()
+	{
+		$query   = m::mock('\Illuminate\Database\Query\Builder');
+		$builder = (new EloquenceStub)->newEloquentBuilder($query);
+
+		$this->assertInstanceOf('\Sofa\Eloquence\Builder', $builder);
+	}
+
+	/**
+	 * @test
+	 * @covers \Sofa\Eloquence\Eloquence::hasColumn
+	 * @covers \Sofa\Eloquence\Eloquence::loadColumnListing
+	 */
+	public function it_loads_and_checks_the_column_listing()
+	{
+		$schema = m::mock('StdClass');
+		$schema->shouldReceive('getColumnListing')->once()->andReturn(['foo', 'bar', 'baz']);
+
+		$connection = m::mock('StdClass');
+		$connection->shouldReceive('getSchemaBuilder')->once()->andReturn($schema);
+
+		$resolver = m::mock('\Illuminate\Database\ConnectionResolverInterface');
+		$resolver->shouldReceive('connection')->once()->andReturn($connection);
+
+		EloquenceStub::setConnectionResolver($resolver);
+
+		$model = new EloquenceStub;
+
+		$this->assertTrue($model->hasColumn('foo'));
+		$this->assertFalse($model->hasColumn('wrong'));
+	}
+
+	/**
 	 * @test
 	 * @covers \Sofa\Eloquence\Eloquence::hasHook
 	 */
@@ -24,7 +60,7 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase {
 		$this->assertTrue($model->hasHook('__isset'));
 	}
 
-	/** 
+	/**
 	 * @test
 	 * @covers \Sofa\Eloquence\Eloquence::hook
 	 * @covers \Sofa\Eloquence\Eloquence::wrapHook

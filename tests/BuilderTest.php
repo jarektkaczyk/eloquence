@@ -12,12 +12,9 @@ use Mockery as m;
 
 class BuilderTest extends \PHPUnit_Framework_TestCase {
 
-    /** 
+    /**
      * @test
      * @covers \Sofa\Eloquence\Builder::where
-     * @covers \Sofa\Eloquence\Builder::notPrefixed
-     * @covers \Sofa\Eloquence\Builder::getColumnMapping
-     * @covers \Sofa\Eloquence\Builder::nestedMapping
      */
     public function it_adds_where_constraint_for_alias_mapping()
     {
@@ -28,14 +25,23 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('select * from "table" where "bar" = ?', $sql);
     }
 
-    /** 
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Builder::baseWhere
+     */
+    public function it_calls_basic_where_if_explicitly_called()
+    {
+        $builder = $this->getBuilder();
+
+        $sql = $builder->baseWhere('foo', 'value')->toSql();
+
+        $this->assertEquals('select * from "table" where "foo" = ?', $sql);
+    }
+
+    /**
      * @test
      * @covers \Sofa\Eloquence\Builder::where
-     * @covers \Sofa\Eloquence\Builder::mappedWhere
-     * @covers \Sofa\Eloquence\Builder::notPrefixed
-     * @covers \Sofa\Eloquence\Builder::getColumnMapping
-     * @covers \Sofa\Eloquence\Builder::nestedMapping
-     * @covers \Sofa\Eloquence\Builder::parseMapping
+     * @covers \Sofa\Eloquence\Builder::isCustomWhere
      */
     public function it_adds_where_constraint_for_nested_mappings()
     {
@@ -48,15 +54,29 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
         $grammar    = m::mock('\Illuminate\Database\Query\Grammars\Grammar');
         $query      = new Query($connection, $grammar, $processor);
 
+        $builder = m::mock('\Sofa\Eloquence\Builder[getModel]', [$query]);
         $model = m::mock('\Sofa\Eloquence\Contracts\Mappable');
-        $model->shouldReceive('hasMapping')->with($alias)->andReturn(true);
-        $model->shouldReceive('getMappingForAttribute')->with($alias)->andReturn($mapping);
+        $model->shouldReceive('customWhere')
+            ->with($builder, ['key' => 'aliased_column', 'operator' => 'some_value', 'value' => '', 'boolean' => 'and'])
+            ->andReturn($builder);
 
-        $builder = m::mock('\Sofa\Eloquence\Builder[has,getModel]', [$query]);
         $builder->shouldReceive('getModel')->andReturn($model);
-        $builder->shouldReceive('has')->with($target, '>=', 1, 'and', m::type('callable'))->andReturn($builder);
 
-        $builder->where('aliased_column', 'value');
+        $builder->where('aliased_column', 'some_value');
+    }
+
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Builder::where
+     * @covers \Sofa\Eloquence\Builder::baseWhere
+     */
+    public function it_calls_basic_where_if_custom_not_applies()
+    {
+        $builder = $this->getBuilder();
+
+        $sql = $builder->where(['column' => 'value'])->toSql();
+
+        $this->assertEquals('select * from "table" where ("column" = ?)', $sql);
     }
 
     protected function getBuilder()
@@ -67,18 +87,20 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
         $query      = new Query($connection, $grammar, $processor);
         $builder    = new Builder($query);
 
-        $model = new MappableStub;
+        $model = new BuilderMappableStub;
         $builder->setModel($model);
 
         return $builder;
     }
 }
 
-class MappableStub extends Model implements MappableContract {
+class BuilderMappableStub extends Model implements MappableContract {
+
     use Eloquence, Mappable;
 
     protected $table = 'table';
     protected $maps = [
         'foo' => 'bar',
+        'aliased_column' => 'deeply.nested.relation.column',
     ];
 }

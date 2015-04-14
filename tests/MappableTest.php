@@ -1,12 +1,70 @@
 <?php namespace Sofa\Eloquence\Tests;
 
+use Mockery as m;
+use Illuminate\Database\Eloquent\Model;
+use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
 
 class MappableTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp()
     {
-        $this->model = new ModelStub;
+        $this->model = new MappableStub;
+    }
+
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable::saveMapped
+     */
+    public function it_saves_mapped_related_models()
+    {
+        $model = new MappableStub;
+
+        $model->bar = m::mock('StdClass');
+        $model->bar->shouldReceive('save')->once()->andReturn(true);
+
+        $model->setMappedAttribute('foo', 'new_value');
+        $model->saveMapped();
+    }
+
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable::forget
+     */
+    public function it_unsets_mapped_attribute()
+    {
+        $model = new MappableStub;
+
+        $this->assertTrue(property_exists($model->bar, 'baz'));
+        $model->forget('foo');
+        $this->assertFalse(property_exists($model->bar, 'baz'));
+    }
+
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable::whereMapped
+     */
+    public function it_queries_mapped_column()
+    {
+        $query = m::mock('\Sofa\Eloquence\Builder');
+        $query->shouldReceive('where')->with('original', '=', 'value', 'and')->once()->andReturn($query);
+
+        $this->model->whereMapped($query, 'alias', '=', 'value', 'and');
+    }
+
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable::whereMapped
+     * @covers \Sofa\Eloquence\Mappable::nestedMapping
+     * @covers \Sofa\Eloquence\Mappable::parseMapping
+     */
+    public function it_queries_mapped_relation()
+    {
+        $query = m::mock('\Sofa\Eloquence\Builder');
+        $query->shouldReceive('has')->with('bar', '>=', 1, 'and', m::type('callable'))->once()->andReturn($query);
+        $query->shouldReceive('with')->with('bar')->once()->andReturn($query);
+
+        $this->model->whereMapped($query, 'foo', '=', 'value', 'and');
     }
 
     /**
@@ -21,7 +79,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertFalse($this->model->hasMapping('bar'));
     }
 
-    /** 
+    /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::hasMapping
      * @covers \Sofa\Eloquence\Mappable::hasImplicitMapping
@@ -32,7 +90,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertFalse($this->model->hasMapping('bar'));
     }
 
-    /** 
+    /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::getExplicitMapping
      */
@@ -41,7 +99,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('bar.baz', $this->model->getExplicitMapping('foo'));
     }
 
-    /** 
+    /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::getImplicitMapping
      */
@@ -50,7 +108,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('related.name', $this->model->getImplicitMapping('name'));
     }
 
-    /** 
+    /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::mapAttribute
      * @covers \Sofa\Eloquence\Mappable::getMappingForAttribute
@@ -66,7 +124,24 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('bam_value', $this->model->mapAttribute('bam'));
     }
 
-    /** 
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable::getTarget
+     * @covers \Sofa\Eloquence\Mappable::getMappingForAttribute
+     */
+    public function it_fails_silently_when_target_or_mapping_was_not_found()
+    {
+        $this->model->bar = null;
+
+        // no target
+        $this->model->setMappedAttribute('foo', 'value');
+        $this->assertNull($this->model->mapAttribute('foo'));
+
+        // no mapping
+        $this->model->getMappingForAttribute('wrong');
+    }
+
+    /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::setMappedAttribute
      * @covers \Sofa\Eloquence\Mappable::getTarget
@@ -83,24 +158,29 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
+class MappableStub {
 
-class ModelStub {
-
-    use Mappable {
+    use Eloquence, Mappable {
         hasExplicitMapping as protectedHasExplicitMapping;
         hasImplicitMapping as protectedHasImplicitMapping;
         getExplicitMapping as protectedGetExplicitMapping;
         getImplicitMapping as protectedGetImplicitMapping;
         setMappedAttribute as protectedSetMappedAttribute;
         mapAttribute       as protectedMapAttribute;
+        whereMapped        as protectedWhereMapped;
+        forget             as protectedForget;
+        saveMapped         as protectedSaveMapped;
     }
 
     protected $maps = [
-        // explicit mappings
+        // local alias
+        'alias'       => 'original',        // $this->original
+
+        // explicit relation mappings
         'foo'         => 'bar.baz',         // $this->bar->baz
         'bam'         => 'bar.bad.bam',     // $this->bar->bad->bam
 
-        // implicit mappings
+        // implicit relation mappings
         'related'     => ['name', 'email'], // $this->related->name
         'related.far' => ['far_field'],     // $this->related->far->far_field
     ];
@@ -128,6 +208,11 @@ class ModelStub {
         return $this->protectedSetMappedAttribute($key, $value);
     }
 
+    public function whereMapped()
+    {
+        return call_user_func_array([$this, 'protectedWhereMapped'], func_get_args());
+    }
+
     public function mapAttribute($key)
     {
         return $this->protectedMapAttribute($key);
@@ -146,5 +231,15 @@ class ModelStub {
     protected function getRelatedStub($attributes)
     {
         return (object) $attributes;
+    }
+
+    public function forget($key)
+    {
+        return $this->protectedForget($key);
+    }
+
+    public function saveMapped()
+    {
+        return $this->protectedSaveMapped();
     }
 }

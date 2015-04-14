@@ -2,9 +2,16 @@
 
 [![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=master)](https://travis-ci.org/jarektkaczyk/eloquence) [![Code Quality](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads.svg)](https://packagist.org/packages/sofa/eloquence)
 
-Useful extensions for the Eloquent ORM.
+Easy and flexible extensions for the Eloquent ORM.
 
-:construction: **WIP** currently available extensions: `Mappable` and `Formattable`. For the time being, package does not follow semver.
+:construction: **WIP** currently available extensions: 
+
+1. `Metable` - meta attributes made easy
+2. `Mappable` -map attributes to table fields and/or related models
+3. `Formattable` - flexible set mutators with quick setup
+4. `Mutable` - flexible get mutators with quick setup
+
+The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.3"` instead of `"~0.3@dev"`.
 
 If you want to know more about new extensions you can check our [Roadmap](#roadmap)!
 

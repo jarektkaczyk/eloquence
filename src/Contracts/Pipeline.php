@@ -15,7 +15,7 @@ interface Pipeline
     /**
      * Specify the actions the parcel will be passed through.
      *
-     * @param  array  $pipes
+     * @param  array $pipes
      * @return $this
      */
     public function through(array $pipes);
@@ -31,7 +31,7 @@ interface Pipeline
     /**
      * Dispatch the parcel and call the final callback at the end.
      *
-     * @param  \Closure  $destination
+     * @param  \Closure $destination
      * @return mixed
      */
     public function to(Closure $destination);
