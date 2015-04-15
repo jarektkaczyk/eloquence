@@ -55,21 +55,21 @@ class AttributeBag extends Collection implements AttributeBagContract
         return $this->set($item);
     }
 
+    /**
+     * Validate item being provided as attribute.
+     *
+     * @param  mixed  $item
+     * @return void
+     */
     protected function validate($item)
     {
-        // if ($item instanceof Attribute) {
-        //     if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $attribute->getKey())) {
-        //         throw new InvalidArgumentException("Provided key [{$key}] is not valid variable name.");
-        //     }
-        // }
-
         if ($item instanceof Attribute) {
             return true;
         }
 
         $type = is_object($item) ? get_class($item) : gettype($item);
 
-        $class = Attribute::class;
+        $class = 'Sofa\Eloquence\Metable\Attribute';
 
         throw new InvalidArgumentException(
             "Attribute must be an instance of [{$class}]. [{$type}] given."
@@ -164,11 +164,23 @@ class AttributeBag extends Collection implements AttributeBagContract
         $this->forget($key);
     }
 
+    /**
+     * Handle dynamic properties.
+     *
+     * @param string $key
+     * @param mixed  $value
+     */
     public function __set($key, $value)
     {
         $this->set($key, $value);
     }
 
+    /**
+     * Handle dynamic properties.
+     *
+     * @param  string $key
+     * @return mixed
+     */
     public function __get($key)
     {
         return $this->getValue($key);

@@ -3,4 +3,5 @@
 interface AttributeBag
 {
     public function set($key, $value);
+    public function getValue($key);
 }

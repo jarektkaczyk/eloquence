@@ -1,5 +1,6 @@
 <?php namespace Sofa\Eloquence\Metable;
 
+use InvalidArgumentException;
 use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Contracts\Attribute as AttributeContract;
@@ -24,20 +25,20 @@ class Attribute extends Model implements AttributeContract
      * @var array
      */
     protected $getMutators = [
-        'array'         => 'json_decode',
-        'StdClass'      => 'json_decode',
-        Model::class    => 'unserialize',
-        DateTime::class => 'asDateTime',
+        'array'                              => 'json_decode',
+        'StdClass'                           => 'json_decode',
+        'DateTime'                           => 'asDateTime',
+        'Illuminate\Database\Eloquent\Model' => 'unserialize',
     ];
 
     /**
      * @var array
      */
     protected $setMutators = [
-        'array'         => 'json_encode',
-        'StdClass'      => 'json_encode',
-        Model::class    => 'serialize',
-        DateTime::class => 'fromDateTime',
+        'array'                              => 'json_encode',
+        'StdClass'                           => 'json_encode',
+        'DateTime'                           => 'fromDateTime',
+        'Illuminate\Database\Eloquent\Model' => 'serialize',
     ];
 
     /**
@@ -123,9 +124,15 @@ class Attribute extends Model implements AttributeContract
      * Set key of the meta attribute.
      *
      * @param string $key
+     *
+     * @throws \InvalidArgumentException
      */
     protected function setKey($key)
     {
+        if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $key)) {
+            throw new InvalidArgumentException("Provided key [{$key}] is not valid variable name.");
+        }
+
         $this->attributes['key'] = $key;
     }
 

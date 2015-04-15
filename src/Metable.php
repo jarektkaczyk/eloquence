@@ -298,7 +298,7 @@ trait Metable
      */
     public function metaAttributes()
     {
-        return $this->morphMany(Attribute::class, 'metable');
+        return $this->morphMany('Sofa\Eloquence\Metable\Attribute', 'metable');
     }
 
     /**

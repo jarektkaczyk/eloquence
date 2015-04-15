@@ -77,7 +77,7 @@ trait Formattable
     /**
      * Determine if the format has multiple methods to call.
      *
-     * @param  string $format
+     * @param  string  $format
      * @return boolean
      */
     protected function hasMultipleMethods($format)
@@ -204,7 +204,7 @@ trait Formattable
     /**
      * Determine whether the method is a static call.
      *
-     * @param  string $method
+     * @param  string  $method
      * @return boolean
      */
     protected function isStaticClassCall($method)
@@ -276,11 +276,11 @@ trait Formattable
     }
 
     /**
-     * Set array of attribute mappings on the model.
+     * Set array of attribute formatters on the model.
      *
      * @codeCoverageIgnore
      *
-     * @param  array $mappings
+     * @param  array $formats
      * @return void
      */
     public function setFormats(array $formats)

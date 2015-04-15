@@ -5,6 +5,9 @@ use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Pipeline\Pipeline;
 use Sofa\Eloquence\Pipeline\ArgumentBag;
 
+/**
+ * @version 0.4
+ */
 trait Eloquence
 {
     /**
