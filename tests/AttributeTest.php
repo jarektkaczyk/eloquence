@@ -98,7 +98,7 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     {
         $bag = $this->getAttribute()->newCollection();
 
-        $this->assertInstanceOf(AttributeBag::class, $bag);
+        $this->assertInstanceOf('Sofa\Eloquence\Metable\AttributeBag', $bag);
     }
 
     /**
