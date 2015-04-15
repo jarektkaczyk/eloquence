@@ -49,6 +49,16 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
      *
      * @expectedException \InvalidArgumentException
      */
+    public function it_rejects_invalid_variable_name_as_key()
+    {
+        $attribute = new Attribute('foo-bar', 'value');
+    }
+
+    /**
+     * @test
+     *
+     * @expectedException \InvalidArgumentException
+     */
     public function it_rejects_user_types_without_mutator()
     {
         $attribute = new Attribute('foo', $this->getAttribute()->newCollection());

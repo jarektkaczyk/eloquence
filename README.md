@@ -1,6 +1,6 @@
 # Sofa/Eloquence
 
-[![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=master)](https://travis-ci.org/jarektkaczyk/eloquence) [![Code Quality](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads.svg)](https://packagist.org/packages/sofa/eloquence)
+[![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=0.4)](https://travis-ci.org/jarektkaczyk/eloquence) [![Coverage Status](https://coveralls.io/repos/jarektkaczyk/eloquence/badge.svg?branch=0.4)](https://coveralls.io/r/jarektkaczyk/eloquence?branch=0.4) [![Code Quality](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence/badges/quality-score.png?b=0.4)](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads.svg)](https://packagist.org/packages/sofa/eloquence)
 
 Easy and flexible extensions for the Eloquent ORM.
 
