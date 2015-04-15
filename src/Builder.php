@@ -7,7 +7,7 @@ class Builder extends EloquentBuilder
     /**
      * Add where constraint to the query.
      *
-     * @param  string  $column
+     * @param  string  $key
      * @param  string  $operator
      * @param  mixed   $value
      * @param  string  $boolean

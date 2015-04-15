@@ -36,7 +36,6 @@ interface Attribute
     /**
      * Determine whether a get mutator exists for the value type.
      *
-     * @param  mixed   $value
      * @return boolean
      */
     public function hasMetaGetMutator();

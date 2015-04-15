@@ -199,12 +199,9 @@ trait Mappable
     {
         foreach ($this->maps as $related => $mappings) {
             if (is_array($mappings) && in_array($key, $mappings)) {
-                $mapping = "{$related}.{$key}";
-                break;
+                return "{$related}.{$key}";
             }
         }
-
-        return $mapping;
     }
 
     /**

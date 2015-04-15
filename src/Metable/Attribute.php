@@ -5,6 +5,11 @@ use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Contracts\Attribute as AttributeContract;
 
+/**
+ * @property string $type
+ * @property string $key
+ * @property string $value
+ */
 class Attribute extends Model implements AttributeContract
 {
     /**
@@ -48,7 +53,7 @@ class Attribute extends Model implements AttributeContract
      */
     protected $visible = ['key', 'value', 'type', 'created_at', 'updated_at'];
 
-    public function __construct($key = null, $value = '', $attributes = [])
+    public function __construct($key = null, $value = '')
     {
         parent::__construct([]);
 
@@ -207,7 +212,6 @@ class Attribute extends Model implements AttributeContract
     /**
      * Determine whether a get mutator exists for the value type.
      *
-     * @param  mixed   $value
      * @return boolean
      */
     public function hasMetaGetMutator()
@@ -251,11 +255,9 @@ class Attribute extends Model implements AttributeContract
     {
         foreach ($this->{"{$dir}Mutators"} as $mutated => $mutator) {
             if ($this->getValueType($value) == $mutated || $value instanceof $mutated) {
-                $type = $mutated;
+                return $mutated;
             }
         }
-
-        return $type;
     }
 
     /**

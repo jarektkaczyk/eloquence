@@ -7,6 +7,9 @@ use Sofa\Eloquence\Pipeline\ArgumentBag;
 
 /**
  * @version 0.4
+ *
+ * @method \Illuminate\Database\Connection getConnection()
+ * @method string getTable()
  */
 trait Eloquence
 {
@@ -164,6 +167,7 @@ trait Eloquence
      *
      * @param  string $key
      * @return mixed
+     * @return mixed
      */
     public function getAttribute($key)
     {
@@ -184,8 +188,9 @@ trait Eloquence
      *
      * @codeCoverageIgnore
      *
-     * @param string $key
-     * @param mixed  $value
+     * @param  string $key
+     * @param  mixed  $value
+     * @return void
      */
     public function setAttribute($key, $value)
     {
@@ -205,8 +210,8 @@ trait Eloquence
      *
      * @codeCoverageIgnore
      *
-     * @param array  $options
-     * @param mixed  $value
+     * @param  array  $options
+     * @return boolean
      */
     public function save(array $options = [])
     {
@@ -227,42 +232,22 @@ trait Eloquence
     }
 
     /**
-     * Register hook for getArrayableAttributes.
+     * Register hook for toArray.
      *
      * @codeCoverageIgnore
      *
      * @return mixed
      */
-    public function getArrayableAttributes()
+    public function toArray()
     {
         $this->unwrapHooks(__FUNCTION__);
         $pipes = $this->unwrappedHooks[__FUNCTION__];
-        $parcel = parent::getArrayableAttributes();
+        $parcel = parent::toArray();
 
         return (new Pipeline($pipes))
                 ->send($parcel)
-                ->to(function ($attributes) {
-                    return $attributes;
-                });
-    }
-
-    /**
-     * Register hook for getArrayableRelations
-     *
-     * @codeCoverageIgnore
-     *
-     * @return mixed
-     */
-    public function getArrayableRelations()
-    {
-        $this->unwrapHooks(__FUNCTION__);
-        $pipes = $this->unwrappedHooks[__FUNCTION__];
-        $parcel = parent::getArrayableRelations();
-
-        return (new Pipeline($pipes))
-                ->send($parcel)
-                ->to(function ($attributes) {
-                    return $attributes;
+                ->to(function ($array) {
+                    return $array;
                 });
     }
 

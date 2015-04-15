@@ -171,7 +171,6 @@ trait Metable
      */
     protected function whereMeta($query, $key, $operator, $value, $boolean)
     {
-        // return $query->has('metaAttributes', '>=', 1, $boolean, function ($q) use ($key, $operator, $value) {
         return $query
             ->has('metaAttributes', '>=', 1, $boolean, $this->getMetaWhereConstraint($key, $operator, $value))
             ->with('metaAttributes');
@@ -206,7 +205,6 @@ trait Metable
     public function scopeHasMetaAttribute($query, $key, $boolean = 'and')
     {
         $query->has('metaAttributes', '>=', 1, $boolean, $this->getMetaWhereConstraint($key));
-        // call_user_func_array([$this, 'scopeHasMetaAttributes'], [$query, (array) $key]);
     }
 
     /**
@@ -220,7 +218,6 @@ trait Metable
     {
         $query->where(function ($q) use ($keys, $boolean) {
             foreach ($keys as $key) {
-                // $q->has('metaAttributes', '>=', 1, $boolean, function ($q) use ($key) {
                 $q->has('metaAttributes', '>=', 1, $boolean, $this->getMetaWhereConstraint($key));
             }
         });
@@ -356,4 +353,9 @@ trait Metable
     {
         $this->allowedMeta = $attributes;
     }
+
+    /*
+     * Provided by Eloquence base trait.
+     */
+    abstract public function hasColumn($key);
 }

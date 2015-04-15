@@ -155,7 +155,7 @@ trait Formattable
     /**
      * Transform a string with a pipe to an array.
      *
-     * @param  string $format
+     * @param  string|array $format
      * @return array
      */
     protected function transformFormatToArray($format)
