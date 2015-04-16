@@ -53,11 +53,19 @@ class Attribute extends Model implements AttributeContract
      */
     protected $visible = ['key', 'value', 'type', 'created_at', 'updated_at'];
 
-    public function __construct($key = null, $value = '')
+    public function __construct($key = null, $value = null)
     {
-        parent::__construct([]);
+        // default behaviour
+        if (is_array($key)) {
+            parent::__construct($key);
 
-        $this->set($key, $value);
+        } else {
+            parent::__construct();
+
+            if (is_string($key)) {
+                $this->set($key, $value);
+            }
+        }
     }
 
     /**

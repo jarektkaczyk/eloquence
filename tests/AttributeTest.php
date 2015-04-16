@@ -9,6 +9,18 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function it_instantiates_as_eloquent_by_default()
+    {
+        $emptyModel = new Attribute;
+        $arrayModel = new Attribute([]);
+
+        $this->assertEquals([], $emptyModel->getAttributes());
+        $this->assertEquals([], $arrayModel->getAttributes());
+    }
+
+    /**
+     * @test
+     */
     public function it_handles_casting_to_string()
     {
         $color  = new Attribute('color', 'red');

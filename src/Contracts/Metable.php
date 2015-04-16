@@ -9,7 +9,7 @@ interface Metable
     public function getMetaAttributesArray();
     public function hasMeta($key);
     public function getMeta($key);
-    public function setMeta($key);
+    public function setMeta($key, $value);
     public function getAllowedMeta();
     public function setAllowedMeta(array $attributes);
 }

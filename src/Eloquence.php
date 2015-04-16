@@ -4,6 +4,8 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Pipeline\Pipeline;
 use Sofa\Eloquence\Pipeline\ArgumentBag;
+use Sofa\Eloquence\Contracts\Mutator as MutatorContract;
+use Sofa\Eloquence\Mutator\Mutator;
 
 /**
  * @version 0.4
@@ -13,6 +15,13 @@ use Sofa\Eloquence\Pipeline\ArgumentBag;
  */
 trait Eloquence
 {
+    /**
+     * Attribute mutator instance.
+     *
+     * @var \Sofa\Eloquence\Contracts\Mutator
+     */
+    protected static $attributeMutator;
+
     /**
      * Model's table column listing.
      *
@@ -33,6 +42,24 @@ trait Eloquence
      * @var array
      */
     protected $unwrappedHooks = [];
+
+    /**
+     * Boot the trait.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return void
+     */
+    public static function bootEloquence()
+    {
+        if (!isset(static::$attributeMutator)) {
+            if (function_exists('app') && isset(app()['eloquence.mutator'])) {
+                static::setAttributeMutator(app('eloquence.mutator'));
+            } else {
+                static::setAttributeMutator(new Mutator);
+            }
+        }
+    }
 
     /**
      * Register hook on Eloquent method.
@@ -131,6 +158,30 @@ trait Eloquence
         return new Builder($query);
     }
 
+    /**
+     * Set attribute mutator instance.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param  \Sofa\Eloquence\Contracts\Mutator $mutator
+     * @return void
+     */
+    public static function setAttributeMutator(MutatorContract $mutator)
+    {
+        static::$attributeMutator = $mutator;
+    }
+
+    /**
+     * Get attribute mutator instance.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Sofa\Eloquence\Contracts\Mutator
+     */
+    public static function getAttributeMutator()
+    {
+        return static::$attributeMutator;
+    }
 
     /*
     |--------------------------------------------------------------------------

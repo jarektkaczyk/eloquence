@@ -4,6 +4,7 @@ use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Metable;
+use Sofa\Eloquence\Contracts\Metable as MetableContract;
 
 class MetableTest extends \PHPUnit_Framework_TestCase {
 
@@ -203,7 +204,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class MetableStub {
+class MetableStub implements MetableContract {
     use Eloquence, Metable {
         saveMeta               as protectedSaveMeta;
         whereMeta              as protectedWhereMeta;

@@ -4,6 +4,7 @@ use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
+use Sofa\Eloquence\Contracts\Mappable as MappableContract;
 
 class MappableTest extends \PHPUnit_Framework_TestCase {
 
@@ -158,7 +159,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class MappableStub {
+class MappableStub implements MappableContract {
 
     use Eloquence, Mappable {
         hasExplicitMapping as protectedHasExplicitMapping;
