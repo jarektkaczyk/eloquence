@@ -1,13 +1,24 @@
 <?php namespace Sofa\Eloquence;
 
 use Sofa\Eloquence\Metable\Attribute;
-use Sofa\Eloquence\Builder;
+use Sofa\Eloquence\Metable\AttributeBag;
 
 /**
  * @property array $allowedMeta
  */
 trait Metable
 {
+    /**
+     * Query methods customizable by this trait.
+     *
+     * @var array
+     */
+    protected $metaQueryable = [
+        'where', 'whereBetween', 'whereIn', 'whereNull',
+        'whereDate', 'whereYear', 'whereMonth', 'whereDay',
+        'orderBy', 'pluck', 'aggregate', 'lists'
+    ];
+
     /**
      * Register hooks for the trait.
      *
@@ -21,10 +32,11 @@ trait Metable
                 'setAttribute',
                 'getAttribute',
                 'toArray',
+                'replicate',
                 'save',
                 '__isset',
                 '__unset',
-                'customWhere',
+                'queryHook',
             ] as $method) {
             static::hook($method, "{$method}Metable");
         }
@@ -89,6 +101,26 @@ trait Metable
     }
 
     /**
+     * Register hook on replicate method.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return \Closure
+     */
+    public function replicateMetable()
+    {
+        return function ($next, $copy, $args) {
+            $metaAttributes = $args->get('original')
+                                    ->getMetaAttributes()
+                                    ->replicate($args->get('except'));
+
+            $copy->setRelation('metaAttributes', $metaAttributes);
+
+            return $next($copy);
+        };
+    }
+
+    /**
      * Register hook on save method.
      *
      * @codeCoverageIgnore
@@ -145,86 +177,344 @@ trait Metable
     }
 
     /**
-     * Register hook on customWhere method.
+     * Register hook on queryHook method.
      *
      * @codeCoverageIgnore
      *
      * @return \Closure
      */
-    public function customWhereMetable()
+    public function queryHookMetable()
     {
-        return function ($next, $query, $args) {
-            $key = $args->get('key');
+        return function ($next, $query, $bag) {
+            $method = $bag->get('method');
+            $args   = $bag->get('args');
+            $column = $args->get('column');
 
-            if (!$this->hasColumn($key) && $this->allowsMeta($key)) {
-                return call_user_func_array([$this, 'whereMeta'], array_merge([$query], $args->all()));
+            if (!$this->hasColumn($column) && $this->allowsMeta($column) && $this->isMetaQueryable($method)) {
+                return call_user_func_array([$this, 'metaQuery'], [$query, $method, $args]);
             }
 
-            return $next($query, $args);
+            return $next($query, $bag);
         };
     }
 
     /**
-     * Custom where clause for meta attributes.
+     * Determine wheter method called on the query is customizable by this trait.
      *
+     * @param  string  $method
+     * @return boolean
+     */
+    protected function isMetaQueryable($method)
+    {
+        return in_array($method, $this->metaQueryable);
+    }
+
+    /**
+     * Custom query handler for querying meta attributes.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return mixed
+     */
+    protected function metaQuery(Builder $query, $method, ArgumentBag $args)
+    {
+        if (in_array($method, ['pluck', 'aggregate', 'orderBy', 'lists'])) {
+            return $this->metaJoinQuery($query, $method, $args);
+        }
+
+        return $this->metaHasQuery($query, $method, $args);
+    }
+
+    /**
+     * Join meta attributes table in order to call provided method.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return mixed
+     */
+    protected function metaJoinQuery(Builder $query, $method, ArgumentBag $args)
+    {
+        $alias = $this->joinMeta($query, $args->get('column'));
+
+        // For aggregates we need the actual function name
+        // so it can be called directly on the builder.
+        $method = $args->get('function') ?: $method;
+
+        return (in_array($method, ['orderBy', 'lists']))
+            ? $this->{"{$method}Meta"}($query, $args, $alias)
+            : $this->metaSingleResult($query, $method, $alias);
+    }
+
+    /**
+     * Order query by meta attribute.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $alias
      * @return \Sofa\Eloquence\Builder
      */
-    protected function whereMeta($query, $key, $operator, $value, $boolean)
+    protected function orderByMeta(Builder $query, $args, $alias)
     {
+        $query->with('metaAttributes')->getQuery()->orderBy("{$alias}.meta_value", $args->get('direction'));
+
+        return $query;
+    }
+
+    protected function listsMeta(Builder $query, ArgumentBag $args, $alias)
+    {
+        list($column, $key) = [$args->get('column'), $args->get('key')];
+
+        $query->select("{$alias}.meta_value as {$column}");
+
+        if (!is_null($key) && strpos('.', $key) === false) {
+            $this->selectListsKey($query, $key);
+        }
+
+        return $query->callParent('lists', $args->all());
+    }
+
+    protected function selectListsKey(Builder $query, $key)
+    {
+        if ($this->hasColumn($key)) {
+            return $query->addSelect($this->getTable().'.'.$key);
+        }
+
+        $alias = $this->joinMeta($query, $key);
+
+        return $query->addSelect("{$alias}.meta_value as {$key}");
+    }
+    /**
+     * Get single value result from the meta attribute.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  string $alias
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return \Sofa\Eloquence\Builder
+     */
+    protected function metaSingleResult(Builder $query, $method, $alias, $args)
+    {
+        return $query->getQuery()->select("{$alias}.meta_value")->{$method}("{$alias}.meta_value");
+    }
+
+
+    /**rawified
+     * Join meta attributes table.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string  $column
+     * @return string
+     */
+    protected function joinMeta(Builder $query, $column)
+    {
+        $this->prefixColumnsForJoin($query);
+
+        $alias = $this->generateMetaAlias();
+
+        $table = (new Attribute)->getTable();
+
+        $query->leftJoin("{$table} as {$alias}", function ($join) use ($alias, $column) {
+            $join->on("{$alias}.metable_id", '=', $this->getQualifiedKeyName())
+                ->where("{$alias}.metable_type", '=', $this->getMorphClass())
+                ->where("{$alias}.meta_key", '=', $column);
+        });
+
+        return $alias;
+    }
+
+    /**
+     * Generate unique alias for meta attributes table.
+     *
+     * @return string
+     */
+    protected function generateMetaAlias()
+    {
+        return md5(microtime(true)).'_meta_alias';
+    }
+
+    /**
+     * Prefix selected columns with table name so joined meta attributes
+     * columns are not unexpectedly appended on the result models.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @return void
+     */
+    protected function prefixColumnsForJoin(Builder $query)
+    {
+        if (!$columns = $query->getQuery()->columns) {
+            return $query->select($this->getTable().'.*');
+        }
+
+        // We will assume that columns without table prefix are simply
+        // fields on this model's table, so we will prefix them now
+        // in order to avoid possible conflicts with meta table.
+        foreach ($columns as $key => $column) {
+            if (strpos($column, '.') !== false) continue;
+
+            $columns[$key] = $this->getTable().'.'.$column;
+        }
+
+        $query->getQuery()->columns = $columns;
+    }
+
+    /**
+     * Add whereHas subquery on the meta attributes relation.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return \Sofa\Eloquence\Builder
+     */
+    protected function metaHasQuery(Builder $query, $method, ArgumentBag $args)
+    {
+        $boolean = $this->getMetaBoolean($args);
+
+        $operator = $this->getMetaOperator($method, $args);
+
+        $this->unbindNumerics($args);
+
         return $query
-            ->has('metaAttributes', '>=', 1, $boolean, $this->getMetaWhereConstraint($key, $operator, $value))
+            ->has('metaAttributes', $operator, 1, $boolean, $this->getMetaWhereConstraint($method, $args))
             ->with('metaAttributes');
+    }
+
+    /**
+     * Get boolean called on the original method and set it to default.
+     *
+     * @param  \Sofa\EloquenceArgumentBag $args
+     * @return string
+     */
+    protected function getMetaBoolean(ArgumentBag $args)
+    {
+        $boolean = $args->get('boolean');
+
+        $args->set('boolean', 'and');
+
+        return $boolean;
+    }
+
+    /**
+     * Determine the operator for count relation query.
+     *
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return string
+     */
+    protected function getMetaOperator($method, ArgumentBag $args)
+    {
+        if ($not = $args->get('not')) {
+            $args->set('not', false);
+        }
+
+        return ($not xor $this->isWhereNull($method, $args)) ? '<' : '>=';
+    }
+
+    /**
+     * Determine whether where should be treated as whereNull.
+     *
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return boolean
+     */
+    protected function isWhereNull($method, $args)
+    {
+        return $method === 'whereNull' || $method === 'where' && $this->isWhereNullByArgs($args);
+    }
+
+    /**
+     * Determine whether where is a whereNull by the arguments passed to where method.
+     *
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return boolean
+     */
+    protected function isWhereNullByArgs(ArgumentBag $args)
+    {
+        return is_null($args->get('operator'))
+            || is_null($args->get('value')) && !in_array($args->get('operator'), ['<>', '!=']);
+    }
+
+    /**
+     * Integers and floats must be passed in raw form in order to avoid string
+     * comparison, due to the fact that all meta values are stored as strings.
+     *
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return void
+     */
+    protected function unbindNumerics(ArgumentBag $args)
+    {
+        if (($value = $args->get('value')) && (is_int($value) || is_float($value))) {
+            $args->set('value', $this->raw($value));
+        } elseif ($values = $args->get('values')) {
+            foreach ($values as $key => $value) {
+                if (is_int($value) || is_float($value)) {
+                    $values[$key] = $this->raw($value);
+                }
+            }
+
+            $args->set('values', $values);
+        }
+    }
+
+    /**
+     * Create raw query expression.
+     *
+     * @param  mixed $value
+     * @return \Illuminate\Database\Query\Expression
+     */
+    protected function raw($value)
+    {
+        return $this->getConnection()->raw($value);
     }
 
     /**
      * Get the relation constraint closure.
      *
-     * @param  string  $key
-     * @param  string  $operator
-     * @param  string  $value
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
      * @return \Closure
      */
-    protected function getMetaWhereConstraint($key, $operator = '=', $value = null)
+    protected function getMetaWhereConstraint($method, ArgumentBag $args)
     {
-        return function ($query) use ($key, $operator, $value) {
-            $query->where('key', $key);
+        $column = $args->get('column');
 
-            if ($value) {
-                $query->where('value', $operator, $value);
+        $args->set('column', 'meta_value');
+
+        if ($method === 'whereBetween') {
+            return $this->getMetaBetweenConstraint($column, $args->get('values'));
+        }
+
+        return function ($query) use ($column, $method, $args) {
+            $query->where('meta_key', $column);
+
+            if ($args->get('value') || $args->get('values')) {
+                call_user_func_array([$query, $method], $args->all());
             }
         };
     }
 
     /**
-     * Query scope filtering by meta attribute key.
+     * Query Builder whereBetween override required to pass raw numeric values.
      *
-     * @codeCoverageIgnore
-     *
-     * @return void
+     * @param  string $column
+     * @param  array  $values
+     * @return \Closure
      */
-    public function scopeHasMetaAttribute($query, $key, $boolean = 'and')
+    protected function getMetaBetweenConstraint($column, array $values)
     {
-        $query->has('metaAttributes', '>=', 1, $boolean, $this->getMetaWhereConstraint($key));
+        $min = $values[0];
+        $max = $values[1];
+
+        return function ($query) use ($column, $min, $max) {
+            $query->where('meta_key', $column)
+                ->where('meta_value', '>=', $min)
+                ->where('meta_value', '<=', $max);
+        };
     }
 
     /**
-     * Query scope filtering by multiple meta attribute keys.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return void
-     */
-    public function scopeHasMetaAttributes($query, array $keys, $boolean = 'and')
-    {
-        $query->where(function ($q) use ($keys, $boolean) {
-            foreach ($keys as $key) {
-                $q->has('metaAttributes', '>=', 1, $boolean, $this->getMetaWhereConstraint($key));
-            }
-        });
-    }
-
-    /**
-     * Save new, updated meta attributes and delete the ones unset.
+     * Save new or updated meta attributes and delete the ones that were unset.
      *
      * @return void
      */
@@ -242,7 +532,7 @@ trait Metable
     /**
      * Determine whether meta attribute is allowed for the model.
      *
-     * @param  string  $key
+     * @param  string $key
      * @return boolean
      */
     public function allowsMeta($key)
@@ -255,7 +545,7 @@ trait Metable
     /**
      * Determine whether meta attribute exists on the model.
      *
-     * @param  string  $key
+     * @param  string $key
      * @return boolean
      */
     public function hasMeta($key)
@@ -301,7 +591,7 @@ trait Metable
     /**
      * Get meta attributes as collection.
      *
-     * @return \Sofa\Eloquence\Metable\AttributeBags
+     * @return \Sofa\Eloquence\Metable\AttributeBag
      */
     public function getMetaAttributes()
     {
@@ -311,26 +601,53 @@ trait Metable
     }
 
     /**
+     * Accessor for metaAttributes property
+     *
+     * @return \Sofa\Eloquence\Metable\AttributeBag
+     */
+    public function getMetaAttributesAttribute()
+    {
+        return $this->getMetaAttributes();
+    }
+
+    /**
      * Get meta attributes as associative array.
      *
      * @return array
      */
     public function getMetaAttributesArray()
     {
-        return array_filter($this->getMetaAttributes()->lists('value', 'key'));
+        return array_filter($this->getMetaAttributes()->lists('meta_value', 'meta_key'));
     }
 
     /**
      * Load meta attributes relation.
      *
-     * @param  boolean $reload
      * @return void
      */
-    protected function loadMetaAttributes($reload = false)
+    protected function loadMetaAttributes()
     {
-        if ($reload || !array_key_exists('metaAttributes', $this->relations)) {
-            $this->load('metaAttributes');
+        if (!array_key_exists('metaAttributes', $this->relations)) {
+            $this->reloadMetaAttributes();
         }
+
+        $attributes = $this->getRelation('metaAttributes');
+
+        if (!$attributes instanceof AttributeBag) {
+            $this->setRelation('metaAttributes', (new Attribute)->newBag($attributes->all()));
+        }
+    }
+
+    /**
+     * Reload meta attributes from db or set empty bag for newly created model.
+     *
+     * @return $this
+     */
+    protected function reloadMetaAttributes()
+    {
+        return ($this->exists)
+            ? $this->load('metaAttributes')
+            : $this->setRelation('metaAttributes', (new Attribute)->newBag());
     }
 
     /**
@@ -353,9 +670,4 @@ trait Metable
     {
         $this->allowedMeta = $attributes;
     }
-
-    /*
-     * Provided by Eloquence base trait.
-     */
-    abstract public function hasColumn($key);
 }

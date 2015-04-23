@@ -11,6 +11,11 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase {
 		EloquenceStub::clearHooks();
 	}
 
+	public function tearDown()
+	{
+		m::close();
+	}
+
 	/**
 	 * @test
 	 * @covers \Sofa\Eloquence\Eloquence::newEloquentBuilder
@@ -26,6 +31,7 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * @test
 	 * @covers \Sofa\Eloquence\Eloquence::hasColumn
+	 * @covers \Sofa\Eloquence\Eloquence::getColumnListing
 	 * @covers \Sofa\Eloquence\Eloquence::loadColumnListing
 	 */
 	public function it_loads_and_checks_the_column_listing()
@@ -45,6 +51,7 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertTrue($model->hasColumn('foo'));
 		$this->assertFalse($model->hasColumn('wrong'));
+		$this->assertEquals(['foo', 'bar', 'baz'], $model->getColumnListing());
 	}
 
 	/**

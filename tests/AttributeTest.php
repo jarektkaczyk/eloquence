@@ -118,7 +118,7 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
      */
     public function it_uses_attribute_bag()
     {
-        $bag = $this->getAttribute()->newCollection();
+        $bag = $this->getAttribute()->newBag();
 
         $this->assertInstanceOf('Sofa\Eloquence\Metable\AttributeBag', $bag);
     }
@@ -130,13 +130,13 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
      */
     public function it_allows_custom_table_name_to_be_set_once()
     {
-        $attribute = $this->getAttribute();
+        $attribute = new AttributeStub;
         $this->assertEquals('meta_attributes', $attribute->getTable());
 
-        Attribute::setCustomTable('meta');
+        AttributeStub::setCustomTable('meta');
         $this->assertEquals('meta', $attribute->getTable());
 
-        Attribute::setCustomTable('cant_do_it_again');
+        AttributeStub::setCustomTable('cant_do_it_again');
         $this->assertEquals('meta', $attribute->getTable());
     }
 
@@ -144,6 +144,10 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     {
         return new Attribute('color', 'red');
     }
+}
+
+class AttributeStub extends Attribute {
+    protected static $customTable;
 }
 
 class AttributeNoMutatorsStub extends Attribute {

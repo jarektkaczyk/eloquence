@@ -27,6 +27,20 @@ class Attribute extends Model implements AttributeContract
     protected $table = 'meta_attributes';
 
     /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var boolean
+     */
+    public $timestamps = false;
+
+    /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'meta_id';
+
+    /**
      * @var array
      */
     protected $getMutators = [
@@ -51,8 +65,22 @@ class Attribute extends Model implements AttributeContract
      *
      * @var array
      */
-    protected $visible = ['key', 'value', 'type', 'created_at', 'updated_at'];
+    protected $visible = ['key', 'value', 'type'];
 
+    /**
+     * The accessors to append to the model's array form.
+     * Used for convenience so you don't need to use meta_key, meta_value properties.
+     *
+     * @var array
+     */
+    protected $appends = ['key', 'value', 'type'];
+
+    /**
+     * Create new attribute instance.
+     *
+     * @param string|array  $key
+     * @param mixed  $value
+     */
     public function __construct($key = null, $value = null)
     {
         // default behaviour
@@ -86,7 +114,7 @@ class Attribute extends Model implements AttributeContract
      * @param  array  $models
      * @return \Sofa\Eloquence\Metable\AttributeBag
      */
-    public function newCollection(array $models = [])
+    public function newBag(array $models = [])
     {
         return new AttributeBag($models);
     }
@@ -110,7 +138,7 @@ class Attribute extends Model implements AttributeContract
      *
      * @return string
      */
-    public function getKey()
+    public function getMetaKey()
     {
         return $this->key;
     }
@@ -124,7 +152,7 @@ class Attribute extends Model implements AttributeContract
     {
         $value = $this->value;
 
-        $validTypes = ['bool', 'int', 'float', 'double', 'array', 'object', 'null'];
+        $validTypes = ['boolean', 'int', 'float', 'double', 'array', 'object', 'null'];
 
         if (in_array($this->type, $validTypes)) {
             settype($value, $this->type);
@@ -146,7 +174,7 @@ class Attribute extends Model implements AttributeContract
             throw new InvalidArgumentException("Provided key [{$key}] is not valid variable name.");
         }
 
-        $this->attributes['key'] = $key;
+        $this->attributes['meta_key'] = $key;
     }
 
     /**
@@ -156,7 +184,7 @@ class Attribute extends Model implements AttributeContract
      */
     protected function setType($value)
     {
-        $this->attributes['type'] = $this->hasMetaSetMutator($value)
+        $this->attributes['meta_type'] = $this->hasMetaSetMutator($value)
             ? $this->getMutatedType($value, 'set')
             : $this->getValueType($value);
     }
@@ -181,7 +209,7 @@ class Attribute extends Model implements AttributeContract
             );
         }
 
-        $this->attributes['value'] = $value;
+        $this->attributes['meta_value'] = $value;
     }
 
     /**
@@ -350,5 +378,65 @@ class Attribute extends Model implements AttributeContract
     public function __toString()
     {
         return $this->castToString();
+    }
+
+    /**
+     * Mutator for meta_type property
+     *
+     * @return void
+     */
+    public function setTypeAttribute($type)
+    {
+        $this->attributes['meta_type'] = $value;
+    }
+
+    /**
+     * Accessor for meta_type property
+     *
+     * @return string
+     */
+    public function getTypeAttribute()
+    {
+        return $this->attributes['meta_type'];
+    }
+
+    /**
+     * Mutator for meta_key property
+     *
+     * @return void
+     */
+    public function setKeyAttribute($key)
+    {
+        $this->attributes['meta_key'] = $key;
+    }
+
+    /**
+     * Accessor for meta_key property
+     *
+     * @return string
+     */
+    public function getKeyAttribute()
+    {
+        return $this->attributes['meta_key'];
+    }
+
+    /**
+     * Mutator for meta_value property
+     *
+     * @return void
+     */
+    public function setValueAttribute($value)
+    {
+        $this->attributes['meta_value'] = $value;
+    }
+
+    /**
+     * Accessor for meta_value property
+     *
+     * @return mixed
+     */
+    public function getValueAttribute()
+    {
+        return $this->attributes['meta_value'];
     }
 }

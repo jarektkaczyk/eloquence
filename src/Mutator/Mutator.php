@@ -104,36 +104,37 @@ class Mutator implements MutatorContract
      */
     protected function parseClassMethod($userCallable)
     {
+        list($class) = explode('@', $userCallable);
+
         $callable = str_replace('@', '::', $userCallable);
 
         try {
             $method = new ReflectionMethod($callable);
+
+            $class = new ReflectionClass($class);
         } catch (ReflectionException $e) {
             throw new InvalidCallableException($e->getMessage());
         }
 
-        return ($method->isStatic()) ? $callable : $this->getInstanceMethod($method, $userCallable);
+        return ($method->isStatic()) ? $callable : $this->getInstanceMethod($class, $method);
     }
 
     /**
      * Get instance callable.
      *
      * @param  \ReflectionMethod  $method
-     * @param  string  $userCallable
      * @return callable
      *
      * @throws \Sofa\Eloquence\Mutator\InvalidCallableException
      */
-    protected function getInstanceMethod(ReflectionMethod $method, $userCallable)
+    protected function getInstanceMethod(ReflectionClass $class, ReflectionMethod $method)
     {
-        $class = $method->getDeclaringClass();
-
         if (!$method->isPublic()) {
-            throw new InvalidCallableException("Instance method [{$userCallable}] is not public.");
+            throw new InvalidCallableException("Instance method [{$class}@{$method->getName()}] is not public.");
         }
 
         if (!$this->canInstantiate($class)) {
-            throw new InvalidCallableException("Can't instantiate class [{$userCallable}].");
+            throw new InvalidCallableException("Can't instantiate class [{$class->getName()}].");
         }
 
         return [$class->newInstance(), $method->getName()];

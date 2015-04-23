@@ -1,5 +1,6 @@
 <?php namespace Sofa\Eloquence;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
 class Builder extends EloquentBuilder
@@ -19,42 +20,21 @@ class Builder extends EloquentBuilder
     ];
 
     /**
-     * 'Not' based methods with custom handlers processed by magic __call.
+     * The methods that should be returned from query builder.
      *
      * @var array
      */
-    protected $notOverrides  = [
-        'whereNotBetween', 'orWhereBetween', 'orWhereNotBetween',
-        'whereNotIn', 'orWhereIn', 'orWhereNotIn'
-    ];
+    protected $passthru = array(
+        'toSql', 'lists', 'insert', 'insertGetId', 'pluck', 'count', 'raw',
+        'min', 'max', 'avg', 'sum', 'exists', 'getBindings', 'aggregate',
+    );
 
     /**
-     * Date based methods with custom handlers processed by magic __call.
-     *
-     * @var array
-     */
-    protected $dateOverrides = ['whereDate', 'whereYear', 'whereMonth', 'whereDay'];
-
-    /**
-     * Null based methods with custom handlers processed by magic __call.
-     *
-     * @var array
-     */
-    protected $nullOverrides = ['whereNotNull', 'orWhereNull', 'orWhereNotNull'];
-
-    /**
-     * Aggregate methods with custom handlers processed by magic __call.
-     *
-     * @var array
-     */
-    protected $aggregateOverrides  = ['min', 'max', 'sum', 'avg', 'count'];
-
-    /**
-     * Call base handler for where call.
+     * Call base Eloquent method.
      *
      * @param  string $method
      * @param  array  $args
-     * @return $this
+     * @return mixed
      */
     public function callParent($method, array $args)
     {
@@ -66,12 +46,10 @@ class Builder extends EloquentBuilder
      *
      * @param  string $method
      * @param  \Sofa\Eloquence\ArgumentBag $args
-     * @return $this
+     * @return mixed
      */
     protected function callHook($method, ArgumentBag $args)
     {
-        // return $this->getModel()->queryHook($this, $method, $args);
-
         if ($this->hasHook($args->get('column'))) {
             return $this->getModel()->queryHook($this, $method, $args);
         }
@@ -131,6 +109,19 @@ class Builder extends EloquentBuilder
     }
 
     /**
+     * Add an "or where" clause to the query.
+     *
+     * @param  string  $column
+     * @param  string  $operator
+     * @param  mixed   $value
+     * @return $this
+     */
+    public function orWhere($column, $operator = null, $value = null)
+    {
+        return $this->where($column, $operator, $value, 'or');
+    }
+
+    /**
      * Add a where between statement to the query.
      *
      * @param  string  $column
@@ -143,6 +134,44 @@ class Builder extends EloquentBuilder
     {
         return $this->callHook(__FUNCTION__, $this->packArgs(compact('column', 'values', 'boolean', 'not')));
     }
+
+    /**
+     * Add an or where between statement to the query.
+     *
+     * @param  string  $column
+     * @param  array   $values
+     * @return $this
+     */
+    public function orWhereBetween($column, array $values)
+    {
+        return $this->whereBetween($column, $values, 'or');
+    }
+
+    /**
+     * Add a where not between statement to the query.
+     *
+     * @param  string  $column
+     * @param  array   $values
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNotBetween($column, array $values, $boolean = 'and')
+    {
+        return $this->whereBetween($column, $values, $boolean, true);
+    }
+
+    /**
+     * Add an or where not between statement to the query.
+     *
+     * @param  string  $column
+     * @param  array   $values
+     * @return $this
+     */
+    public function orWhereNotBetween($column, array $values)
+    {
+        return $this->whereNotBetween($column, $values, 'or');
+    }
+
 
     /**
      * Add a "where in" clause to the query.
@@ -159,6 +188,43 @@ class Builder extends EloquentBuilder
     }
 
     /**
+     * Add an "or where in" clause to the query.
+     *
+     * @param  string  $column
+     * @param  mixed   $values
+     * @return $this
+     */
+    public function orWhereIn($column, $values)
+    {
+        return $this->whereIn($column, $values, 'or');
+    }
+
+    /**
+     * Add a "where not in" clause to the query.
+     *
+     * @param  string  $column
+     * @param  mixed   $values
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNotIn($column, $values, $boolean = 'and')
+    {
+        return $this->whereIn($column, $values, $boolean, true);
+    }
+
+    /**
+     * Add an "or where not in" clause to the query.
+     *
+     * @param  string  $column
+     * @param  mixed   $values
+     * @return $this
+     */
+    public function orWhereNotIn($column, $values)
+    {
+        return $this->whereNotIn($column, $values, 'or');
+    }
+
+    /**
      * Add a "where null" clause to the query.
      *
      * @param  string  $column
@@ -169,6 +235,40 @@ class Builder extends EloquentBuilder
     public function whereNull($column, $boolean = 'and', $not = false)
     {
         return $this->callHook(__FUNCTION__, $this->packArgs(compact('column', 'boolean', 'not')));
+    }
+
+    /**
+     * Add an "or where null" clause to the query.
+     *
+     * @param  string  $column
+     * @return $this
+     */
+    public function orWhereNull($column)
+    {
+        return $this->whereNull($column, 'or');
+    }
+
+    /**
+     * Add a "where not null" clause to the query.
+     *
+     * @param  string  $column
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNotNull($column, $boolean = 'and')
+    {
+        return $this->whereNull($column, $boolean, true);
+    }
+
+    /**
+     * Add an "or where not null" clause to the query.
+     *
+     * @param  string  $column
+     * @return $this
+     */
+    public function orWhereNotNull($column)
+    {
+        return $this->whereNotNull($column, 'or');
     }
 
     /**
@@ -187,6 +287,62 @@ class Builder extends EloquentBuilder
     }
 
     /**
+     * Add a "where date" statement to the query.
+     *
+     * @param  string  $column
+     * @param  string   $operator
+     * @param  int   $value
+     * @param  string   $boolean
+     * @return $this
+     */
+    public function whereDate($column, $operator, $value, $boolean = 'and')
+    {
+        return $this->addDateBasedWhere('Date', $column, $operator, $value, $boolean);
+    }
+
+    /**
+     * Add a "where day" statement to the query.
+     *
+     * @param  string  $column
+     * @param  string   $operator
+     * @param  int   $value
+     * @param  string   $boolean
+     * @return $this
+     */
+    public function whereDay($column, $operator, $value, $boolean = 'and')
+    {
+        return $this->addDateBasedWhere('Day', $column, $operator, $value, $boolean);
+    }
+
+    /**
+     * Add a "where month" statement to the query.
+     *
+     * @param  string  $column
+     * @param  string   $operator
+     * @param  int   $value
+     * @param  string   $boolean
+     * @return $this
+     */
+    public function whereMonth($column, $operator, $value, $boolean = 'and')
+    {
+        return $this->addDateBasedWhere('Month', $column, $operator, $value, $boolean);
+    }
+
+    /**
+     * Add a "where year" statement to the query.
+     *
+     * @param  string  $column
+     * @param  string   $operator
+     * @param  int   $value
+     * @param  string   $boolean
+     * @return $this
+     */
+    public function whereYear($column, $operator, $value, $boolean = 'and')
+    {
+        return $this->addDateBasedWhere('Year', $column, $operator, $value, $boolean);
+    }
+
+    /**
      * Add an exists clause to the query.
      *
      * @param  \Closure $callback
@@ -194,7 +350,7 @@ class Builder extends EloquentBuilder
      * @param  bool     $not
      * @return $this
      */
-    public function whereExists(\Closure $callback, $boolean = 'and', $not = false)
+    public function whereExists(Closure $callback, $boolean = 'and', $not = false)
     {
         $type = $not ? 'NotExists' : 'Exists';
 
@@ -224,6 +380,28 @@ class Builder extends EloquentBuilder
     }
 
     /**
+     * Add an "order by" clause for a timestamp to the query.
+     *
+     * @param  string  $column
+     * @return $this
+     */
+    public function latest($column = 'created_at')
+    {
+        return $this->orderBy($column, 'desc');
+    }
+
+    /**
+     * Add an "order by" clause for a timestamp to the query.
+     *
+     * @param  string  $column
+     * @return $this
+     */
+    public function oldest($column = 'created_at')
+    {
+        return $this->orderBy($column, 'asc');
+    }
+
+    /**
      * Pluck a single column from the database.
      *
      * @param  string  $column
@@ -241,11 +419,71 @@ class Builder extends EloquentBuilder
      * @param  array   $columns
      * @return mixed
      */
-    public function aggregate($function, $columns = array('*'))
+    public function aggregate($function, array $columns = ['*'])
     {
-        $column = reset($columns);
+        $column = (reset($columns) !== '*') ? reset($columns) : null;
 
         return $this->callHook(__FUNCTION__, $this->packArgs(compact('function', 'columns', 'column')));
+    }
+
+    /**
+     * Retrieve the minimum value of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    public function min($column)
+    {
+        return $this->aggregate(__FUNCTION__, (array) $column);
+    }
+
+    /**
+     * Retrieve the maximum value of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    public function max($column)
+    {
+        return $this->aggregate(__FUNCTION__, (array) $column);
+    }
+
+    /**
+     * Retrieve the average of the values of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    public function avg($column)
+    {
+        return $this->aggregate(__FUNCTION__, (array) $column);
+    }
+
+    /**
+     * Retrieve the sum of the values of a given column.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    public function sum($column)
+    {
+        return $this->aggregate(__FUNCTION__, (array) $column);
+    }
+
+    /**
+     * Retrieve the "count" result of the query.
+     *
+     * @param  string  $columns
+     * @return int
+     */
+    public function count($columns = '*')
+    {
+        return $this->aggregate(__FUNCTION__, (array) $columns);
+    }
+
+    public function lists($column, $key = null)
+    {
+        return $this->callHook(__FUNCTION__, $this->packArgs(compact('column', 'key')));
     }
 
     /**
@@ -255,118 +493,6 @@ class Builder extends EloquentBuilder
      */
     public function newQuery()
     {
-        return (new static($this->query->newQuery()))->setModel($this->model);
-    }
-
-    /**
-     * Handle dynamic method calls.
-     *
-     * @param  string $method
-     * @param  array  $parameters
-     * @return mixed
-     */
-    public function __call($method, $parameters)
-    {
-        return $this->callOverride($method, $parameters);
-    }
-
-    /**
-     * Handle dynamic method calls.
-     *
-     * @param  string $method
-     * @param  array  $parameters
-     * @return mixed
-     */
-    protected function callOverride($method, $parameters)
-    {
-        $overrides = array_merge(
-            $this->notOverrides, $this->dateOverrides, $this->nullOverrides, $this->aggregateOverrides
-        );
-
-        if (!in_array($method, $overrides)) {
-            return parent::__call($method, $parameters);
-        }
-
-        list($method, $parameters) = $this->parseMethodAndParameters($method, $parameters);
-
-        return call_user_func_array([$this, $method], $parameters);
-    }
-
-    /**
-     * Get the real method name and parameters for it.
-     *
-     * @param  string $method
-     * @param  array  $parameters
-     * @return array
-     */
-    protected function parseMethodAndParameters($method, array $parameters)
-    {
-        $paramCount = $this->getRequiredParamCount($method);
-
-        // For date based methods we need to extract the type
-        // from the called method name so it can be passed
-        // to the addDateBasedWhere as first parameter.
-        if (count($parameters) >= $paramCount && $this->isOverride($method, 'dateOverrides')) {
-            array_unshift($parameters, substr($method, 5));
-
-            $method = 'addDateBasedWhere';
-
-        // For negation methods we need to extract boolean and not params
-        // from the called method in order to get the real method name
-        // so we will call it with parameters adjusted accordingly.
-        } elseif (count($parameters) >= $paramCount && $this->isOverride($method, 'notOrNull')) {
-            if (!isset($parameters[$paramCount])) {
-                $parameters[$paramCount] = (strpos($method, 'or') !== false) ? 'or' : 'and';
-            }
-
-            $parameters[$paramCount+1] = (strpos($method, 'Not') !== false) ? true : false;
-
-            $method = lcfirst(str_replace(['Not', 'or'], '', $method));
-
-        // For aggregates we only make sure that columns are passed
-        // in form of an array and add called method name as type
-        // then just call the aggregate to get the real result.
-        } elseif (count($parameters) >= $paramCount && $this->isOverride($method, 'aggregateOverrides')) {
-            if (!is_array($parameters[0])){
-                $parameters[0] = $parameters;
-            }
-
-            array_unshift($parameters, $method);
-
-            $method = 'aggregate';
-        }
-
-        return [$method, $parameters];
-    }
-
-    /**
-     * Get required parameters count for method.
-     *
-     * @param  string $method
-     * @return int
-     */
-    protected function getRequiredParamCount($method)
-    {
-        if (in_array($method, $this->dateOverrides)) {
-            return 3;
-        } elseif (in_array($method, $this->notOverrides)) {
-            return 2;
-        }
-
-        return 1;
-    }
-
-    /**
-     * Determine whether called method should be handled by Eloquence Builder.
-     *
-     * @param  string  $method
-     * @param  string  $group
-     * @return boolean
-     */
-    protected function isOverride($method, $group)
-    {
-        return ($group == 'notOrNull')
-            ? in_array($method, array_merge($this->notOverrides, $this->nullOverrides))
-            : in_array($method, $this->{$group});
+        return $this->model->newQueryWithoutScopes();
     }
 }

@@ -14,77 +14,83 @@ class AttributeBag extends Collection implements AttributeBagContract
     public function __construct($attributes = [])
     {
         $this->loadAndIndex($attributes);
+        // foreach ($attributes as $attribute) {
+        //     $this->add($attribute);
+        // }
     }
 
     /**
      * Add or update attribute.
      *
-     * @param  string $key
-     * @param  mixed  $value
+     * @param  \Sofa\Eloquence\Metable\Attribute|string $key
+     * @param  mixed $value
      * @return $this
-     *
-     * @throws \InvalidArgumentException
      */
     public function set($key, $value = null)
     {
         if ($key instanceof Attribute) {
-            $value = $key->getValue();
-            $key   = $key->getKey();
+            return $this->setInstance($key);
         }
 
         if ($this->has($key)) {
             $this->update($key, $value);
         } else {
-            $this[$key] = $this->newAttribute($key, $value);
+            $this->items[$key] = $this->newAttribute($key, $value);
         }
 
         return $this;
     }
 
     /**
-     * Add or update attribute.
+     * Set attribute.
      *
-     * @param \Sofa\Eloquence\Metable\Attribute  $item
-     *
-     * @throws \InvalidArgumentException
+     * @param \Sofa\Eloquence\Metable\Attribute $attribute
      */
-    public function add($item)
+    protected function setInstance(Attribute $attribute)
     {
-        $this->validate($item);
+        if ($this->has($attribute->getMetaKey())) {
+            $this->update($attribute);
+        } else {
+            $this[$attribute->getMetaKey()] = $attribute;
+        }
 
-        return $this->set($item);
+        return $this;
     }
 
     /**
-     * Validate item being provided as attribute.
+     * Set attribute.
      *
-     * @param  mixed  $item
-     * @return void
+     * @param \Sofa\Eloquence\Metable\Attribute $attribute
      */
-    protected function validate($item)
+    public function add($attribute)
     {
-        if ($item instanceof Attribute) {
-            return true;
-        }
+        return $this->addInstance($attribute);
+    }
 
-        $type = is_object($item) ? get_class($item) : gettype($item);
-
-        $class = 'Sofa\Eloquence\Metable\Attribute';
-
-        throw new InvalidArgumentException(
-            "Attribute must be an instance of [{$class}]. [{$type}] given."
-        );
+    /**
+     * Set attribute.
+     *
+     * @param \Sofa\Eloquence\Metable\Attribute $attribute
+     */
+    protected function addInstance(Attribute $attribute)
+    {
+        return $this->set($attribute);
     }
 
     /**
      * Update existing attribute.
      *
-     * @param  string $key
+     * @param  \Sofa\Eloquence\Metable\Attribute|string $key
      * @param  mixed  $value
      * @return $this
      */
-    protected function update($key, $value)
+    protected function update($key, $value = null)
     {
+        if ($key instanceof Attribute) {
+            $value = $key->getValue();
+            $key = $key->getMetaKey();
+        }
+
         $this->get($key)->setValue($value);
 
         return $this;
@@ -131,26 +137,15 @@ class AttributeBag extends Collection implements AttributeBagContract
     }
 
     /**
-     * Use attributes key as the collection index.
+     * Set attribute.
      *
-     * @param  array $items
+     * @param  string $key
+     * @param  mixed  $value
      * @return void
      */
-    protected function loadAndIndex($items)
+    public function offsetSet($key, $value)
     {
-        $retriever = $this->valueRetriever('key');
-
-        $attributes = [];
-
-        foreach ($items as $item) {
-            if (!isset($item->key) || !isset($item->value)) {
-                throw new InvalidArgumentException("Attribute must have key and value.");
-            }
-
-            $attributes[$retriever($item)] = $item;
-        }
-
-        $this->items = $attributes;
+        $this->set($key, $value);
     }
 
     /**
@@ -206,5 +201,46 @@ class AttributeBag extends Collection implements AttributeBagContract
     public function __unset($key)
     {
         $this->forget($key);
+    }
+
+    /**
+     * Use attributes key as collection index.
+     *
+     * @param  array $items
+     * @return void
+     */
+    protected function loadAndIndex(array $items)
+    {
+        $retriever = $this->valueRetriever('key');
+
+        $attributes = [];
+
+        foreach ($items as $item) {
+            if (!isset($item->key) || !isset($item->value)) {
+                throw new InvalidArgumentException("Attribute must contain key and value.");
+            }
+
+            $attributes[$retriever($item)] = $item;
+        }
+
+        $this->items = $attributes;
+    }
+
+    /**
+     * Create copy of the attribute bag.
+     *
+     * @return static
+     */
+    public function replicate($except = null)
+    {
+        $except = $except ? array_combine($except, $except) : [];
+
+        $attributes = [];
+
+        foreach (array_diff_key($this->items, $except) as $attribute) {
+            $attributes[] = $attribute->replicate();
+        }
+
+        return new static($attributes);
     }
 }

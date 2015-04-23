@@ -8,8 +8,7 @@ Easy and flexible extensions for the Eloquent ORM.
 
 1. `Metable` - meta attributes made easy
 2. `Mappable` -map attributes to table fields and/or related models
-3. `Formattable` - flexible set mutators with quick setup
-4. `Mutable` - flexible get mutators with quick setup
+3. `Mutable` - flexible attribute get/set mutators with quick setup
 
 The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.3"` instead of `"~0.3@dev"`.
 
@@ -22,7 +21,6 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 * [Getting Started](#getting-started)
 * [Mappable](#mappable)
   * [Explicit vs. Implicit mappings](#explicit-vs-implicit-mappings)
-* [Formattable](#formattable)
 * [Mixing extensions](#mix)
 * [Roadmap](#roadmap)
 
@@ -155,59 +153,6 @@ As you can notice, behaviour is just the same. However, there is slight differen
 Mappings work also with **form model binding**.
 
 **Important**: Mind that each mapping call requires the relation to be loaded, so you may need to use [eager loading](http://laravel.com/docs/5.0/eloquent#eager-loading) in order to avoid n+1 query issue.
-
-# <a name="formattable"></a>Formattable
-
-Define format on the protected `$formats` variable like bellow.
-
-```php
-<?php namespace App;
-
-use Sofa\Eloquence\Eloquence; // base trait
-use Sofa\Eloquence\Formattable; // extension trait
-
-class User extends \Eloquent {
-
-    use Eloquence, Formattable;
-
-    protected $formats = [
-        // internal or global functions
-        'first_name' => 'strtolower|ucwords',
-        'last_name'  => ['strtolower', 'ucwords'],
-
-        // static methods
-        'slug'       => 'Illuminate\Support\Str::slug',
-
-        // instance methods
-        'short_name' => 'clip',
-
-        // passing additional parameters
-        'substring'  => 'substr:0,5',
-    ];
-
-    public function clip($string)
-    {
-      return substr($string, 0, 12) . '...';
-    }
-}
-```
-
-```php
-$user->first_name = 'john';
-$user->first_name; // 'John'
-
-$user->last_name = 'doe';
-$user->last_name; // 'Doe'
-
-$user->slug = 'Awesome package!';
-$user->slug; // 'awesome-package'
-
-$user->short_name = 'I\'m really too long for this attribute!';
-$user->short_name; // 'I\'m really t...'
-
-$user->substring = 'shorten me to 5 letters';
-$user->substring; // 'short'
-```
 
 # <a name="mix"></a>Mixing extensions
 

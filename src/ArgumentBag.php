@@ -1,4 +1,4 @@
-<?php namespace Sofa\Eloquence\Pipeline;
+<?php namespace Sofa\Eloquence;
 
 use Sofa\Eloquence\Contracts\ArgumentBag as ArgumentBagContract;
 
@@ -10,7 +10,7 @@ class ArgumentBag implements ArgumentBagContract
      * @var array
      */
     protected $items;
-    
+
     /**
      * Create new bag.
      *
@@ -55,6 +55,17 @@ class ArgumentBag implements ArgumentBagContract
     public function get($key, $default = null)
     {
         return array_key_exists($key, $this->items) ? $this->items[$key] : $default;
+    }
+
+    /**
+     * Set value at given key.
+     *
+     * @param string $key
+     * @param mixed  $value
+     */
+    public function set($key, $value)
+    {
+        $this->items[$key] = $value;
     }
 
     /**

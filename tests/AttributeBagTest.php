@@ -8,10 +8,6 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::__isset
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::__unset
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::__get
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::__set
      */
     public function it_handles_magic_calls()
     {
@@ -32,8 +28,6 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::forget
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::offsetUnset
      */
     public function it_sets_value_to_null_when_unsetting()
     {
@@ -49,19 +43,21 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::set
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::update
      */
     public function it_updates_existing_attribute()
     {
-        $bag = $this->getBag()->set('foo', 'new_bar');
+        $bag = $this->getbag()->set('foo', 'new_bar');
+        $bag->set(new Attribute('baz', 'new_bax'));
+        $bag->add(new Attribute('key', 'value'));
+        $bag['key'] = 'new_value';
 
         $this->assertEquals('new_bar', $bag->getValue('foo'));
+        $this->assertEquals('new_bax', $bag->getValue('baz'));
+        $this->assertEquals('new_value', $bag->getValue('key'));
     }
 
     /**
      * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::getValue
      */
     public function it_gets_null_for_non_existent_attributes()
     {
@@ -73,7 +69,6 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::getValue
      */
     public function it_gets_raw_attribute_value()
     {
@@ -85,12 +80,6 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::__construct
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::loadAndIndex
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::add
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::set
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::validate
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::newAttribute
      */
     public function it_accepts_only_valid_attribute()
     {
@@ -98,61 +87,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
         $bag->add(new Attribute('key', 'value'));
 
-        $newBag = new AttributeBag([new Attribute('key', 'value'), (object) ['key' => 'foo', 'value' => 'bar']]);
-    }
-
-    /**
-     * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::add
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::validate
-     *
-     * @dataProvider nonAttributes
-     * @expectedException \InvalidArgumentException
-     */
-    public function it_doesnt_accept_non_attribute_types($nonAttribute)
-    {
-        $bag = $this->getBag();
-
-        $bag->add($nonAttribute);
-    }
-
-    /**
-     * @test
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::__construct
-     * @covers \Sofa\Eloquence\Metable\AttributeBag::loadAndIndex
-     *
-     * @dataProvider invalidAttributes
-     * @expectedException \InvalidArgumentException
-     */
-    public function it_doesnt_accept_invalid_attributes($invalidAttribute)
-    {
-        $bag = new AttributeBag([$invalidAttribute]);
-    }
-
-    /**
-     * dataProvider
-     */
-    public function invalidAttributes()
-    {
-        // Because of how Eloquent handles eager loading
-        // we need to allow StdClass instance as well.
-        return [
-            [(object) ['key' => 'foo', 'value' => null]],
-            [(object) ['value' => 'bar']],
-            [new Attribute('key', null)],
-        ];
-    }
-
-    /**
-     * dataProvider
-     */
-    public function nonAttributes()
-    {
-        return [
-            [['key' => 'value']],
-            [new AttributeBagModelStub],
-            [1],
-        ];
+        $newBag = new AttributeBag([new Attribute('key', 'value')]);
     }
 
     protected function getBag()

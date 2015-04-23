@@ -2,7 +2,7 @@
 
 use Closure;
 use Sofa\Eloquence\Contracts\Pipeline as PipelineContract;
-use Sofa\Eloquence\Contracts\ArgumentBag as ArgumentBagContract;
+use Sofa\Eloquence\Contracts\ArgumentBag;
 
 class Pipeline implements PipelineContract
 {
@@ -26,7 +26,7 @@ class Pipeline implements PipelineContract
      * @var \Sofa\Eloquence\Contracts\ArgumentBag
      */
     protected $args;
-    
+
     /**
      * Create new pipeline.
      *
@@ -60,7 +60,7 @@ class Pipeline implements PipelineContract
     /**
      * @inheritdoc
      */
-    public function with(ArgumentBagContract $args)
+    public function with(ArgumentBag $args)
     {
         $this->args = $args;
 

@@ -2,8 +2,8 @@
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Sofa\Eloquence\Pipeline\Pipeline;
-use Sofa\Eloquence\Pipeline\ArgumentBag;
 use Sofa\Eloquence\Contracts\Mutator as MutatorContract;
 use Sofa\Eloquence\Mutator\Mutator;
 
@@ -124,11 +124,9 @@ trait Eloquence
      * @param  string  $key
      * @return boolean
      */
-    public function hasColumn($key)
+    public static function hasColumn($key)
     {
-        if (empty(static::$columnListing)) {
-            static::loadColumnListing();
-        }
+        static::loadColumnListing();
 
         return in_array($key, static::$columnListing);
     }
@@ -136,15 +134,29 @@ trait Eloquence
     /**
      * Get model table columns.
      *
+     * @return array
+     */
+    public static function getColumnListing()
+    {
+        static::loadColumnListing();
+
+        return static::$columnListing;
+    }
+
+    /**
+     * Fetch model table columns.
+     *
      * @return void
      */
     protected static function loadColumnListing()
     {
-        $instance = new static;
+        if (empty(static::$columnListing)) {
+            $instance = new static;
 
-        static::$columnListing = $instance->getConnection()
-                                    ->getSchemaBuilder()
-                                    ->getColumnListing($instance->getTable());
+            static::$columnListing = $instance->getConnection()
+                                        ->getSchemaBuilder()
+                                        ->getColumnListing($instance->getTable());
+        }
     }
 
     /**
@@ -195,19 +207,20 @@ trait Eloquence
      * @codeCoverageIgnore
      *
      * @param  \Sofa\Eloquence\Builder  $query
-     * @param  array  $args
+     * @param  string  $method
+     * @param  \Sofa\Eloquence\ArgumentBag  $args
      * @return \Sofa\Eloquence\Builder
      */
-    public function customWhere(Builder $query, array $args)
+    public function queryHook(Builder $query, $method, ArgumentBag $args)
     {
         $this->unwrapHooks(__FUNCTION__);
         $pipes = $this->unwrappedHooks[__FUNCTION__];
 
         return (new Pipeline($pipes))
                 ->send($query)
-                ->with(new ArgumentBag($args))
-                ->to(function ($query) use ($args) {
-                    return call_user_func_array([$query, 'baseWhere'], $args);
+                ->with(new ArgumentBag(['method' => $method, 'args' => $args]))
+                ->to(function ($query) use ($method, $args) {
+                    return call_user_func_array([$query, 'callParent'], [$method, $args->all()]);
                 });
     }
 
@@ -299,6 +312,28 @@ trait Eloquence
                 ->send($parcel)
                 ->to(function ($array) {
                     return $array;
+                });
+    }
+
+    /**
+     * Register hook for replicate.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return mixed
+     */
+    public function replicate(array $except = null)
+    {
+        $this->unwrapHooks(__FUNCTION__);
+        $pipes = $this->unwrappedHooks[__FUNCTION__];
+        $parcel = parent::replicate($except);
+        $original = $this;
+
+        return (new Pipeline($pipes))
+                ->send($parcel)
+                ->with(new ArgumentBag(compact('except', 'original')))
+                ->to(function ($copy) {
+                    return $copy;
                 });
     }
 
