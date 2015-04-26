@@ -211,13 +211,13 @@ class AttributeBag extends Collection implements AttributeBagContract
      */
     protected function loadAndIndex(array $items)
     {
-        $retriever = $this->valueRetriever('key');
+        $retriever = $this->valueRetriever('meta_key');
 
         $attributes = [];
 
         foreach ($items as $item) {
-            if (!isset($item->key) || !isset($item->value)) {
-                throw new InvalidArgumentException("Attribute must contain key and value.");
+            if (!isset($item->meta_key) || !isset($item->meta_value)) {
+                throw new InvalidArgumentException("Attribute must contain meta_key and meta_value.");
             }
 
             $attributes[$retriever($item)] = $item;

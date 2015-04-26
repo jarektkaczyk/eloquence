@@ -34,21 +34,6 @@ interface Attribute
     public function setValue($value);
 
     /**
-     * Determine whether a get mutator exists for the value type.
-     *
-     * @return boolean
-     */
-    public function hasMetaGetMutator();
-
-    /**
-     * Determine whether a set mutator exists for the value type.
-     *
-     * @param  mixed   $value
-     * @return boolean
-     */
-    public function hasMetaSetMutator($value);
-
-    /**
      * Handle casting value to string.
      *
      * @return string

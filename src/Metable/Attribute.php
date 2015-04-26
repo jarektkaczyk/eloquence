@@ -6,9 +6,7 @@ use Sofa\Eloquence\Contracts\Attribute as AttributeContract;
 use Sofa\Eloquence\Mutator\Mutator;
 
 /**
- * @property string $type
- * @property string $key
- * @property string $value
+ * @property array $attributes
  */
 class Attribute extends Model implements AttributeContract
 {
@@ -72,15 +70,7 @@ class Attribute extends Model implements AttributeContract
      *
      * @var array
      */
-    protected $visible = ['key', 'value', 'type'];
-
-    /**
-     * The accessors to append to the model's array form.
-     * Used for convenience so you don't need to use meta_key, meta_value properties.
-     *
-     * @var array
-     */
-    protected $appends = ['key', 'value', 'type'];
+    protected $visible = ['meta_key', 'meta_value', 'meta_type'];
 
     /**
      * Create new attribute instance.
@@ -131,7 +121,7 @@ class Attribute extends Model implements AttributeContract
      */
     protected function set($key, $value)
     {
-        $this->setKey($key);
+        $this->setMetaKey($key);
         $this->setValue($value);
     }
 
@@ -153,8 +143,8 @@ class Attribute extends Model implements AttributeContract
      */
     public function getValue()
     {
-        if ($this->hasMetaGetMutator()) {
-            return $this->mutateValue($this->value, 'getter');
+        if ($this->hasMutator($this->attributes['meta_value'], 'getter', $this->attributes['meta_type'])) {
+            return $this->mutateValue($this->attributes['meta_value'], 'getter');
         }
 
         return $this->castValue();
@@ -167,7 +157,7 @@ class Attribute extends Model implements AttributeContract
      */
     public function getMetaKey()
     {
-        return $this->key;
+        return $this->attributes['meta_key'];
     }
 
     /**
@@ -177,12 +167,12 @@ class Attribute extends Model implements AttributeContract
      */
     protected function castValue()
     {
-        $value = $this->value;
+        $value = $this->attributes['meta_value'];
 
-        $validTypes = ['boolean', 'int', 'float', 'double', 'array', 'object', 'null'];
+        $validTypes = ['boolean', 'integer', 'float', 'double', 'array', 'object', 'null'];
 
-        if (in_array($this->type, $validTypes)) {
-            settype($value, $this->type);
+        if (in_array($this->attributes['meta_type'], $validTypes)) {
+            settype($value, $this->attributes['meta_type']);
         }
 
         return $value;
@@ -195,7 +185,7 @@ class Attribute extends Model implements AttributeContract
      *
      * @throws \InvalidArgumentException
      */
-    protected function setKey($key)
+    protected function setMetaKey($key)
     {
         if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $key)) {
             throw new InvalidArgumentException("Provided key [{$key}] is not valid variable name.");
@@ -211,7 +201,7 @@ class Attribute extends Model implements AttributeContract
      */
     protected function setType($value)
     {
-        $this->attributes['meta_type'] = $this->hasMetaSetMutator($value)
+        $this->attributes['meta_type'] = $this->hasMutator($value, 'setter')
             ? $this->getMutatedType($value, 'setter')
             : $this->getValueType($value);
     }
@@ -227,7 +217,7 @@ class Attribute extends Model implements AttributeContract
     {
         $this->setType($value);
 
-        if ($this->hasMetaSetMutator($value)) {
+        if ($this->hasMutator($value, 'setter')) {
             $value = $this->mutateValue($value, 'setter');
 
         } elseif (!$this->isStringable($value) && !is_null($value)) {
@@ -248,7 +238,7 @@ class Attribute extends Model implements AttributeContract
      */
     protected function mutateValue($value, $dir = 'setter')
     {
-        $mutator = $this->getMutator($value, $dir, $this->type);
+        $mutator = $this->getMutator($value, $dir, $this->attributes['meta_type']);
 
         if (method_exists($this, $mutator)) {
             return $this->{$mutator}($value);
@@ -266,27 +256,6 @@ class Attribute extends Model implements AttributeContract
     protected function isStringable($value)
     {
         return is_scalar($value);
-    }
-
-    /**
-     * Determine whether a get mutator exists for the value type.
-     *
-     * @return boolean
-     */
-    public function hasMetaGetMutator()
-    {
-        return $this->hasMutator($this->value, 'getter', $this->type);
-    }
-
-    /**
-     * Determine whether a set mutator exists for the value type.
-     *
-     * @param  mixed   $value
-     * @return boolean
-     */
-    public function hasMetaSetMutator($value)
-    {
-        return $this->hasMutator($value, 'setter');
     }
 
     /**
@@ -380,8 +349,8 @@ class Attribute extends Model implements AttributeContract
      */
     public function castToString()
     {
-        if ($this->type == 'array') {
-            return $this->value;
+        if ($this->attributes['meta_type'] == 'array') {
+            return $this->attributes['meta_value'];
         }
 
         $value = $this->getValue();
@@ -401,65 +370,5 @@ class Attribute extends Model implements AttributeContract
     public function __toString()
     {
         return $this->castToString();
-    }
-
-    /**
-     * Mutator for meta_type property
-     *
-     * @return void
-     */
-    public function setTypeAttribute($type)
-    {
-        $this->attributes['meta_type'] = $type;
-    }
-
-    /**
-     * Accessor for meta_type property
-     *
-     * @return string
-     */
-    public function getTypeAttribute()
-    {
-        return $this->attributes['meta_type'];
-    }
-
-    /**
-     * Mutator for meta_key property
-     *
-     * @return void
-     */
-    public function setKeyAttribute($key)
-    {
-        $this->attributes['meta_key'] = $key;
-    }
-
-    /**
-     * Accessor for meta_key property
-     *
-     * @return string
-     */
-    public function getKeyAttribute()
-    {
-        return $this->attributes['meta_key'];
-    }
-
-    /**
-     * Mutator for meta_value property
-     *
-     * @return void
-     */
-    public function setValueAttribute($value)
-    {
-        $this->attributes['meta_value'] = $value;
-    }
-
-    /**
-     * Accessor for meta_value property
-     *
-     * @return mixed
-     */
-    public function getValueAttribute()
-    {
-        return $this->attributes['meta_value'];
     }
 }

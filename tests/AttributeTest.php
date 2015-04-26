@@ -9,19 +9,6 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function eloquent_mutators()
-    {
-        $attribute = new Attribute;
-        $attribute->key   = 'foo';
-        $attribute->value = 'bar';
-        $attribute->type  = 'baz';
-
-        $this->assertEquals(['meta_key' => 'foo', 'meta_value' => 'bar', 'meta_type' => 'baz'], $attribute->getAttributes());
-    }
-
-    /**
-     * @test
-     */
     public function it_instantiates_as_eloquent_by_default()
     {
         $emptyModel = new Attribute;
@@ -43,6 +30,16 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('red', (string) $color);
         $this->assertEquals('[1,2,3]', (string) $array);
         $this->assertEquals('', (string) $object);
+    }
+
+    /**
+     * @test
+     */
+    public function it_calls_instance_mutators()
+    {
+        $attribute = new AttributeNoMutatorsStub('foo', [1,2]);
+        $attribute->getterMutators = ['array' => 'customMutator'];
+        $this->assertEquals('mutated_value', $attribute->getValue());
     }
 
     /**
@@ -140,5 +137,10 @@ class AttributeStub extends Attribute {
 }
 
 class AttributeNoMutatorsStub extends Attribute {
-    public $getMutators = [];
+    public $getterMutators = [];
+
+    public function customMutator($value)
+    {
+        return 'mutated_value';
+    }
 }
