@@ -135,9 +135,7 @@ class Builder extends EloquentBuilder
      */
     public function whereBetween($column, array $values, $boolean = 'and', $not = false)
     {
-        if (count ($values) != 2) {
-            $count = count($values);
-
+        if (($count = count($values)) != 2) {
             throw new InvalidArgumentException(
                 "Between clause requires exactly 2 values, {$count} given."
             );

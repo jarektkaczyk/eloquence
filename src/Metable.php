@@ -369,7 +369,9 @@ trait Metable
         // fields on this model's table, so we will prefix them now
         // in order to avoid possible conflicts with meta table.
         foreach ($columns as $key => $column) {
-            if (strpos($column, '.') !== false) continue;
+            if (strpos($column, '.') !== false) {
+                continue;
+            }
 
             $columns[$key] = $this->getTable().'.'.$column;
         }

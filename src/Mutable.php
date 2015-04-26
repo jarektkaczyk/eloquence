@@ -86,7 +86,7 @@ trait Mutable
      */
     protected function mutableAttributesToArray(array $attributes)
     {
-        foreach($attributes as $key => $value) {
+        foreach ($attributes as $key => $value) {
             if ($this->hasGetterMutator($key)) {
                 $attributes[$key] = $this->mutableMutate($key, $value, 'getter');
             }

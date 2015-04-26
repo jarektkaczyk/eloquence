@@ -15,8 +15,7 @@ class ServiceProvider extends BaseProvider
      */
     public function register()
     {
-        $this->app->singleton('eloquence.mutator', function()
-        {
+        $this->app->singleton('eloquence.mutator', function () {
             return new Mutator;
         });
     }
