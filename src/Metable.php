@@ -244,7 +244,7 @@ trait Metable
 
         return (in_array($method, ['orderBy', 'lists']))
             ? $this->{"{$method}Meta"}($query, $args, $alias)
-            : $this->metaSingleResult($query, $method, $alias);
+            : $this->metaSingleResult($query, $method, $args, $alias);
     }
 
     /**
@@ -262,22 +262,39 @@ trait Metable
         return $query;
     }
 
+    /**
+     * Get an array with the values of given meta attribute.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $alias
+     * @return array
+     */
     protected function listsMeta(Builder $query, ArgumentBag $args, $alias)
     {
         list($column, $key) = [$args->get('column'), $args->get('key')];
 
         $query->select("{$alias}.meta_value as {$column}");
 
-        if (!is_null($key) && strpos('.', $key) === false) {
+        if (!is_null($key)) {
             $this->selectListsKey($query, $key);
         }
 
         return $query->callParent('lists', $args->all());
     }
 
+    /**
+     * Add select clause for key of the list array.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $key
+     * @return \Sofa\Eloquence\Builder
+     */
     protected function selectListsKey(Builder $query, $key)
     {
-        if ($this->hasColumn($key)) {
+        if (strpos($key, '.') !== false) {
+            return $query->addSelect($key);
+        } elseif ($this->hasColumn($key)) {
             return $query->addSelect($this->getTable().'.'.$key);
         }
 
@@ -285,26 +302,27 @@ trait Metable
 
         return $query->addSelect("{$alias}.meta_value as {$key}");
     }
+
     /**
      * Get single value result from the meta attribute.
      *
      * @param  \Sofa\Eloquence\Builder $query
      * @param  string $method
-     * @param  string $alias
      * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $alias
      * @return \Sofa\Eloquence\Builder
      */
-    protected function metaSingleResult(Builder $query, $method, $alias, $args)
+    protected function metaSingleResult(Builder $query, $method, $args, $alias)
     {
         return $query->getQuery()->select("{$alias}.meta_value")->{$method}("{$alias}.meta_value");
     }
 
 
-    /**rawified
+    /**
      * Join meta attributes table.
      *
      * @param  \Sofa\Eloquence\Builder $query
-     * @param  string  $column
+     * @param  string $column
      * @return string
      */
     protected function joinMeta(Builder $query, $column)

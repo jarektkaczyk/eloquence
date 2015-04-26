@@ -9,6 +9,19 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function eloquent_mutators()
+    {
+        $attribute = new Attribute;
+        $attribute->key   = 'foo';
+        $attribute->value = 'bar';
+        $attribute->type  = 'baz';
+
+        $this->assertEquals(['meta_key' => 'foo', 'meta_value' => 'bar', 'meta_type' => 'baz'], $attribute->getAttributes());
+    }
+
+    /**
+     * @test
+     */
     public function it_instantiates_as_eloquent_by_default()
     {
         $emptyModel = new Attribute;
@@ -109,7 +122,7 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     {
         $attribute = $this->getAttribute();
 
-        $this->assertEquals('color', $attribute->getKey());
+        $this->assertEquals('color', $attribute->getMetaKey());
         $this->assertEquals('red', $attribute->getValue());
     }
 

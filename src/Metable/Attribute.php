@@ -387,7 +387,7 @@ class Attribute extends Model implements AttributeContract
      */
     public function setTypeAttribute($type)
     {
-        $this->attributes['meta_type'] = $value;
+        $this->attributes['meta_type'] = $type;
     }
 
     /**

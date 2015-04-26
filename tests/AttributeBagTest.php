@@ -9,6 +9,44 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function it_replicates()
+    {
+        $original = $this->getBag();
+        $copy = $original->replicate();
+
+        $this->assertEquals($original, $copy);
+        $this->assertNotSame($original, $copy);
+        $this->assertEquals($original->first(), $copy->first());
+        $this->assertNotSame($original->first(), $copy->first());
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider invalidAttributes
+     * @expectedException \InvalidArgumentException
+     */
+    public function it_rejects_invalid_attributes($attribute)
+    {
+        new AttributeBag([$attribute]);
+    }
+
+    /*
+     * data provider
+     */
+    public function invalidAttributes()
+    {
+        return [
+            [['foo' => 'name', 'value' => 'jarek']],
+            [['key' => 'name', 'foo' => 'jarek']],
+            [(object) ['foo' => 'name', 'value' => 'jarek']],
+            [(object) ['key' => 'name', 'foo' => 'jarek']],
+        ];
+    }
+
+    /**
+     * @test
+     */
     public function it_handles_magic_calls()
     {
         $bag = $this->getBag();

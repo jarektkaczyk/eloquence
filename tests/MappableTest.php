@@ -4,13 +4,128 @@ use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
-use Sofa\Eloquence\Contracts\Mappable as MappableContract;
 
 class MappableTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp()
     {
         $this->model = new MappableStub;
+    }
+
+    public function tearDown()
+    {
+        m::close();
+    }
+
+    /**
+     * @test
+     */
+    public function alias_where()
+    {
+        $sql = 'select * from "users" where "email" = ? and "ign" = ?';
+
+        $query = $this->getModel()->where('email', 'some@email')->where('nick', 'FooBar');
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email', 'FooBar'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_whereBetween()
+    {
+        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "age" between ? and ?) >= 1';
+
+        $query = $this->getModel()->where('email', 'some@email')->whereBetween('age', [20, 30]);
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email', 20, 30], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_whereNotBetween()
+    {
+        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "age" between ? and ?) < 1';
+
+        $query = $this->getModel()->where('email', 'some@email')->whereNotBetween('age', [20, 30]);
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email', 20, 30], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_whereNotIn()
+    {
+        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" in (?, ?)) < 1';
+
+        $query = $this->getModel()->where('email', 'some@email')->whereNotIn('first_name', ['Jarek', 'Marek']);
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email', 'Jarek', 'Marek'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_whereNotNull()
+    {
+        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" is not null) >= 1';
+
+        $query = $this->getModel()->where('email', 'some@email')->whereNotNull('first_name');
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_whereNull()
+    {
+        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" is not null) < 1';
+
+        $query = $this->getModel()->where('email', 'some@email')->whereNull('first_name');
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_orWhere()
+    {
+        $sql = 'select * from "users" where "email" = ? or (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" = ?) >= 1';
+
+        $query = $this->getModel()->where('email', 'some@email')->orWhere('first_name', 'Jarek');
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['some@email', 'Jarek'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_where()
+    {
+        $sql = 'select * from "users" where (select count(*) from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" = ?) >= 1';
+
+        $query = $this->getModel()->where('first_name', 'Jarek');
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['Jarek'], $query->getBindings());
     }
 
     /**
@@ -39,33 +154,6 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue(property_exists($model->bar, 'baz'));
         $model->forget('foo');
         $this->assertFalse(property_exists($model->bar, 'baz'));
-    }
-
-    /**
-     * @test
-     * @covers \Sofa\Eloquence\Mappable::whereMapped
-     */
-    public function it_queries_mapped_column()
-    {
-        $query = m::mock('\Sofa\Eloquence\Builder');
-        $query->shouldReceive('where')->with('original', '=', 'value', 'and')->once()->andReturn($query);
-
-        $this->model->whereMapped($query, 'alias', '=', 'value', 'and');
-    }
-
-    /**
-     * @test
-     * @covers \Sofa\Eloquence\Mappable::whereMapped
-     * @covers \Sofa\Eloquence\Mappable::nestedMapping
-     * @covers \Sofa\Eloquence\Mappable::parseMapping
-     */
-    public function it_queries_mapped_relation()
-    {
-        $query = m::mock('\Sofa\Eloquence\Builder');
-        $query->shouldReceive('has')->with('bar', '>=', 1, 'and', m::type('callable'))->once()->andReturn($query);
-        $query->shouldReceive('with')->with('bar')->once()->andReturn($query);
-
-        $this->model->whereMapped($query, 'foo', '=', 'value', 'and');
     }
 
     /**
@@ -157,9 +245,23 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->model->setMappedAttribute('bam', 'new_bam_value');
         $this->assertEquals('new_bam_value', $this->model->mapAttribute('bam'));
     }
+
+    public function getModel()
+    {
+        $model = new MappableEloquentStub;
+        $grammarClass = 'Illuminate\Database\Query\Grammars\SQLiteGrammar';
+        $processorClass = 'Illuminate\Database\Query\Processors\SQLiteProcessor';
+        $grammar = new $grammarClass;
+        $processor = new $processorClass;
+        $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
+        $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
+        $class = get_class($model);
+        $class::setConnectionResolver($resolver);
+        return $model;
+    }
 }
 
-class MappableStub implements MappableContract {
+class MappableStub {
 
     use Eloquence, Mappable {
         hasExplicitMapping as protectedHasExplicitMapping;
@@ -168,7 +270,7 @@ class MappableStub implements MappableContract {
         getImplicitMapping as protectedGetImplicitMapping;
         setMappedAttribute as protectedSetMappedAttribute;
         mapAttribute       as protectedMapAttribute;
-        whereMapped        as protectedWhereMapped;
+        mappedQuery        as protectedMappedQuery;
         forget             as protectedForget;
         saveMapped         as protectedSaveMapped;
     }
@@ -209,9 +311,9 @@ class MappableStub implements MappableContract {
         return $this->protectedSetMappedAttribute($key, $value);
     }
 
-    public function whereMapped()
+    public function mappedQuery()
     {
-        return call_user_func_array([$this, 'protectedWhereMapped'], func_get_args());
+        return call_user_func_array([$this, 'protectedMappedQuery'], func_get_args());
     }
 
     public function mapAttribute($key)
@@ -243,4 +345,25 @@ class MappableStub implements MappableContract {
     {
         return $this->protectedSaveMapped();
     }
+}
+
+class MappableEloquentStub extends Model {
+    use Eloquence, Mappable;
+
+    protected $table = 'users';
+
+    protected $maps = [
+        'first_name' => 'profile.first_name',
+        'profile'    => ['last_name', 'age'],
+        'nick'       => 'ign',
+    ];
+
+    public function profile()
+    {
+        return $this->belongsTo(MappableRelatedStub::class, 'profile_id');
+    }
+}
+
+class MappableRelatedStub extends Model {
+    protected $table = 'profiles';
 }

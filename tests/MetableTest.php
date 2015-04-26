@@ -4,29 +4,98 @@ use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as Query;
 use Illuminate\Database\Query\Grammars\Grammar;
+use Illuminate\Database\Query\Expression;
 use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Metable;
 use Sofa\Eloquence\ArgumentBag;
-use Sofa\Eloquence\Contracts\Metable as MetableContract;
 
 class MetableTest extends \PHPUnit_Framework_TestCase {
+
+    public function tearDown()
+    {
+        m::close();
+    }
 
     /**
      * @test
      */
-    public function meta_max()
+    public function meta_lists_with_both_meta_column_and_key_joins_twice()
     {
-        $sql = 'select max("meta_attributes"."value") as aggregate from "metables" '.
-                'left join "meta_attributes" on "meta_attributes"."metable_id" = "metables"."id" '.
-                'and "meta_attributes"."metable_type" = ? and "meta_attributes"."key" = ?';
+        $sql = 'select "meta_alias_1"."meta_value" as "size", "meta_alias_2"."meta_value" as "uuid" from "metables" '.
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ? '.
+                'left join "meta_attributes" as "meta_alias_2" on "meta_alias_2"."metable_id" = "metables"."id" '.
+                'and "meta_alias_2"."metable_type" = ? and "meta_alias_2"."meta_key" = ?';
+
+        $bindings = ['Metable', 'size', 'Metable', 'uuid'];
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+
+        $model->lists('size', 'uuid');
+    }
+
+    /**
+     * @test
+     */
+    public function meta_lists_with_another_join()
+    {
+        $sql = 'select "meta_alias_1"."meta_value" as "size", "joined"."id" from "metables" '.
+                'inner join "another_table" as "joined" on "joined"."metable_id" = "metables"."id" '.
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ?';
 
         $bindings = ['Metable', 'size'];
 
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
 
-        $model->max('size');
+        $model->join('another_table as joined', 'joined.metable_id', '=', 'metables.id')
+                ->lists('size', 'joined.id');
+    }
+
+    /**
+     * @test
+     */
+    public function meta_lists_prefixes_main_table_column()
+    {
+        $sql = 'select "meta_alias_1"."meta_value" as "size", "metables"."id" from "metables" '.
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ?';
+
+        $bindings = ['Metable', 'size'];
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+
+        $model->lists('size', 'id');
+    }
+
+    /**
+     * @test
+     *
+     * @dataProvider aggregateFunctions
+     */
+    public function meta_aggregates($function)
+    {
+        $sql = 'select '.$function.'("meta_alias_1"."meta_value") as aggregate from "metables" '.
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ?';
+
+        $bindings = ['Metable', 'size'];
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+
+        $model->{$function}('size');
+    }
+
+    public function aggregateFunctions()
+    {
+        return [
+            ['max'], ['min'], ['avg'], ['count'], ['sum']
+        ];
     }
 
     /**
@@ -34,9 +103,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_pluck()
     {
-        $sql = 'select "meta_attributes"."value" from "metables" '.
-                'left join "meta_attributes" on "meta_attributes"."metable_id" = "metables"."id" '.
-                'and "meta_attributes"."metable_type" = ? and "meta_attributes"."key" = ? '.
+        $sql = 'select "meta_alias_1"."meta_value" from "metables" '.
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ? '.
                 'limit 1';
 
         $bindings = ['Metable', 'color'];
@@ -53,9 +122,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_prefixes_selected_columns_when_joining_meta_attributes()
     {
         $sql = 'select "metables"."id", "metables"."name" as "full_name", "other"."field" from "metables" '.
-                'left join "meta_attributes" on "meta_attributes"."metable_id" = "metables"."id" '.
-                'and "meta_attributes"."metable_type" = ? and "meta_attributes"."key" = ? '.
-                'order by "meta_attributes"."value" asc';
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ? '.
+                'order by "meta_alias_1"."meta_value" asc';
 
         $query = $this->getModel()->select('id', 'name as full_name', 'other.field')->orderBy('color', 'asc');
 
@@ -66,18 +135,36 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function meta_orderBy()
+    public function meta_orders()
     {
         $sql = 'select "metables".* from "metables" '.
-                'left join "meta_attributes" on "meta_attributes"."metable_id" = "metables"."id" '.
-                'and "meta_attributes"."metable_type" = ? '.
-                'and "meta_attributes"."key" = ? '.
-                'where "name" = ? order by "meta_attributes"."value" asc, "metables"."name" desc';
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? '.
+                'and "meta_alias_1"."meta_key" = ? '.
+                'where "name" = ? order by "meta_alias_1"."meta_value" asc, "metables"."name" desc';
 
-        $query = $this->getModel()->where('name', 'jarek')->orderBy('color', 'asc')->orderBy('metables.name', 'desc');
+        $query = $this->getModel()->where('name', 'jarek')->oldest('color')->latest('metables.name');
 
         $this->assertEquals($sql, $query->toSql());
         $this->assertEquals(['Metable', 'color', 'jarek'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function meta_whereExists()
+    {
+        $sql = 'select * from "metables" where exists (select 1 from "metables" where (select count(*) from "meta_attributes" '.
+                'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
+                'and "meta_key" = ? and "meta_value" > 10) >= 1)';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('raw')->once()->andReturnUsing(function ($value) { return new Expression($value); });
+
+        $query = $model->whereExists(function ($q) {$q->selectRaw(1)->where('size', '>', 10);});
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['Metable', 'size'], $query->getBindings());
     }
 
     /**
@@ -89,7 +176,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and strftime(\''.$placeholder.'\', "value") = ?) >= 1';
+                'and "meta_key" = ? and strftime(\''.$placeholder.'\', "meta_value") = ?) >= 1';
 
         $query = $this->getModel()->where('name', 'jarek')->{"where{$type}"}('published_at', '=', 'date_value');
 
@@ -114,7 +201,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ?) < 1';
+                'and "meta_key" = ?) < 1';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNull('color');
 
@@ -129,7 +216,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ?) >= 1';
+                'and "meta_key" = ?) >= 1';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNotNull('color');
 
@@ -144,7 +231,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ?) >= 1';
+                'and "meta_key" = ?) >= 1';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNotNull('color');
 
@@ -159,7 +246,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ?) < 1';
+                'and "meta_key" = ?) < 1';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNull('color');
 
@@ -174,27 +261,45 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" between ? and ?) < 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) < 1';
 
-        $query = $this->getModel()->where('name', 'jarek')->whereNotBetween('size', [5,10]);
+        $query = $this->getModel()->where('name', 'jarek')->whereNotBetween('size', ['5','10']);
 
         $this->assertEquals($sql, $query->toSql());
-        $this->assertEquals(['jarek', 'Metable', 'size', 5, 10], $query->getBindings());
+        $this->assertEquals(['jarek', 'Metable', 'size', '5', '10'], $query->getBindings());
     }
 
     /**
      * @test
      */
-    public function meta_whereBetween()
+    public function meta_whereBetween_numeric()
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" between ? and ?) >= 1';
+                'and "meta_key" = ? and "meta_value" >= 5 and "meta_value" <= 10.5) >= 1';
 
-        $query = $this->getModel()->where('name', 'jarek')->whereBetween('size', [5,10]);
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('raw')->twice()->andReturnUsing(function ($value) { return new Expression($value); });
+
+        $query = $model->where('name', 'jarek')->whereBetween('size', [5,10.5]);
 
         $this->assertEquals($sql, $query->toSql());
-        $this->assertEquals(['jarek', 'Metable', 'size', 5, 10], $query->getBindings());
+        $this->assertEquals(['jarek', 'Metable', 'size'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
+    public function meta_whereBetween_string()
+    {
+        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+                'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) >= 1';
+
+        $query = $this->getModel()->where('name', 'jarek')->whereBetween('size', ['M','L']);
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['jarek', 'Metable', 'size', 'M', 'L'], $query->getBindings());
     }
 
     /**
@@ -204,12 +309,12 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" between ? and ?) >= 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) >= 1';
 
-        $query = $this->getModel()->where('name', 'jarek')->orWhereBetween('size', [5,10]);
+        $query = $this->getModel()->where('name', 'jarek')->orWhereBetween('size', ['M','L']);
 
         $this->assertEquals($sql, $query->toSql());
-        $this->assertEquals(['jarek', 'Metable', 'size', 5, 10], $query->getBindings());
+        $this->assertEquals(['jarek', 'Metable', 'size', 'M', 'L'], $query->getBindings());
     }
 
     /**
@@ -219,12 +324,12 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" between ? and ?) < 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) < 1';
 
-        $query = $this->getModel()->where('name', 'jarek')->orWhereNotBetween('size', [5,10]);
+        $query = $this->getModel()->where('name', 'jarek')->orWhereNotBetween('size', ['M','L']);
 
         $this->assertEquals($sql, $query->toSql());
-        $this->assertEquals(['jarek', 'Metable', 'size', 5, 10], $query->getBindings());
+        $this->assertEquals(['jarek', 'Metable', 'size', 'M', 'L'], $query->getBindings());
     }
 
     /**
@@ -234,7 +339,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" in (?, ?, ?)) < 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) < 1';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNotIn('size', ['L', 'M', 'S']);
 
@@ -249,7 +354,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" in (?, ?, ?)) < 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) < 1';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNotIn('size', ['L', 'M', 'S']);
 
@@ -264,7 +369,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" in (?, ?, ?)) >= 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) >= 1';
 
         $query = $this->getModel()->where('name', 'jarek')->whereIn('size', ['L', 'M', 'S']);
 
@@ -279,7 +384,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" in (?, ?, ?)) >= 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) >= 1';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereIn('size', ['L', 'M', 'S']);
 
@@ -294,7 +399,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" = ?) >= 1';
+                'and "meta_key" = ? and "meta_value" = ?) >= 1';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhere('color', 'red');
 
@@ -305,11 +410,29 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function meta_where_numeric()
+    {
+        $sql = 'select * from "metables" where (select count(*) from "meta_attributes" '.
+                'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
+                'and "meta_key" = ? and "meta_value" > 5) >= 1';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('raw')->once()->andReturnUsing(function ($value) { return new Expression($value); });
+
+        $query = $model->where('size', '>', 5);
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals(['Metable', 'size'], $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
     public function meta_where()
     {
         $sql = 'select * from "metables" where (select count(*) from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "key" = ? and "value" = ?) >= 1';
+                'and "meta_key" = ? and "meta_value" = ?) >= 1';
 
         $query = $this->getModel()->where('color', 'red');
 
@@ -358,7 +481,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_checks_not_null_attributes()
     {
         $bag = $this->getBag();
-        $bag->shouldReceive('lists')->with('value', 'key')->once()->andReturn(['color' => 'red', 'size' => null]);
+        $bag->shouldReceive('lists')->with('meta_value', 'meta_key')->twice()->andReturn(['color' => 'red', 'size' => null]);
 
         $model = $this->getMetableStub();
         $model->shouldReceive('getMetaAttributes')->andReturn($bag);
@@ -401,7 +524,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_gets_meta_attributes_as_key_value_array()
     {
         $bag = $this->getBag();
-        $bag->shouldReceive('lists')->with('value', 'key')->once()->andReturn(['color' => 'red']);
+        $bag->shouldReceive('lists')->with('meta_value', 'meta_key')->once()->andReturn(['color' => 'red']);
 
         $model = $this->getMetableStub();
         $model->shouldReceive('getMetaAttributes')->andReturn($bag);
@@ -426,26 +549,22 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         list($model, $bag) = $this->getMetableStubLoadingRelation();
 
-        $this->assertSame($bag, $model->getMetaAttributes());
+        $this->assertEquals($bag, $model->getMetaAttributes());
     }
 
     protected function getMetableStubLoadingRelation()
     {
         $bag = m::mock('StdClass');
-        $relation = m::mock('StdClass');
-        $attribute = m::mock('StdClass');
         $collection = m::mock('StdClass');
 
-        $relation->shouldReceive('getRelated')->once()->andReturn($attribute);
-        $attribute->shouldReceive('newBag')->once()->andReturn($bag);
         $collection->shouldReceive('all')->andReturn([]);
 
         $model = $this->getMetableStub();
+        $model->exists = true;
         $model->relations = [];
         $model->shouldReceive('load')->with('metaAttributes')->once()->andReturn($model);
         $model->shouldReceive('getRelation')->with('metaAttributes')->once()->andReturn($collection);
-        $model->shouldReceive('metaAttributes')->once()->andReturn($relation);
-        $model->shouldReceive('setRelation')->with('metaAttributes', $bag)->once();
+        $model->shouldReceive('setRelation')->with('metaAttributes', m::any())->once();
         $model->shouldReceive('getRelation')->with('metaAttributes')->once()->andReturn($bag);
 
         return [$model, $bag];
@@ -482,22 +601,31 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
         $processor = new $processorClass;
         $schema = m::mock('StdClass');
         $schema->shouldReceive('getColumnListing')->andReturn(['id', 'name']);
-        $connection = m::mock('Illuminate\Database\ConnectionInterface', array('getQueryGrammar' => $grammar, 'getPostProcessor' => $processor));
+        $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
         $connection->shouldReceive('getSchemaBuilder')->andReturn($schema);
-        $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', array('connection' => $connection));
+        $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
         $class = get_class($model);
         $class::setConnectionResolver($resolver);
         return $model;
     }
 }
 
-class MetableEloquentStub extends Model implements MetableContract {
+class MetableEloquentStub extends Model {
     use Eloquence, Metable;
 
     protected $table = 'metables';
     protected $morphClass = 'Metable';
+
+    public $aliases = [];
+
+    protected function generateMetaAlias()
+    {
+        $len = count($this->aliases);
+
+        return $this->aliases[$len] = 'meta_alias_'.($len+1);
+    }
 }
 
-class MetableStub implements MetableContract {
+class MetableStub {
     use Eloquence, Metable;
 }

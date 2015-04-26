@@ -29,7 +29,7 @@ trait Mappable
                 'save',
                 '__isset',
                 '__unset',
-                'customWhere'
+                'queryHook',
             ] as $method) {
             static::hook($method, "{$method}Mappable");
         }
@@ -42,54 +42,138 @@ trait Mappable
      *
      * @return \Closure
      */
-    public function customWhereMappable()
+    public function queryHookMappable()
     {
-        return function ($next, $query, $args) {
-            $key = $args->get('key');
+        return function ($next, $query, $bag) {
+            $method = $bag->get('method');
+            $args   = $bag->get('args');
+            $column = $args->get('column');
 
-            if ($this->hasMapping($key)) {
-                return call_user_func_array([$this, 'whereMapped'], array_merge([$query], $args->all()));
+            if ($this->hasMapping($column)) {
+                return call_user_func_array([$this, 'mappedQuery'], [$query, $method, $args]);
             }
 
-            return $next($query, $args);
+            return $next($query, $bag);
         };
     }
 
     /**
-     * Custom where clause for mapped attributes.
+     * Custom query handler for querying mapped attributes.
      *
-     * @return \Sofa\Eloquence\Builder
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return mixed
      */
-    protected function whereMapped($query, $column, $operator, $value, $boolean)
+    protected function mappedQuery(Builder $query, $method, ArgumentBag $args)
     {
-        $column = $this->getMappingForAttribute($column) ?: $column;
+        $mapping = $this->getMappingForAttribute($args->get('column'));
 
-        if ($this->nestedMapping($column)) {
-            list($target, $column) = $this->parseMapping($column);
-
-            return $query
-                ->has($target, '>=', 1, $boolean, $this->getMappedWhereConstraint($column, $operator, $value))
-                ->with($target);
+        if ($this->nestedMapping($mapping)) {
+            return $this->mappedHasQuery($query, $method, $args, $mapping);
         }
 
-        return $query->where($column, $operator, $value, $boolean);
+        $args->set('column', $mapping);
+
+        return $query->callParent($method, $args->all());
+
+    }
+
+    /**
+     * Add whereHas subquery on the mapped attribute relation.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $mapping
+     * @return \Sofa\Eloquence\Builder
+     */
+    protected function mappedHasQuery(Builder $query, $method, ArgumentBag $args, $mapping)
+    {
+        $boolean = $this->getMappedBoolean($args);
+
+        $operator = $this->getMappedOperator($method, $args);
+
+        list($target, $column) = $this->parseMapping($mapping);
+
+        $args->set('column', $column);
+
+        return $query
+            ->has($target, $operator, 1, $boolean, $this->getMappedWhereConstraint($method, $args))
+            ->with($target);
     }
 
     /**
      * Get the relation constraint closure.
      *
-     * @codeCoverageIgnore
-     *
-     * @param  string  $column
-     * @param  string  $operator
-     * @param  string  $value
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
      * @return \Closure
      */
-    protected function getMappedWhereConstraint($column, $operator, $value)
+    protected function getMappedWhereConstraint($method, ArgumentBag $args)
     {
-        return function ($q) use ($column, $operator, $value) {
-            $q->where($column, $operator, $value);
+        return function ($query) use ($method, $args) {
+            call_user_func_array([$query, $method], $args->all());
         };
+    }
+
+    /**
+     * Get boolean called on the original method and set it to default.
+     *
+     * @param  \Sofa\EloquenceArgumentBag $args
+     * @return string
+     */
+    protected function getMappedBoolean(ArgumentBag $args)
+    {
+        $boolean = $args->get('boolean');
+
+        $args->set('boolean', 'and');
+
+        return $boolean;
+    }
+
+    /**
+     * Determine the operator for count relation query and set 'not' appropriately.
+     *
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return string
+     */
+    protected function getMappedOperator($method, ArgumentBag $args)
+    {
+        if ($not = $args->get('not')) {
+            $args->set('not', false);
+        }
+
+        if ($null = $this->isWhereNull($method, $args)) {
+            $args->set('not', true);
+        }
+
+        return ($not xor $null) ? '<' : '>=';
+    }
+
+    /**
+     * Determine whether where should be treated as whereNull.
+     *
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return boolean
+     */
+    protected function isWhereNull($method, $args)
+    {
+        return $method === 'whereNull' || $method === 'where' && $this->isWhereNullByArgs($args);
+    }
+
+    /**
+     * Determine whether where is a whereNull by the arguments passed to where method.
+     *
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return boolean
+     */
+    protected function isWhereNullByArgs(ArgumentBag $args)
+    {
+        return is_null($args->get('operator'))
+            || is_null($args->get('value')) && !in_array($args->get('operator'), ['<>', '!=']);
     }
 
     /**

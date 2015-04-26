@@ -57,9 +57,8 @@ Define mappings on the protected `$maps` variable like bellow. Use this extensio
 
 use Sofa\Eloquence\Eloquence; // base trait
 use Sofa\Eloquence\Mappable; // extension trait
-use Sofa\Eloquence\Contracts\Mappable as MappableContract; // interface
 
-class User extends \Eloquent implements MappableContract {
+class User extends \Eloquent {
 
     use Eloquence, Mappable;
 
@@ -164,9 +163,8 @@ Feel free to mix the extensions, however mind that the **order of including trai
 use Sofa\Eloquence\Eloquence; // base trait
 use Sofa\Eloquence\Mappable; // extension trait
 use Sofa\Eloquence\Formattable; // extension trait
-use Sofa\Eloquence\Contracts\Mappable as MappableContract; // interface
 
-class User extends \Eloquent implements MappableContract {
+class User extends \Eloquent {
 
     use Eloquence, 
     Mappable, Formattable; // order of these traits matters!
