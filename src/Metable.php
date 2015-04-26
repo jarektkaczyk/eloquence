@@ -686,8 +686,8 @@ trait Metable
      * @param  array $attributes
      * @return void
      */
-    public function setAllowedMeta(array $attributes)
-    {
-        $this->allowedMeta = $attributes;
-    }
+    // public function setAllowedMeta(array $attributes)
+    // {
+    //     $this->allowedMeta = $attributes;
+    // }
 }

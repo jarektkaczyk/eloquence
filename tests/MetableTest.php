@@ -577,9 +577,6 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     {
         $model = new MetableStub;
         $this->assertEquals([], $model->getAllowedMeta());
-
-        $model->setAllowedMeta(['foo', 'bar']);
-        $this->assertEquals(['foo', 'bar'], $model->getAllowedMeta());
     }
 
     public function getMetableStub()

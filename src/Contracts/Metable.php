@@ -11,5 +11,4 @@ interface Metable
     public function getMeta($key);
     public function setMeta($key, $value);
     public function getAllowedMeta();
-    public function setAllowedMeta(array $attributes);
 }
