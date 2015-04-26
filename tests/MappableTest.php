@@ -360,7 +360,7 @@ class MappableEloquentStub extends Model {
 
     public function profile()
     {
-        return $this->belongsTo(MappableRelatedStub::class, 'profile_id');
+        return $this->belongsTo('Sofa\Eloquence\Tests\MappableRelatedStub', 'profile_id');
     }
 }
 

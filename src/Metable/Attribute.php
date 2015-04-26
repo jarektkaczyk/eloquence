@@ -1,9 +1,9 @@
 <?php namespace Sofa\Eloquence\Metable;
 
 use InvalidArgumentException;
-use DateTime;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Contracts\Attribute as AttributeContract;
+use Sofa\Eloquence\Mutator\Mutator;
 
 /**
  * @property string $type
@@ -12,6 +12,13 @@ use Sofa\Eloquence\Contracts\Attribute as AttributeContract;
  */
 class Attribute extends Model implements AttributeContract
 {
+    /**
+     * Attribute mutator instance.
+     *
+     * @var \Sofa\Eloquence\Contracts\Mutator
+     */
+    protected static $attributeMutator;
+
     /**
      * Custom table name.
      *
@@ -43,7 +50,7 @@ class Attribute extends Model implements AttributeContract
     /**
      * @var array
      */
-    protected $getMutators = [
+    protected $getterMutators = [
         'array'                              => 'json_decode',
         'StdClass'                           => 'json_decode',
         'DateTime'                           => 'asDateTime',
@@ -53,7 +60,7 @@ class Attribute extends Model implements AttributeContract
     /**
      * @var array
      */
-    protected $setMutators = [
+    protected $setterMutators = [
         'array'                              => 'json_encode',
         'StdClass'                           => 'json_encode',
         'DateTime'                           => 'fromDateTime',
@@ -97,6 +104,26 @@ class Attribute extends Model implements AttributeContract
     }
 
     /**
+     * Boot this model.
+     *
+     * @codeCoverageIgnore
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        if (!isset(static::$attributeMutator)) {
+            if (function_exists('app') && isset(app()['eloquence.mutator'])) {
+                static::$attributeMutator = app('eloquence.mutator');
+            } else {
+                static::$attributeMutator = new Mutator;
+            }
+        }
+    }
+
+    /**
      * Set the meta attribute.
      *
      * @param string $key
@@ -127,7 +154,7 @@ class Attribute extends Model implements AttributeContract
     public function getValue()
     {
         if ($this->hasMetaGetMutator()) {
-            return $this->mutateValue($this->value, 'get');
+            return $this->mutateValue($this->value, 'getter');
         }
 
         return $this->castValue();
@@ -185,7 +212,7 @@ class Attribute extends Model implements AttributeContract
     protected function setType($value)
     {
         $this->attributes['meta_type'] = $this->hasMetaSetMutator($value)
-            ? $this->getMutatedType($value, 'set')
+            ? $this->getMutatedType($value, 'setter')
             : $this->getValueType($value);
     }
 
@@ -194,14 +221,14 @@ class Attribute extends Model implements AttributeContract
      *
      * @param mixed $value
      *
-     * @throws \Sofa\Eloquence\Exceptions\InvalidTypeException
+     * @throws \Sofa\Eloquence\Metable\InvalidTypeException
      */
     public function setValue($value)
     {
         $this->setType($value);
 
         if ($this->hasMetaSetMutator($value)) {
-            $value = $this->mutateValue($value, 'set');
+            $value = $this->mutateValue($value, 'setter');
 
         } elseif (!$this->isStringable($value) && !is_null($value)) {
             throw new InvalidTypeException(
@@ -219,19 +246,15 @@ class Attribute extends Model implements AttributeContract
      * @param  string $dir
      * @return mixed
      */
-    protected function mutateValue($value, $dir = 'set')
+    protected function mutateValue($value, $dir = 'setter')
     {
         $mutator = $this->getMutator($value, $dir, $this->type);
 
         if (method_exists($this, $mutator)) {
-            $mutator = [$this, $mutator];
+            return $this->{$mutator}($value);
         }
 
-        if (!is_callable($mutator)) {
-            throw new InvalidMutatorException("[{$mutator}] function not found.");
-        }
-
-        return call_user_func_array($mutator, [$value]);
+        return static::$attributeMutator->mutate($value, $mutator);
     }
 
     /**
@@ -252,7 +275,7 @@ class Attribute extends Model implements AttributeContract
      */
     public function hasMetaGetMutator()
     {
-        return $this->hasMutator($this->value, 'get', $this->type);
+        return $this->hasMutator($this->value, 'getter', $this->type);
     }
 
     /**
@@ -263,7 +286,7 @@ class Attribute extends Model implements AttributeContract
      */
     public function hasMetaSetMutator($value)
     {
-        return $this->hasMutator($value, 'set');
+        return $this->hasMutator($value, 'setter');
     }
 
     /**
@@ -287,7 +310,7 @@ class Attribute extends Model implements AttributeContract
      * @param  string $dir
      * @return string
      */
-    protected function getMutatedType($value, $dir = 'set')
+    protected function getMutatedType($value, $dir = 'setter')
     {
         foreach ($this->{"{$dir}Mutators"} as $mutated => $mutator) {
             if ($this->getValueType($value) == $mutated || $value instanceof $mutated) {
@@ -303,7 +326,7 @@ class Attribute extends Model implements AttributeContract
      * @param  string  $dir
      * @return boolean
      */
-    protected function hasMutator($value, $dir = 'set', $type = null)
+    protected function hasMutator($value, $dir = 'setter', $type = null)
     {
         return (bool) $this->getMutator($value, $dir, $type);
     }
@@ -315,7 +338,7 @@ class Attribute extends Model implements AttributeContract
      * @param  string $dir
      * @return string
      */
-    protected function getMutator($value, $dir = 'set', $type = null)
+    protected function getMutator($value, $dir = 'setter', $type = null)
     {
         $type = $type ?: $this->getValueType($value);
 

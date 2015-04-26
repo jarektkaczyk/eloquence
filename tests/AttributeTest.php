@@ -47,30 +47,6 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     */
-    public function it_calls_instance_mutators()
-    {
-        $attribute = new AttributeNoMutatorsStub('foo', [1,2]);
-        $attribute->getMutators = ['array' => 'customMutator'];
-
-        $this->assertEquals('mutated_value', $attribute->getValue());
-    }
-
-    /**
-     * @test
-     *
-     * @expectedException \Sofa\Eloquence\Metable\InvalidMutatorException
-     */
-    public function wrong_mutator()
-    {
-        $attribute = new AttributeNoMutatorsStub('foo', [1,2]);
-        $attribute->getMutators = ['array' => 'no_function_here'];
-
-        $attribute->getValue();
-    }
-
-    /**
-     * @test
      *
      * @expectedException \InvalidArgumentException
      */
@@ -165,9 +141,4 @@ class AttributeStub extends Attribute {
 
 class AttributeNoMutatorsStub extends Attribute {
     public $getMutators = [];
-
-    public function customMutator($value)
-    {
-        return 'mutated_value';
-    }
 }

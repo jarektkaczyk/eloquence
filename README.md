@@ -75,9 +75,10 @@ class User extends \Eloquent {
 
     public function profile()
     {
-      return $this->belongsTo(Profile::class);
+      return $this->belongsTo(Profile::class); // *
     }
 ```
+* `::class` is PHP5.5 constant, in PHP5.4 use full namesaced string instead.
 
 You can also add mapped attributes to the array representation of your model, just like any accessor:
 
