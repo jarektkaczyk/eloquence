@@ -18,6 +18,18 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
+     *
+     * @expectedException \InvalidArgumentException
+     */
+    public function it_takes_exactly_two_values_for_whereBetween()
+    {
+        $builder = $this->getBuilder();
+
+        $builder->whereBetween('size', [1,2,3]);
+    }
+
+    /**
+     * @test
      */
     public function it_calls_eloquent_method_if_called()
     {

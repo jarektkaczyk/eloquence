@@ -1,5 +1,6 @@
 <?php namespace Sofa\Eloquence;
 
+use InvalidArgumentException;
 use Closure;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
@@ -129,9 +130,19 @@ class Builder extends EloquentBuilder
      * @param  string  $boolean
      * @param  boolean $not
      * @return $this
+     *
+     * @throws \InvalidArgumentException
      */
     public function whereBetween($column, array $values, $boolean = 'and', $not = false)
     {
+        if (count ($values) != 2) {
+            $count = count($values);
+
+            throw new InvalidArgumentException(
+                "Between clause requires exactly 2 values, {$count} given."
+            );
+        }
+
         return $this->callHook(__FUNCTION__, $this->packArgs(compact('column', 'values', 'boolean', 'not')));
     }
 

@@ -391,7 +391,9 @@ trait Metable
 
         $operator = $this->getMetaOperator($method, $args);
 
-        $this->unbindNumerics($args);
+        if (in_array($method, ['whereBetween', 'where'])) {
+            $this->unbindNumerics($args);
+        }
 
         return $query
             ->has('metaAttributes', $operator, 1, $boolean, $this->getMetaWhereConstraint($method, $args))

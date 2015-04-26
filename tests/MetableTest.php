@@ -371,10 +371,10 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
                 'and "meta_key" = ? and "meta_value" in (?, ?, ?)) >= 1';
 
-        $query = $this->getModel()->where('name', 'jarek')->whereIn('size', ['L', 'M', 'S']);
+        $query = $this->getModel()->where('name', 'jarek')->whereIn('size', ['L', 'M', 55]);
 
         $this->assertEquals($sql, $query->toSql());
-        $this->assertEquals(['jarek', 'Metable', 'size', 'L', 'M', 'S'], $query->getBindings());
+        $this->assertEquals(['jarek', 'Metable', 'size', 'L', 'M', 55], $query->getBindings());
     }
 
     /**
