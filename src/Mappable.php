@@ -1,6 +1,13 @@
 <?php namespace Sofa\Eloquence;
 
+use LogicException;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property array $maps
@@ -69,14 +76,223 @@ trait Mappable
     {
         $mapping = $this->getMappingForAttribute($args->get('column'));
 
-        if ($this->nestedMapping($mapping)) {
-            return $this->mappedHasQuery($query, $method, $args, $mapping);
+        if ($this->relationMapping($mapping)) {
+            return $this->mappedRelationQuery($query, $method, $args, $mapping);
         }
 
         $args->set('column', $mapping);
 
         return $query->callParent($method, $args->all());
+    }
 
+    /**
+     * Handle querying relational mappings.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $mapping
+     * @return mixed
+     */
+    protected function mappedRelationQuery($query, $method, ArgumentBag $args, $mapping)
+    {
+        list($target, $column) = $this->parseMapping($mapping);
+
+        if (in_array($method, ['pluck', 'aggregate', 'orderBy', 'lists'])) {
+            return $this->mappedJoinQuery($query, $method, $args, $target, $column);
+        }
+
+        return $this->mappedHasQuery($query, $method, $args, $target, $column);
+    }
+
+    /**
+     * Join mapped table(s) in order to call given method.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $target
+     * @param  string $column
+     * @return mixed
+     */
+    protected function mappedJoinQuery($query, $method, ArgumentBag $args, $target, $column)
+    {
+        $table = $this->joinMapped($query, $target);
+
+        // For aggregates we need the actual function name
+        // so it can be called directly on the builder.
+        $method = $args->get('function') ?: $method;
+
+        return (in_array($method, ['orderBy', 'lists']))
+            ? $this->{"{$method}Mapped"}($query, $args, $table, $column, $target)
+            : $this->mappedSingleResult($query, $method, "{$table}.{$column}");
+    }
+
+    /**
+     * Order query by mapped attribute.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $table
+     * @param  string $column
+     * @param  string $target
+     * @return \Sofa\Eloquence\Builder
+     */
+    protected function orderByMapped(Builder $query, ArgumentBag $args, $table, $column, $target)
+    {
+        $query->with($target)->getQuery()->orderBy("{$table}.{$column}", $args->get('direction'));
+
+        return $query;
+    }
+
+    /**
+     * Get an array with the values of given mapped attribute.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  string $table
+     * @param  string $column
+     * @return array
+     */
+    protected function listsMapped(Builder $query, ArgumentBag $args, $table, $column)
+    {
+        $query->select("{$table}.{$column}");
+
+        if (!is_null($args->get('key'))) {
+            $this->selectListsKey($query, $args->get('key'));
+        }
+
+        $args->set('column', $column);
+
+        return $query->callParent('lists', $args->all());
+    }
+
+    /**
+     * Add select clause for key of the list array.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $key
+     * @return \Sofa\Eloquence\Builder
+     */
+    protected function selectListsKey(Builder $query, $key)
+    {
+        if ($this->hasColumn($key)) {
+            return $query->addSelect($this->getTable().'.'.$key);
+        }
+
+        return $query->addSelect($key);
+    }
+
+    /**
+     * Join mapped table(s).
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $column
+     * @return string
+     */
+    protected function joinMapped(Builder $query, $target)
+    {
+        $this->prefixColumnsForJoin($query);
+
+        $parent = $this;
+
+        foreach (explode('.', $target) as $segment) {
+            list($table, $parent) = $this->joinSegment($query, $segment, $parent);
+        }
+
+        return $table;
+    }
+
+    /**
+     * Join relation's table accordingly.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $segment
+     * @param  \Illuminate\Database\Eloquent\Model $parent
+     * @return array
+     */
+    protected function joinSegment(Builder $query, $segment, Model $parent)
+    {
+        $relation = $parent->{$segment}();
+        $related  = $relation->getRelated();
+        $table    = $related->getTable();
+
+        // If the table has been already joined let's skip it. Otherwise we will left join
+        // it in order to allow using some query methods on mapped columns. Polymorphic
+        // relations require also additional constraints, so let's handle it as well.
+        if (!$this->alreadyJoined($query, $table)) {
+            list($fk, $pk) = $this->getJoinKeys($relation);
+
+            $query->leftJoin($table, function ($join) use ($fk, $pk, $relation, $parent, $related) {
+                $join->on($fk, '=', $pk);
+
+                if ($relation instanceof MorphOne || $relation instanceof MorphTo) {
+                    $morphClass = ($relation instanceof MorphOne)
+                        ? $parent->getMorphClass()
+                        : $related->getMorphClass();
+
+                    $join->where($relation->getMorphType(), '=', $morphClass);
+                }
+            });
+        }
+
+        return [$table, $related];
+    }
+
+    /**
+     * Determine whether given table has been already joined.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string  $table
+     * @return boolean
+     */
+    protected function alreadyJoined(Builder $query, $table)
+    {
+        foreach ((array) $query->getQuery()->joins as $join) {
+            if ($join->table == $table) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the keys from relation in order to join the table.
+     *
+     * @param  \Illuminate\Database\Eloquent\Relations\Relation $relation
+     * @return array
+     *
+     * @throws \LogicException
+     */
+    protected function getJoinKeys(Relation $relation)
+    {
+        if ($relation instanceof HasOne || $relation instanceof MorphOne) {
+            return [$relation->getForeignKey(), $relation->getQualifiedParentKeyName()];
+        }
+
+        if ($relation instanceof BelongsTo && !$relation instanceof MorphTo) {
+            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOtherKeyName()];
+        }
+
+        $class = get_class($relation);
+
+        throw new LogicException(
+            "Only HasOne, MorphOne and BelongsTo mappings can be queried. {$class} given."
+        );
+    }
+
+    /**
+     * Get single value result from the mapped attribute.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  string $method
+     * @param  string $qualifiedColumn
+     * @return mixed
+     */
+    protected function mappedSingleResult(Builder $query, $method, $qualifiedColumn)
+    {
+        return $query->getQuery()->select("{$qualifiedColumn}")->{$method}("{$qualifiedColumn}");
     }
 
     /**
@@ -85,16 +301,15 @@ trait Mappable
      * @param  \Sofa\Eloquence\Builder $query
      * @param  string $method
      * @param  \Sofa\Eloquence\ArgumentBag $args
-     * @param  string $mapping
+     * @param  string $target
+     * @param  string $column
      * @return \Sofa\Eloquence\Builder
      */
-    protected function mappedHasQuery(Builder $query, $method, ArgumentBag $args, $mapping)
+    protected function mappedHasQuery(Builder $query, $method, ArgumentBag $args, $target, $column)
     {
         $boolean = $this->getMappedBoolean($args);
 
         $operator = $this->getMappedOperator($method, $args);
-
-        list($target, $column) = $this->parseMapping($mapping);
 
         $args->set('column', $column);
 
@@ -153,30 +368,6 @@ trait Mappable
     }
 
     /**
-     * Determine whether where should be treated as whereNull.
-     *
-     * @param  string $method
-     * @param  \Sofa\Eloquence\ArgumentBag $args
-     * @return boolean
-     */
-    protected function isWhereNull($method, $args)
-    {
-        return $method === 'whereNull' || $method === 'where' && $this->isWhereNullByArgs($args);
-    }
-
-    /**
-     * Determine whether where is a whereNull by the arguments passed to where method.
-     *
-     * @param  \Sofa\Eloquence\ArgumentBag $args
-     * @return boolean
-     */
-    protected function isWhereNullByArgs(ArgumentBag $args)
-    {
-        return is_null($args->get('operator'))
-            || is_null($args->get('value')) && !in_array($args->get('operator'), ['<>', '!=']);
-    }
-
-    /**
      * Get the mapping key.
      *
      * @param  string $key
@@ -199,7 +390,7 @@ trait Mappable
      * @param  string $mapping
      * @return boolean
      */
-    protected function nestedMapping($mapping)
+    protected function relationMapping($mapping)
     {
         return strpos($mapping, '.') !== false;
     }
@@ -491,18 +682,5 @@ trait Mappable
     public function getMaps()
     {
         return (property_exists($this, 'maps')) ? $this->maps : [];
-    }
-
-    /**
-     * Set array of attribute mappings on the model.
-     *
-     * @codeCoverageIgnore
-     *
-     * @param  array $mappings
-     * @return void
-     */
-    public function setMaps(array $mappings)
-    {
-        $this->maps = $mappings;
     }
 }

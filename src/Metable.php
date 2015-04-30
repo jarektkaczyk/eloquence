@@ -244,7 +244,7 @@ trait Metable
 
         return (in_array($method, ['orderBy', 'lists']))
             ? $this->{"{$method}Meta"}($query, $args, $alias)
-            : $this->metaSingleResult($query, $method, $args, $alias);
+            : $this->metaSingleResult($query, $method, $alias);
     }
 
     /**
@@ -308,11 +308,10 @@ trait Metable
      *
      * @param  \Sofa\Eloquence\Builder $query
      * @param  string $method
-     * @param  \Sofa\Eloquence\ArgumentBag $args
      * @param  string $alias
-     * @return \Sofa\Eloquence\Builder
+     * @return mixed
      */
-    protected function metaSingleResult(Builder $query, $method, $args, $alias)
+    protected function metaSingleResult(Builder $query, $method, $alias)
     {
         return $query->getQuery()->select("{$alias}.meta_value")->{$method}("{$alias}.meta_value");
     }
@@ -350,33 +349,6 @@ trait Metable
     protected function generateMetaAlias()
     {
         return md5(microtime(true)).'_meta_alias';
-    }
-
-    /**
-     * Prefix selected columns with table name so joined meta attributes
-     * columns are not unexpectedly appended on the result models.
-     *
-     * @param  \Sofa\Eloquence\Builder $query
-     * @return void
-     */
-    protected function prefixColumnsForJoin(Builder $query)
-    {
-        if (!$columns = $query->getQuery()->columns) {
-            return $query->select($this->getTable().'.*');
-        }
-
-        // We will assume that columns without table prefix are simply
-        // fields on this model's table, so we will prefix them now
-        // in order to avoid possible conflicts with meta table.
-        foreach ($columns as $key => $column) {
-            if (strpos($column, '.') !== false) {
-                continue;
-            }
-
-            $columns[$key] = $this->getTable().'.'.$column;
-        }
-
-        $query->getQuery()->columns = $columns;
     }
 
     /**
@@ -431,30 +403,6 @@ trait Metable
         }
 
         return ($not xor $this->isWhereNull($method, $args)) ? '<' : '>=';
-    }
-
-    /**
-     * Determine whether where should be treated as whereNull.
-     *
-     * @param  string $method
-     * @param  \Sofa\Eloquence\ArgumentBag $args
-     * @return boolean
-     */
-    protected function isWhereNull($method, $args)
-    {
-        return $method === 'whereNull' || $method === 'where' && $this->isWhereNullByArgs($args);
-    }
-
-    /**
-     * Determine whether where is a whereNull by the arguments passed to where method.
-     *
-     * @param  \Sofa\Eloquence\ArgumentBag $args
-     * @return boolean
-     */
-    protected function isWhereNullByArgs(ArgumentBag $args)
-    {
-        return is_null($args->get('operator'))
-            || is_null($args->get('value')) && !in_array($args->get('operator'), ['<>', '!=']);
     }
 
     /**

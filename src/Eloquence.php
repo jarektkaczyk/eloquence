@@ -119,6 +119,57 @@ trait Eloquence
     }
 
     /**
+     * Prefix selected columns with table name so joined fields
+     * are not unexpectedly appended on the returned models.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @return void
+     */
+    protected function prefixColumnsForJoin(Builder $query)
+    {
+        if (!$columns = $query->getQuery()->columns) {
+            return $query->select($this->getTable().'.*');
+        }
+
+        // We will assume that columns without table prefix are simply
+        // fields on this model's table, so we will prefix them now
+        // in order to avoid possible conflicts with other table.
+        foreach ($columns as $key => $column) {
+            if (strpos($column, '.') !== false) {
+                continue;
+            }
+
+            $columns[$key] = $this->getTable().'.'.$column;
+        }
+
+        $query->getQuery()->columns = $columns;
+    }
+
+    /**
+     * Determine whether where should be treated as whereNull.
+     *
+     * @param  string $method
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return boolean
+     */
+    protected function isWhereNull($method, ArgumentBag $args)
+    {
+        return $method === 'whereNull' || $method === 'where' && $this->isWhereNullByArgs($args);
+    }
+
+    /**
+     * Determine whether where is a whereNull by the arguments passed to where method.
+     *
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return boolean
+     */
+    protected function isWhereNullByArgs(ArgumentBag $args)
+    {
+        return is_null($args->get('operator'))
+            || is_null($args->get('value')) && !in_array($args->get('operator'), ['<>', '!=']);
+    }
+
+    /**
      * Determine whether the key is meta attribute or actual table field.
      *
      * @param  string  $key

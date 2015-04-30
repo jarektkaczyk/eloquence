@@ -19,6 +19,148 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
+     *
+     * @dataProvider aggregateFunctions
+     */
+    public function mapped_aggregates($function)
+    {
+        $sql = 'select '.$function.'("images"."path") as aggregate from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id" '.
+                'left join "images" on "images"."profile_id" = "profiles"."id"';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+
+        $model->{$function}('avatar');
+    }
+
+    public function aggregateFunctions()
+    {
+        return [
+            ['max'], ['min'], ['avg'], ['count'], ['sum']
+        ];
+    }
+
+    /**
+     * @test
+     *
+     * @expectedException \LogicException
+     */
+    public function mapped_join_rejects_morphTo_relation_for_joins()
+    {
+        // It's a MorphTo relation that is supported for mapping,
+        // but due to the way it works it cannot be used for
+        // query hooks, because it's impossible to join.
+        $this->getModel()->pluck('role');
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_join_polymorphic_relation()
+    {
+        $sql = 'select "companies"."name" from "users" '.
+                'left join "companies" on "companies"."brandable_id" = "users"."id" '.
+                'and "companies"."brandable_type" = ? '.
+                'limit 1';
+
+        $bindings = ['UserMorph'];
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+
+        $model->pluck('brand');
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_pluck()
+    {
+        $sql = 'select "images"."path" from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id" '.
+                'left join "images" on "images"."profile_id" = "profiles"."id" '.
+                'limit 1';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+
+        $model->pluck('avatar');
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_lists_leaves_prefixed_keys_intact()
+    {
+        $sql = 'select "profiles"."last_name", "other_table"."id" from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id"';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+
+        $model->lists('last_name', 'other_table.id');
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_lists_prefixes_main_table_column()
+    {
+        $sql = 'select "profiles"."last_name", "users"."id" from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id"';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+
+        $model->lists('last_name', 'id');
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_orderBy_nested()
+    {
+        $sql = 'select "users".* from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id" '.
+                'left join "images" on "images"."profile_id" = "profiles"."id" '.
+                'order by "images"."path" asc, "profiles"."first_name" desc';
+
+        $query = $this->getModel()->oldest('avatar')->latest('first_name', 'desc');
+
+        $this->assertEquals($sql, $query->toSql());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_orderBy_has_one()
+    {
+        $sql = 'select "users".* from "users" '.
+                'left join "accounts" on "accounts"."user_id" = "users"."id" '.
+                'order by "accounts"."photo" asc, "accounts"."address" desc';
+
+        $query = $this->getModel()->oldest('photo')->latest('address', 'desc');
+
+        $this->assertEquals($sql, $query->toSql());
+    }
+
+    /**
+     * @test
+     */
+    public function mapped_orderBy_belongs_to()
+    {
+        $sql = 'select "users".* from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id" '.
+                'order by "ign" asc, "profiles"."first_name" desc';
+
+        $query = $this->getModel()->oldest('nick')->latest('first_name', 'desc');
+
+        $this->assertEquals($sql, $query->toSql());
+    }
+
+    /**
+     * @test
      */
     public function alias_where()
     {
@@ -253,7 +395,10 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $processorClass = 'Illuminate\Database\Query\Processors\SQLiteProcessor';
         $grammar = new $grammarClass;
         $processor = new $processorClass;
+        $schema = m::mock('StdClass');
+        $schema->shouldReceive('getColumnListing')->andReturn(['id', 'email', 'ign']);
         $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
+        $connection->shouldReceive('getSchemaBuilder')->andReturn($schema);
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
         $class = get_class($model);
         $class::setConnectionResolver($resolver);
@@ -351,19 +496,56 @@ class MappableEloquentStub extends Model {
     use Eloquence, Mappable;
 
     protected $table = 'users';
-
+    protected $morphClass = 'UserMorph';
     protected $maps = [
         'first_name' => 'profile.first_name',
         'profile'    => ['last_name', 'age'],
         'nick'       => 'ign',
+        'photo'      => 'account.photo',
+        'address'    => 'account.address',
+        'avatar'     => 'profile.image.path',
+        'brand'      => 'company.name',
+        'role'       => 'userable.name',
     ];
 
     public function profile()
     {
         return $this->belongsTo('Sofa\Eloquence\Tests\MappableRelatedStub', 'profile_id');
     }
+
+    public function account()
+    {
+        return $this->hasOne('Sofa\Eloquence\Tests\MappableRelatedHasOneStub', 'user_id');
+    }
+
+    public function company()
+    {
+        return $this->morphOne('Sofa\Eloquence\Tests\MappablePolymorphicStub', 'brandable');
+    }
+
+    public function userable()
+    {
+        return $this->morphTo();
+    }
 }
 
 class MappableRelatedStub extends Model {
     protected $table = 'profiles';
+
+    public function image()
+    {
+        return $this->hasOne('Sofa\Eloquence\Tests\MappableFarRelatedStub', 'profile_id');
+    }
+}
+
+class MappableRelatedHasOneStub extends Model {
+    protected $table = 'accounts';
+}
+
+class MappableFarRelatedStub extends Model {
+    protected $table = 'images';
+}
+
+class MappablePolymorphicStub extends Model {
+    protected $table = 'companies';
 }
