@@ -15,6 +15,13 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 trait Mappable
 {
     /**
+     * Flat array representation of mapped attributes.
+     *
+     * @var array
+     */
+    public static $mappedAttributes;
+
+    /**
      * Related mapped objects to save along with the mappable instance.
      *
      * @var array
@@ -60,6 +67,10 @@ trait Mappable
                 return call_user_func_array([$this, 'mappedQuery'], [$query, $method, $args]);
             }
 
+            if (in_array($method, ['select', 'addSelect'])) {
+                call_user_func_array([$this, 'mappedSelect'], [$query, $args]);
+            }
+
             return $next($query, $bag);
         };
     }
@@ -83,6 +94,47 @@ trait Mappable
         $args->set('column', $mapping);
 
         return $query->callParent($method, $args->all());
+    }
+
+    /**
+     * Adjust mapped columns for select statement.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return void
+     */
+    protected function mappedSelect(Builder $query, ArgumentBag $args)
+    {
+        $columns = $args->get('columns');
+
+        foreach ($columns as $key => $column) {
+            list($column, $alias) = $this->extractColumnAlias($column);
+
+            // Each mapped column will be selected appropriately. If it's alias
+            // then prefix it with current table and use original field name
+            // otherwise join required mapped tables and select the field.
+            if ($this->hasMapping($column)) {
+                $mapping = $this->getMappingForAttribute($column);
+
+                if ($this->relationMapping($mapping)) {
+                    list($target, $mapped) = $this->parseMapping($mapping);
+
+                    $table = $this->joinMapped($query, $target);
+                } else {
+                    list($table, $mapped) = [$this->getTable(), $mapping];
+                }
+
+                $columns[$key] = "{$table}.{$mapped}";
+
+            // For non mapped columns present on this table we will simply
+            // add the prefix, in order to avoid any column collisions,
+            // that are likely to happen when we are joining tables.
+            } elseif ($this->hasColumn($column)) {
+                $columns[$key] = "{$this->getTable()}.{$column}";
+            }
+        }
+
+        $args->set('columns', $columns);
     }
 
     /**
@@ -159,7 +211,7 @@ trait Mappable
         $query->select("{$table}.{$column}");
 
         if (!is_null($args->get('key'))) {
-            $this->selectListsKey($query, $args->get('key'));
+            $this->mappedSelectListsKey($query, $args->get('key'));
         }
 
         $args->set('column', $column);
@@ -174,7 +226,7 @@ trait Mappable
      * @param  string $key
      * @return \Sofa\Eloquence\Builder
      */
-    protected function selectListsKey(Builder $query, $key)
+    protected function mappedSelectListsKey(Builder $query, $key)
     {
         if ($this->hasColumn($key)) {
             return $query->addSelect($this->getTable().'.'.$key);
@@ -375,12 +427,8 @@ trait Mappable
      */
     public function getMappingForAttribute($key)
     {
-        if ($this->hasExplicitMapping($key)) {
-            return $this->getExplicitMapping($key);
-        }
-
-        if ($this->hasImplicitMapping($key)) {
-            return $this->getImplicitMapping($key);
+        if ($this->hasMapping($key)) {
+            return static::$mappedAttributes[$key];
         }
     }
 
@@ -420,62 +468,42 @@ trait Mappable
      */
     public function hasMapping($key)
     {
-        return $this->hasExplicitMapping($key) || $this->hasImplicitMapping($key);
-    }
-
-    /**
-     * Determine whether an attribute has implicit mapping.
-     *
-     * @param  string $key
-     * @return boolean
-     */
-    protected function hasImplicitMapping($key)
-    {
-        foreach ($this->getMaps() as $mapping) {
-            if (is_array($mapping) && in_array($key, $mapping)) {
-                return true;
-            }
+        if (is_null(static::$mappedAttributes)) {
+            $this->parseMappings();
         }
 
-        return false;
+        return array_key_exists($key, static::$mappedAttributes);
     }
 
     /**
-     * Determine whether an attribute has explicit mapping.
+     * Parse defined mappings into flat array.
      *
-     * @param  string $key
-     * @return boolean
+     * @return void
      */
-    protected function hasExplicitMapping($key)
+    protected function parseMappings()
     {
-        $mapped = $this->getMaps();
+        static::$mappedAttributes = [];
 
-        return array_key_exists($key, $mapped) && is_string($mapped[$key]);
-    }
-
-    /**
-     * Get the key for explicit mapping.
-     *
-     * @param  string $key
-     * @return string
-     */
-    protected function getExplicitMapping($key)
-    {
-        return $this->maps[$key];
-    }
-
-    /**
-     * Get the key for implicit mapping.
-     *
-     * @param  string $key
-     * @return string|null
-     */
-    protected function getImplicitMapping($key)
-    {
-        foreach ($this->maps as $related => $mappings) {
-            if (is_array($mappings) && in_array($key, $mappings)) {
-                return "{$related}.{$key}";
+        foreach ($this->getMaps() as $attribute => $mapping) {
+            if (is_array($mapping)) {
+                $this->parseImplicitMapping($mapping, $attribute);
+            } else {
+                static::$mappedAttributes[$attribute] = $mapping;
             }
+        }
+    }
+
+    /**
+     * Parse implicit mappings.
+     *
+     * @param  array  $attributes
+     * @param  string $target
+     * @return void
+     */
+    protected function parseImplicitMapping($attributes, $target)
+    {
+        foreach ($attributes as $attribute) {
+            static::$mappedAttributes[$attribute] = "{$target}.{$attribute}";
         }
     }
 

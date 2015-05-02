@@ -20,6 +20,23 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function meta_select()
+    {
+        $sql = 'select "meta_alias_1"."meta_value" as "size", "other"."id", "metables"."name" from "metables" '.
+                'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
+                'and "meta_alias_1"."metable_type" = ? and "meta_alias_1"."meta_key" = ?';
+
+        $bindings = ['Metable', 'size'];
+
+        $query = $this->getModel()->select('size', 'other.id', 'name');
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals($bindings, $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
     public function meta_lists_with_both_meta_column_and_key_joins_twice()
     {
         $sql = 'select "meta_alias_1"."meta_value" as "size", "meta_alias_2"."meta_value" as "uuid" from "metables" '.

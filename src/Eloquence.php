@@ -170,6 +170,23 @@ trait Eloquence
     }
 
     /**
+     * Extract real name and alias from the sql select clause.
+     *
+     * @param  string $column
+     * @return array
+     */
+    protected function extractColumnAlias($column)
+    {
+        $alias = $column;
+
+        if (strpos($column, ' as ') !== false) {
+            list($column, $alias) = explode(' as ', $column);
+        }
+
+        return [$column, $alias];
+    }
+
+    /**
      * Determine whether the key is meta attribute or actual table field.
      *
      * @param  string  $key

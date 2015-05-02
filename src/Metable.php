@@ -194,6 +194,10 @@ trait Metable
                 return call_user_func_array([$this, 'metaQuery'], [$query, $method, $args]);
             }
 
+            if (in_array($method, ['select', 'addSelect'])) {
+                call_user_func_array([$this, 'metaSelect'], [$query, $args]);
+            }
+
             return $next($query, $bag);
         };
     }
@@ -224,6 +228,38 @@ trait Metable
         }
 
         return $this->metaHasQuery($query, $method, $args);
+    }
+
+    /**
+     * Adjust meta columns for select statement.
+     *
+     * @param  \Sofa\Eloquence\Builder $query
+     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @return void
+     */
+    protected function metaSelect(Builder $query, ArgumentBag $args)
+    {
+        $columns = $args->get('columns');
+
+        foreach ($columns as $key => $column) {
+            list($column, $alias) = $this->extractColumnAlias($column);
+
+            if ($this->hasColumn($column)) {
+                $select = "{$this->getTable()}.{$column}";
+
+                if ($column !== $alias) {
+                    $select .= " as {$alias}";
+                }
+
+                $columns[$key] = $select;
+            } elseif (strpos($column, '.') === false) {
+                $table = $this->joinMeta($query, $column);
+
+                $columns[$key] = "{$table}.meta_value as {$alias}";
+            }
+        }
+
+        $args->set('columns', $columns);
     }
 
     /**
@@ -277,7 +313,7 @@ trait Metable
         $query->select("{$alias}.meta_value as {$column}");
 
         if (!is_null($key)) {
-            $this->selectListsKey($query, $key);
+            $this->metaSelectListsKey($query, $key);
         }
 
         return $query->callParent('lists', $args->all());
@@ -290,7 +326,7 @@ trait Metable
      * @param  string $key
      * @return \Sofa\Eloquence\Builder
      */
-    protected function selectListsKey(Builder $query, $key)
+    protected function metaSelectListsKey(Builder $query, $key)
     {
         if (strpos($key, '.') !== false) {
             return $query->addSelect($key);

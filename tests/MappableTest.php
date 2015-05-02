@@ -19,6 +19,19 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
+     */
+    public function mapped_select()
+    {
+        $sql = 'select "profiles"."last_name", "users"."id", "users"."ign" from "users" '.
+                'left join "profiles" on "users"."profile_id" = "profiles"."id"';
+
+        $query = $this->getModel()->select('last_name', 'id', 'nick');
+
+        $this->assertEquals($sql, $query->toSql());
+    }
+
+    /**
+     * @test
      *
      * @dataProvider aggregateFunctions
      */
@@ -301,7 +314,6 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::hasMapping
-     * @covers \Sofa\Eloquence\Mappable::hasExplicitMapping
      * @covers \Sofa\Eloquence\Mappable::getMaps
      */
     public function it_finds_mapped_attribute_using_explicit_dot_notation()
@@ -313,30 +325,11 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      * @covers \Sofa\Eloquence\Mappable::hasMapping
-     * @covers \Sofa\Eloquence\Mappable::hasImplicitMapping
      */
     public function it_finds_mapped_attribute_using_implicit_array_notation()
     {
         $this->assertTrue($this->model->hasMapping('name'));
         $this->assertFalse($this->model->hasMapping('bar'));
-    }
-
-    /**
-     * @test
-     * @covers \Sofa\Eloquence\Mappable::getExplicitMapping
-     */
-    public function it_fetches_explicit_mapping()
-    {
-        $this->assertEquals('bar.baz', $this->model->getExplicitMapping('foo'));
-    }
-
-    /**
-     * @test
-     * @covers \Sofa\Eloquence\Mappable::getImplicitMapping
-     */
-    public function it_fetches_implicit_mapping()
-    {
-        $this->assertEquals('related.name', $this->model->getImplicitMapping('name'));
     }
 
     /**
@@ -409,10 +402,6 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
 class MappableStub {
 
     use Eloquence, Mappable {
-        hasExplicitMapping as protectedHasExplicitMapping;
-        hasImplicitMapping as protectedHasImplicitMapping;
-        getExplicitMapping as protectedGetExplicitMapping;
-        getImplicitMapping as protectedGetImplicitMapping;
         setMappedAttribute as protectedSetMappedAttribute;
         mapAttribute       as protectedMapAttribute;
         mappedQuery        as protectedMappedQuery;
@@ -464,16 +453,6 @@ class MappableStub {
     public function mapAttribute($key)
     {
         return $this->protectedMapAttribute($key);
-    }
-
-    public function getImplicitMapping($key)
-    {
-        return $this->protectedGetImplicitMapping($key);
-    }
-
-    public function getExplicitMapping($key)
-    {
-        return $this->protectedGetExplicitMapping($key);
     }
 
     protected function getRelatedStub($attributes)

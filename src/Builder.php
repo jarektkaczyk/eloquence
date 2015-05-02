@@ -51,7 +51,7 @@ class Builder extends EloquentBuilder
      */
     protected function callHook($method, ArgumentBag $args)
     {
-        if ($this->hasHook($args->get('column'))) {
+        if ($this->hasHook($args->get('column')) || in_array($method, ['select', 'addSelect'])) {
             return $this->getModel()->queryHook($this, $method, $args);
         }
 
@@ -88,6 +88,19 @@ class Builder extends EloquentBuilder
     | Query builder overrides
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * Set the columns to be selected.
+     *
+     * @param  array  $columns
+     * @return $this
+     */
+    public function select($columns = ['*'])
+    {
+        $columns = is_array($columns) ? $columns : func_get_args();
+
+        return $this->callHook(__FUNCTION__, $this->packArgs(compact('columns')));
+    }
 
     /**
      * Add where constraint to the query.
