@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 trait Validable
 {
     /**
+     * Validation switch.
+     *
+     * @var boolean
+     */
+    protected $skipValidation = false;
+
+    /**
      * Validator instance.
      *
      * @var \Illuminate\Contracts\Validation\Validator
@@ -43,6 +50,55 @@ trait Validable
                 static::setValidatorFactory(app('validator'));
             }
         }
+    }
+
+    /**
+     * Skip validation on the next saving attempt.
+     *
+     * @return $this
+     */
+    public function skipValidation()
+    {
+        return $this->disableValidation($once = true);
+    }
+
+    /**
+     * Disable validation for this instance.
+     *
+     * @return $this
+     */
+    public function disableValidation($once = false)
+    {
+        $this->skipValidation = ($once) ? Observer::SKIP_ONCE : Observer::SKIP_ALWAYS;
+
+        return $this;
+    }
+
+    /**
+     * Enable validation for this instance.
+     *
+     * @return $this
+     */
+    public function enableValidation()
+    {
+        $this->skipValidation = false;
+
+        return $this;
+    }
+
+    /**
+     * Determine whether validation is enabled for this instance.
+     *
+     * @return integer|false
+     */
+    public function skipsValidation()
+    {
+        return $this->skipValidation;
+    }
+
+    public function validationEnabled()
+    {
+        return !$this->skipsValidation();
     }
 
     /**

@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\MessageBag;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Validable;
+use Sofa\Eloquence\Validable\Observer;
 
 class ValidableTest extends \PHPUnit_Framework_TestCase {
 
@@ -40,6 +41,31 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         ];
 
         $this->assertEquals($rulesAdjusted, rules_for_update($rules, 10, 'primary_key'));
+    }
+
+    /**
+     * @test
+     */
+    public function validation_disabling_and_enabling()
+    {
+        $model = $this->getModel();
+        $this->assertTrue($model->validationEnabled());
+
+        $model->disableValidation();
+        $this->assertFalse($model->validationEnabled());
+
+        $model->enableValidation();
+        $this->assertTrue($model->validationEnabled());
+    }
+
+    /**
+     * @test
+     */
+    public function validation_skipping()
+    {
+        $model = $this->getModel();
+        $model->skipValidation();
+        $this->assertEquals(Observer::SKIP_ONCE, $model->skipsValidation());
     }
 
     /**
