@@ -1,18 +1,18 @@
 # Sofa/Eloquence
 
-[![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=0.4)](https://travis-ci.org/jarektkaczyk/eloquence) [![Coverage Status](https://coveralls.io/repos/jarektkaczyk/eloquence/badge.svg?branch=0.4)](https://coveralls.io/r/jarektkaczyk/eloquence?branch=0.4) [![Code Quality](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence/badges/quality-score.png?b=0.4)](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads)](https://packagist.org/packages/sofa/eloquence)
+[![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=0.4)](https://travis-ci.org/jarektkaczyk/eloquence) [![Coverage Status](https://coveralls.io/repos/jarektkaczyk/eloquence/badge.svg?branch=0.4)](https://coveralls.io/r/jarektkaczyk/eloquence?branch=0.4) [![Code Quality](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence/badges/quality-score.png?b=0.4)](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads)](https://packagist.org/packages/sofa/eloquence) [![stable](https://poser.pugx.org/sofa/eloquence/v/stable.svg)](https://packagist.org/packages/sofa/eloquence)
 
 Easy and flexible extensions for the Eloquent ORM.
 
 :construction: **WIP** currently available extensions: 
 
-1. `Mappable` -map attributes to table fields and/or related models
-2. `Metable` - meta attributes made easy
-3. `Mutable` - flexible attribute get/set mutators with quick setup
-4. `Mutator` - pipe-based mutating
-5. `Validable` - self-validating models
+1. `Validable` - self-validating models
+2. `Mappable` -map attributes to table fields and/or related models
+3. `Metable` - meta attributes made easy
+4. `Mutable` - flexible attribute get/set mutators with quick setup
+5. `Mutator` - pipe-based mutating
 
-The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.3"` instead of `"~0.3@dev"`.
+The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.4"` instead of `"~0.4@dev"`.
 
 If you want to know more about new extensions you can check our [Roadmap](#roadmap)!
 
@@ -20,12 +20,14 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 
 * [Getting Started](#getting-started)
 * [Validable](#validable)
+  * [Easy integration with form requests](#easy-integration-with-form-requests)
+  * [Less boilerplate thanks to Eloquence Model](#less-boilerplate-thanks-to-eloquence-model)
 * [Mappable](#mappable)
   * [Explicit vs. Implicit mappings](#explicit-vs-implicit-mappings)
 * [Metable](#metable)
 * [Mutable](#mutable)
 * [Mutator](#mutator)
-* [Mixing extensions](#mix)
+* [Mixing extensions](#mixing-extensions)
 * [Roadmap](#roadmap)
 
 # <a name="getting-started"></a>Getting Started
@@ -45,11 +47,192 @@ Package requires **PHP 5.4+** and works with **Laravel 5+**.
 
 2. Add `Eloquence` trait to the model - it's entry point for other extensions and is required for them to work.
 3. Add other traits, that you want to use.
+4. Optionally add `Sofa\Eloquence\ServiceProvider` to your `config/app.php` providers array - it will register the `Mutator` as a service in the IoC Container.
 
 
 # <a name="validable"></a>Validable
 
-docs soon...
+`Validable` is the one to grant your model super-cow powers :)
+
+All you need to do is to define the rules, everything else will be done for you:
+
+- validation on **creating** with provided rules.
+- validation on **updating with auto-adjusted rules** for update (unique checks).
+- auto-validation can be **skipped for next saving attempt** or **disabled completely** for given instance.
+- rules can be defined as **one or many properties** for your convenience - see the example.
+- additionally you will never have to worry about incorrect attributes set on your model (incorrect in that they are not referring to actual columns on the table, so would cause DB error) - they will be **cleaned on saving**, thanks to the `Eloquence` base trait, just implement `CleansAttributes` contract.
+
+```php
+<?php namespace App;
+
+use Sofa\Eloquence\Eloquence; // base trait
+use Sofa\Eloquence\Validable; // extension trait
+use Sofa\Eloquence\Contracts\CleansAttributes;
+use Sofa\Eloquence\Contracts\Validable as ValidableContract;
+
+class User extends \Eloquent implements ValidableContract, CleansAttributes {
+
+  use Eloquence, Validable;
+
+  // You may use $rules and/or any number of $someRules, $otherRules etc
+  // properties for your convenience - they will be all merged together.
+  // 
+  // Available rules as described in the laravel docs:
+  // @link http://laravel.com/docs/5.0/validation#available-validation-rules
+  protected static $businessRules = [
+    'name'  => 'required|min:5', // rules passed as pipe-separated string
+    'email' => ['required', 'email', 'unique:users'] // or as an array
+  ];
+
+  protected static $dataIntegrityRules = [
+    'email' => 'max:255',
+  ];
+
+  // You can also pass custom attribute names and validation messages
+  // just like when using Laravel Validator directly.
+  protected static $validationAttributes = [
+    'email' => 'EMAIL',
+    'name'  => 'REAL NAME',
+  ];
+
+  protected static $validationMessages = [
+    'required'       => 'Man, field :attribute must be filled!',
+    'email.required' => 'Man, gimme your email?!',
+  ];
+
+}
+```
+
+Example usage:
+```php
+>>> User::getCreateRules()
+// [
+//     "email" => [
+//         "required",
+//         "email",
+//         "unique:users",
+//         "max:255"
+//     ],
+//     "name"  => [
+//         "required",
+//         "min:5",
+//     ]
+// ]
+>>> User::getUpdateRulesForId(10)
+// [
+//     "email" => [
+//         "required",
+//         "email",
+//         "unique:users,name,10,id",
+//         "max:255"
+//     ],
+//     "name"  => [
+//         "required",
+//         "min:5",
+//     ]
+// ]
+>>> User::getValidatedFields()
+// [
+//     "email",
+//     "name"
+// ]
+
+>>> $user = new User
+// <App\User #0000000018ab2ca40000000013cb0d59> {}
+
+>>> $user->isValid()
+// false
+
+>>> $user->getValidationErrors()
+// <Illuminate\Support\MessageBag #0000000018ab2c8d0000000013cb0d59> {}
+
+>>> $user->getValidationErrors()->all()
+// [
+//   "Man, gimme your email?!",
+//   "Man, field REAL NAME must be filled!"
+// ]
+
+>>> $user->email = 'invalid'
+// "invalid"
+>>> $user->name = 'foo'
+// "foo"
+>>> $user->save()
+// false
+>>> $user->getValidationErrors()->all()
+// [
+//   "The EMAIL must be a valid email address.",
+//   "The REAL NAME must be at least 5 characters."
+// ]
+
+>>> $user->skipValidation()->save()
+// true
+
+>>> $user->getUpdateRules()
+// [
+//     "email" => [
+//         "required",
+//         "email",
+//         "unique:users,name,224,id",
+//         "max:255"
+//     ],
+//     "name"  => [
+//         "required",
+//         "min:5",
+//     ]
+// ]
+```
+
+### <a name="easy-integration-with-form-requests"></a>Easy integration with form requests
+
+Chances are, you are using `Form Reuqests` extensively in your Laravel web app. That said, you might be afraid of the duplication of the rules in both model and corresponding form request, but worry no more.
+
+Here's how easily you can integrate your validable model and form request:
+
+```php
+<?php namespace App\Http\Requests;
+
+use App\Http\Requests\Request;
+use App\User;
+
+class UpdateUserRequest extends Request {
+
+  public function authorize()
+  {
+    return true;
+  }
+
+  // get the rules
+  public function rules()
+  {
+    $id = $this->users; // assuming resource controller and {users} uri param
+
+    return User::getUpdateRulesForId($id);
+  }
+
+  // CreateUserRequest would be simply returning rules as defined in the model
+  // public function rules()
+  // {
+  //   return User::getCreateRules();
+  // }
+
+  // pass custom messages if defined
+  public function messages()
+  {
+    return User::getValidationMessages();
+  }
+
+  // and attributes as well
+  public function attributes()
+  {
+    return User::getValidationAttributes();
+  }
+}
+```
+
+### <a name="less-boilerplate-thanks-to-eloquence-model"></a>Less boilerplate thanks to Eloquence Model
+
+Most likely you will want to use auto validation on all your models, so instead of adding the traits and contracts manually, simply extend `Sofa\Eloquence\Model`. It provides `Validable` and `CleansAttributes` contracts implementation for you.
+
 
 
 # <a name="mappable"></a>Mappable
@@ -83,7 +266,7 @@ class User extends \Eloquent {
     }
 ```
 
-* `::class` is PHP5.5 constant, in PHP5.4 use full namesaced string instead.
+* `::class` is PHP5.5 constant, in PHP5.4 use full namespaced string instead.
 
 You can also add mapped attributes to the array representation of your model, just like any accessor:
 
@@ -167,7 +350,7 @@ Mappings work also with **form model binding**.
 
 **Important**: Mind that each mapping call requires the relation to be loaded, so you may need to use [eager loading](http://laravel.com/docs/5.0/eloquent#eager-loading) in order to avoid n+1 query issue.
 
-# <a name="mix"></a>Mixing extensions
+# <a name="mixing-extensions"></a>Mixing extensions
 
 Feel free to mix the extensions, however mind that the **order of including traits matters**.
 
@@ -181,13 +364,13 @@ use Sofa\Eloquence\Formattable; // extension trait
 class User extends \Eloquent {
 
     use Eloquence, 
-    Mappable, Formattable; // order of these traits matters!
+    Mappable, Mutable; // order of these traits matters!
 
     protected $maps = [
       'picture' => 'profile.picture_path',
     ];
 
-    protected $formats = [
+    protected $setterMutators = [
       'picture' => 'strtolower',
     ];
 
@@ -335,6 +518,6 @@ $hotelsWithSauna = App\Hotel::whereNotNull('sauna')->get();
   docs soon...
 
 # <a name="roadmap"></a>Roadmap
-- [ ] Easy model validation.
+- [x] Easy model validation.
 
 ...and much more to come soon!

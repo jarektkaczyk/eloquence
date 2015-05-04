@@ -2,6 +2,6 @@
 
 interface CleansAttributes
 {
-    public function getColumnListing();
+    public static function getColumnListing();
     public function getDirty();
 }

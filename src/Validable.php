@@ -53,6 +53,18 @@ trait Validable
     }
 
     /**
+     * Determine whether all the attributes on this instance pass validation.
+     *
+     * @return boolean
+     */
+    public function isValid()
+    {
+        $this->getValidator()->setData($this->getAttributes());
+
+        return $this->getValidator()->passes();
+    }
+
+    /**
      * Skip validation on the next saving attempt.
      *
      * @return $this
@@ -87,7 +99,7 @@ trait Validable
     }
 
     /**
-     * Determine whether validation is enabled for this instance.
+     * Get current validation flag.
      *
      * @return integer|false
      */
@@ -96,25 +108,13 @@ trait Validable
         return $this->skipValidation;
     }
 
+    /**
+     * Determine whether validation is enabled for this instance.
+     * @return [type] [description]
+     */
     public function validationEnabled()
     {
         return !$this->skipsValidation();
-    }
-
-    /**
-     * Determine whether all the attributes on this instance pass validation.
-     *
-     * @return boolean
-     */
-    public function isValid()
-    {
-        if ($this->exists && !$this->isDirty()) {
-            return true;
-        }
-
-        $this->getValidator()->setData($this->getAttributes());
-
-        return $this->getValidator()->passes();
     }
 
     /**
@@ -234,19 +234,18 @@ trait Validable
      */
     public function getUpdateRules()
     {
-        return static::getUpdateRulesForId($this);
+        return ($this->getKey()) ? static::getUpdateRulesForId($this) : static::getCreateRules();
     }
 
     /**
      * Get all validation rules for update for given id.
      *
      * @param  \Illuminate\Database\Eloquent\Model|string $id
-     * @param  string $primaryKey
      * @return array
      */
-    public static function getUpdateRulesForId($id, $primaryKey = 'id')
+    public static function getUpdateRulesForId($id)
     {
-        return rules_for_update(static::getCreateRules(), $id, $primaryKey);
+        return rules_for_update(static::getCreateRules(), $id, (new static)->getKeyName());
     }
 
     /**

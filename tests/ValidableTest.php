@@ -127,16 +127,6 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function it_skips_validation_for_existing_non_dirty_model()
-    {
-        $model = $this->getModel();
-        $model->exists = true;
-        $this->assertTrue($model->isValid());
-    }
-
-    /**
-     * @test
-     */
     public function it_checks_all_the_attributes()
     {
         $model = $this->getModel();

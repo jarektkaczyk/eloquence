@@ -9,7 +9,7 @@ use Sofa\Eloquence\Mutator\Mutator;
 use Sofa\Eloquence\AttributeCleaner\Observer as AttributeCleaner;
 
 /**
- * @version 0.4.8
+ * @version 0.4.9
  *
  * @method \Illuminate\Database\Connection getConnection()
  * @method string getTable()
