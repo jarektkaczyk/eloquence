@@ -18,5 +18,7 @@ class ServiceProvider extends BaseProvider
         $this->app->singleton('eloquence.mutator', function () {
             return new Mutator;
         });
+
+        $this->app->alias('eloquence.mutator', 'Sofa\Eloquence\Contracts\Mutator');
     }
 }

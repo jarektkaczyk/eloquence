@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Sofa\Eloquence\Pipeline\Pipeline;
 use Sofa\Eloquence\Contracts\Mutator as MutatorContract;
 use Sofa\Eloquence\Mutator\Mutator;
+use Sofa\Eloquence\AttributeCleaner\Observer as AttributeCleaner;
 
 /**
- * @version 0.4
+ * @version 0.4.8
  *
  * @method \Illuminate\Database\Connection getConnection()
  * @method string getTable()
@@ -52,6 +53,8 @@ trait Eloquence
      */
     public static function bootEloquence()
     {
+        static::observe(new AttributeCleaner);
+
         if (!isset(static::$attributeMutator)) {
             if (function_exists('app') && isset(app()['eloquence.mutator'])) {
                 static::setAttributeMutator(app('eloquence.mutator'));
