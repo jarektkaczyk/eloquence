@@ -10,6 +10,7 @@ Easy and flexible extensions for the Eloquent ORM.
 2. `Metable` - meta attributes made easy
 3. `Mutable` - flexible attribute get/set mutators with quick setup
 4. `Mutator` - pipe-based mutating
+5. `Validable` - self-validating models
 
 The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.3"` instead of `"~0.3@dev"`.
 
@@ -17,8 +18,8 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 
 # Table of Contents
 
-* [Requirements](#requirements)
 * [Getting Started](#getting-started)
+* [Validable](#validable)
 * [Mappable](#mappable)
   * [Explicit vs. Implicit mappings](#explicit-vs-implicit-mappings)
 * [Metable](#metable)
@@ -27,22 +28,16 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 * [Mixing extensions](#mix)
 * [Roadmap](#roadmap)
 
-# <a name="team-members"></a>Team Members
-
-* Jarek Tkaczyk ([SOFTonSOFA](http://softonsofa.com/)) <jarek@softonsofa.com>
-* Romain Lanz (https://github.com/RomainLanz) <lanz.romain@gmail.com>
-
-# <a name="requirements"></a>Requirements
-
-* This package requires PHP 5.4+
-
 # <a name="getting-started"></a>Getting Started
+
+Package requires **PHP 5.4+** and works with **Laravel 5+**.
+
 
 1. Require the package in your `composer.json`:
     ```
         "require": {
             ...
-            "sofa/eloquence": "~0.3@dev",
+            "sofa/eloquence": "~0.4@dev",
             ...
         },
 
@@ -50,6 +45,12 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 
 2. Add `Eloquence` trait to the model - it's entry point for other extensions and is required for them to work.
 3. Add other traits, that you want to use.
+
+
+# <a name="validable"></a>Validable
+
+docs soon...
+
 
 # <a name="mappable"></a>Mappable
 
