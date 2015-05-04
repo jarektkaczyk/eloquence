@@ -1,7 +1,7 @@
 <?php namespace Sofa\Eloquence;
 
 use LogicException;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -263,7 +263,7 @@ trait Mappable
      * @param  \Illuminate\Database\Eloquent\Model $parent
      * @return array
      */
-    protected function joinSegment(Builder $query, $segment, Model $parent)
+    protected function joinSegment(Builder $query, $segment, EloquentModel $parent)
     {
         $relation = $parent->{$segment}();
         $related  = $relation->getRelated();
@@ -416,7 +416,7 @@ trait Mappable
             $args->set('not', true);
         }
 
-        return ($not xor $null) ? '<' : '>=';
+        return ($not ^ $null) ? '<' : '>=';
     }
 
     /**

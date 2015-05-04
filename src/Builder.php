@@ -4,6 +4,9 @@ use InvalidArgumentException;
 use Closure;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
+/**
+ * @method $this leftJoin($table, $one, $operator, $two)
+ */
 class Builder extends EloquentBuilder
 {
     /**

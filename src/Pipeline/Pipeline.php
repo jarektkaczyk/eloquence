@@ -1,8 +1,8 @@
 <?php namespace Sofa\Eloquence\Pipeline;
 
 use Closure;
-use Sofa\Eloquence\Contracts\Pipeline as PipelineContract;
 use Sofa\Eloquence\Contracts\ArgumentBag;
+use Sofa\Eloquence\Contracts\Pipeline as PipelineContract;
 
 class Pipeline implements PipelineContract
 {

@@ -438,7 +438,7 @@ trait Metable
             $args->set('not', false);
         }
 
-        return ($not xor $this->isWhereNull($method, $args)) ? '<' : '>=';
+        return ($not ^ $this->isWhereNull($method, $args)) ? '<' : '>=';
     }
 
     /**
@@ -665,15 +665,4 @@ trait Metable
     {
         return (property_exists($this, 'allowedMeta')) ? $this->allowedMeta : [];
     }
-
-    /**
-     * Set allowed meta attributes array.
-     *
-     * @param  array $attributes
-     * @return void
-     */
-    // public function setAllowedMeta(array $attributes)
-    // {
-    //     $this->allowedMeta = $attributes;
-    // }
 }

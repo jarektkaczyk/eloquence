@@ -1,11 +1,8 @@
 <?php namespace Sofa\Eloquence;
 
-use Closure;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Sofa\Eloquence\Mutator\Mutator;
 use Sofa\Eloquence\Pipeline\Pipeline;
 use Sofa\Eloquence\Contracts\Mutator as MutatorContract;
-use Sofa\Eloquence\Mutator\Mutator;
 use Sofa\Eloquence\AttributeCleaner\Observer as AttributeCleaner;
 
 /**

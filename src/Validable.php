@@ -2,8 +2,11 @@
 
 use Sofa\Eloquence\Validable\Observer;
 use Illuminate\Contracts\Validation\Factory;
-use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method integer getKey()
+ * @method string getKeyName()
+ */
 trait Validable
 {
     /**
@@ -110,7 +113,8 @@ trait Validable
 
     /**
      * Determine whether validation is enabled for this instance.
-     * @return [type] [description]
+     *
+     * @return boolean
      */
     public function validationEnabled()
     {
@@ -228,8 +232,6 @@ trait Validable
     /**
      * Get all validation rules for update on this model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model|string $id
-     * @param  string $primaryKey
      * @return array
      */
     public function getUpdateRules()
@@ -286,7 +288,7 @@ trait Validable
      * Get rules from given group.
      *
      * @param  string $group
-     * @return
+     * @return array
      */
     protected static function getRulesGroup($group)
     {
@@ -296,7 +298,8 @@ trait Validable
     /**
      * Set validation factory instance for this model.
      *
-     * @param \Illuminate\Contracts\Validation\Factory
+     * @param  \Illuminate\Contracts\Validation\Factory
+     * @return void
      */
     public static function setValidatorFactory(Factory $factory)
     {

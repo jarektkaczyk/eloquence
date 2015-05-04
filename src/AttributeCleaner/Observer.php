@@ -1,6 +1,5 @@
 <?php namespace Sofa\Eloquence\AttributeCleaner;
 
-use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Contracts\CleansAttributes;
 
 class Observer
