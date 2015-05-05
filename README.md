@@ -359,7 +359,6 @@ Feel free to mix the extensions, however mind that the **order of including trai
 
 use Sofa\Eloquence\Eloquence; // base trait
 use Sofa\Eloquence\Mappable; // extension trait
-use Sofa\Eloquence\Formattable; // extension trait
 
 class User extends \Eloquent {
 
