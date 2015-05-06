@@ -392,6 +392,8 @@ $user->profile->picture_path; // path/to/another/file.jpg
 
 # <a name="metable"></a>Metable
 
+It requires additional table in your db. You can find the migration under `Sofa\Eloquence\Metable` - for the time being, create you own migration and simply copy the code **without namespace**. Soon there will be a console command and publishing option for the migration.
+
 Use it to add meta-attributes to your model, if it has arbitrary number of attributes. For example `Hotel` or `Product`:
 
 ```php
