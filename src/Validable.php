@@ -128,7 +128,17 @@ trait Validable
      */
     public function getValidationErrors()
     {
-        return $this->getValidator()->errors();
+        return $this->getMessageBag();
+    }
+
+    /**
+     * Retrieve validation error messages.
+     *
+     * @return \Illuminate\Support\MessageBag
+     */
+    public function getMessageBag()
+    {
+        return $this->getValidator()->getMessageBag();
     }
 
     /**
@@ -217,11 +227,21 @@ trait Validable
                 $group = static::getRulesGroup($groupName);
 
                 if (isset($group[$key])) {
-                    $rule = is_array($group[$key])
+                    $rules = is_array($group[$key])
                             ? $group[$key]
                             : explode('|', $group[$key]);
 
-                    $result[$key] = array_unique(array_merge($result[$key], $rule));
+                    foreach ($rules as &$rule) {
+                        if ($rule === 'unique') {
+                            $table = (new static)->getTable();
+
+                            $rule .= ":{$table}";
+                        }
+                    }
+
+                    unset($rule);
+
+                    $result[$key] = array_unique(array_merge($result[$key], $rules));
                 }
             }
         }

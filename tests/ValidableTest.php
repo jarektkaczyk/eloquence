@@ -91,7 +91,7 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $messageBag = new MessageBag(['name' => 'name is required']);
         $model = $this->getModel();
         $validator = $model->getValidator();
-        $validator->shouldReceive('errors')->once()->andReturn($messageBag);
+        $validator->shouldReceive('getMessageBag')->once()->andReturn($messageBag);
 
         $this->assertEquals(['name'], $model->getInvalidAttributes());
     }
@@ -104,7 +104,7 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $messageBag = new MessageBag(['name' => 'name is required']);
         $model = $this->getModel();
         $validator = $model->getValidator();
-        $validator->shouldReceive('errors')->once()->andReturn($messageBag);
+        $validator->shouldReceive('getMessageBag')->once()->andReturn($messageBag);
 
         $this->assertEquals(new MessageBag(['name' => 'name is required']), $model->getValidationErrors());
     }
@@ -152,8 +152,10 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
 class ValidableEloquentStub extends Model {
     use Eloquence, Validable;
 
+    protected $table = 'users';
+
     protected static $rules = [
-        'email' => 'required|email|unique:users',
+        'email' => 'required|email|unique',
         'name'  => ['required', 'max:10', 'unique:users,username,null,id,account_id,5'],
     ];
 

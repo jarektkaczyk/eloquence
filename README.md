@@ -29,6 +29,7 @@ If you want to know more about new extensions you can check our [Roadmap](#roadm
 * [Mutator](#mutator)
 * [Mixing extensions](#mixing-extensions)
 * [Roadmap](#roadmap)
+* [Contribution](#contribution)
 
 # <a name="getting-started"></a>Getting Started
 
@@ -359,6 +360,7 @@ Feel free to mix the extensions, however mind that the **order of including trai
 
 use Sofa\Eloquence\Eloquence; // base trait
 use Sofa\Eloquence\Mappable; // extension trait
+use Sofa\Eloquence\Mutable; // extension trait
 
 class User extends \Eloquent {
 
@@ -520,3 +522,9 @@ $hotelsWithSauna = App\Hotel::whereNotNull('sauna')->get();
 - [x] Easy model validation.
 
 ...and much more to come soon!
+
+# <a name="contribution"></a>Contribution
+
+All contributions are welcome, PRs must be **tested** and **PSR-2 compliant**.
+
+Thanks to [contributors](https://github.com/jarektkaczyk/eloquence/graphs/contributors).

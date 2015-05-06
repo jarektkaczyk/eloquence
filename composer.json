@@ -1,6 +1,6 @@
 {
     "name": "sofa/eloquence",
-    "description": "Extensions for the Eloquent ORM.",
+    "description": "Extensions for the Eloquent ORM. Validation, attribute mutators, mapping relations, queryable meta attributes and more.",
     "license": "MIT",
     "support": {
         "issues": "https://github.com/jarektkaczyk/eloquence/issues",
@@ -9,10 +9,11 @@
     "keywords": [
         "laravel",
         "eloquent",
+        "meta",
         "orm",
         "database",
         "active record",
-        "sql"
+        "sql",
     ],
     "authors": [
         {
