@@ -119,33 +119,6 @@ trait Eloquence
     }
 
     /**
-     * Prefix selected columns with table name so joined fields
-     * are not unexpectedly appended on the returned models.
-     *
-     * @param  \Sofa\Eloquence\Builder $query
-     * @return void
-     */
-    protected function prefixColumnsForJoin(Builder $query)
-    {
-        if (!$columns = $query->getQuery()->columns) {
-            return $query->select($this->getTable().'.*');
-        }
-
-        // We will assume that columns without table prefix are simply
-        // fields on this model's table, so we will prefix them now
-        // in order to avoid possible conflicts with other table.
-        foreach ($columns as $key => $column) {
-            if (strpos($column, '.') !== false) {
-                continue;
-            }
-
-            $columns[$key] = $this->getTable().'.'.$column;
-        }
-
-        $query->getQuery()->columns = $columns;
-    }
-
-    /**
      * Determine whether where should be treated as whereNull.
      *
      * @param  string $method
@@ -187,6 +160,23 @@ trait Eloquence
     }
 
     /**
+     * Get the target relation and column from the mapping.
+     *
+     * @param  string $mapping
+     * @return array
+     */
+    public function parseMappedColumn($mapping)
+    {
+        $segments = explode('.', $mapping);
+
+        $column = array_pop($segments);
+
+        $target = implode('.', $segments);
+
+        return [$target, $column];
+    }
+
+    /**
      * Determine whether the key is meta attribute or actual table field.
      *
      * @param  string  $key
@@ -196,7 +186,17 @@ trait Eloquence
     {
         static::loadColumnListing();
 
-        return in_array($key, static::$columnListing);
+        return in_array((string)$key, static::$columnListing);
+    }
+
+    /**
+     * Get searchable columns defined on the model.
+     *
+     * @return array
+     */
+    public function getSearchableColumns()
+    {
+        return (property_exists($this, 'searchableColumns')) ? $this->searchableColumns : [];
     }
 
     /**

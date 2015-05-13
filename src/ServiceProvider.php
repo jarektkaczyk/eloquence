@@ -1,13 +1,23 @@
 <?php namespace Sofa\Eloquence;
 
-use Illuminate\Support\ServiceProvider as BaseProvider;
+use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Mutator\Mutator;
+use Sofa\Eloquence\Relations\JoinerFactory;
+use Sofa\Eloquence\Searchable\ParserFactory;
+use Illuminate\Support\ServiceProvider as BaseProvider;
 
 /**
  * @codeCoverageIgnore
  */
 class ServiceProvider extends BaseProvider
 {
+    public function boot()
+    {
+        Builder::setJoinerFactory(new JoinerFactory);
+
+        Builder::setParserFactory(new ParserFactory);
+    }
+
     /**
      * Register the service provider.
      *

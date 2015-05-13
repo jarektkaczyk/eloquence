@@ -14,7 +14,7 @@ Easy and flexible extensions for the Eloquent ORM.
 
 The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.4"` instead of `"~0.4@dev"`.
 
-If you want to know more about new extensions you can check our [Roadmap](#roadmap)!
+If you want to know more about new extensions you can check the [Roadmap](#roadmap)!
 
 # Table of Contents
 

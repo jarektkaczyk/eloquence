@@ -117,7 +117,7 @@ trait Mappable
                 $mapping = $this->getMappingForAttribute($column);
 
                 if ($this->relationMapping($mapping)) {
-                    list($target, $mapped) = $this->parseMapping($mapping);
+                    list($target, $mapped) = $this->parseMappedColumn($mapping);
 
                     $table = $this->joinMapped($query, $target);
                 } else {
@@ -148,7 +148,7 @@ trait Mappable
      */
     protected function mappedRelationQuery($query, $method, ArgumentBag $args, $mapping)
     {
-        list($target, $column) = $this->parseMapping($mapping);
+        list($target, $column) = $this->parseMappedColumn($mapping);
 
         if (in_array($method, ['pluck', 'aggregate', 'orderBy', 'lists'])) {
             return $this->mappedJoinQuery($query, $method, $args, $target, $column);
@@ -239,12 +239,12 @@ trait Mappable
      * Join mapped table(s).
      *
      * @param  \Sofa\Eloquence\Builder $query
-     * @param  string $column
+     * @param  string $target
      * @return string
      */
     protected function joinMapped(Builder $query, $target)
     {
-        $this->prefixColumnsForJoin($query);
+        $query->prefixColumnsForJoin();
 
         $parent = $this;
 
@@ -444,23 +444,6 @@ trait Mappable
     }
 
     /**
-     * Get the target relation and column from the mapping.
-     *
-     * @param  string $mapping
-     * @return array
-     */
-    protected function parseMapping($mapping)
-    {
-        $segments = explode('.', $mapping);
-
-        $column = array_pop($segments);
-
-        $target = implode('.', $segments);
-
-        return [$target, $column];
-    }
-
-    /**
      * Determine whether a mapping exists for an attribute.
      *
      * @param  string $key
@@ -472,7 +455,7 @@ trait Mappable
             $this->parseMappings();
         }
 
-        return array_key_exists($key, static::$mappedAttributes);
+        return array_key_exists((string)$key, static::$mappedAttributes);
     }
 
     /**
@@ -679,7 +662,7 @@ trait Mappable
     {
         $mapping = $this->getMappingForAttribute($key);
 
-        list($target, $attribute) = $this->parseMapping($mapping);
+        list($target, $attribute) = $this->parseMappedColumn($mapping);
 
         $target = $target ? $this->getTarget($this, explode('.', $target)) : $this;
 

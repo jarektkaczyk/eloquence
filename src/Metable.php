@@ -252,7 +252,7 @@ trait Metable
                 }
 
                 $columns[$key] = $select;
-            } elseif (strpos($column, '.') === false) {
+            } elseif (is_string($column) && strpos($column, '.') === false) {
                 $table = $this->joinMeta($query, $column);
 
                 $columns[$key] = "{$table}.meta_value as {$alias}";
@@ -362,7 +362,7 @@ trait Metable
      */
     protected function joinMeta(Builder $query, $column)
     {
-        $this->prefixColumnsForJoin($query);
+        $query->prefixColumnsForJoin();
 
         $alias = $this->generateMetaAlias();
 
@@ -461,17 +461,6 @@ trait Metable
 
             $args->set('values', $values);
         }
-    }
-
-    /**
-     * Create raw query expression.
-     *
-     * @param  mixed $value
-     * @return \Illuminate\Database\Query\Expression
-     */
-    protected function raw($value)
-    {
-        return $this->getConnection()->raw($value);
     }
 
     /**

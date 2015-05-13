@@ -18,6 +18,19 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
+     */
+    public function it_joins_relations_as_strings_or_array()
+    {
+        $builder = $this->getBuilder();
+
+        $builder->leftJoinRelations('foo', 'bar');
+        $builder->rightJoinRelations(['foo', 'bar']);
+        $builder->joinRelations('foo', 'bar');
+        $builder->joinRelations(['foo', 'bar']);
+    }
+
+    /**
+     * @test
      *
      * @expectedException \InvalidArgumentException
      */
@@ -47,6 +60,15 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
         $processor  = m::mock('\Illuminate\Database\Query\Processors\Processor');
         $query      = new Query($connection, $grammar, $processor);
         $builder    = new Builder($query);
+
+        $joiner = m::mock('stdClass');
+        $joiner->shouldReceive('join')->with('foo', m::any());
+        $joiner->shouldReceive('join')->with('bar', m::any());
+        $factory = m::mock('\Sofa\Eloquence\Relations\JoinerFactory');
+        $factory->shouldReceive('make')->andReturn($joiner);
+        Builder::setJoinerFactory($factory);
+
+        Builder::setParserFactory(new \Sofa\Eloquence\Searchable\ParserFactory);
 
         $model = new BuilderModelStub;
         $builder->setModel($model);
