@@ -4,13 +4,16 @@
 
 Easy and flexible extensions for the Eloquent ORM.
 
-:construction: **WIP** currently available extensions: 
+**WIP** currently available extensions: 
 
+1. `Searchable` query - crazy-simple fulltext search through any related model
 1. `Validable` - self-validating models
 2. `Mappable` -map attributes to table fields and/or related models
 3. `Metable` - meta attributes made easy
 4. `Mutable` - flexible attribute get/set mutators with quick setup
 5. `Mutator` - pipe-based mutating
+
+Check [documentation](https://github.com/jarektkaczyk/eloquence/wiki) and examples below.
 
 The package is under development and **currently doesn't follow semantic versioning**, thus **BC breaks are likely to happen**. If you are going to use it in production, then require specific version, eg. `"0.4"` instead of `"~0.4@dev"`.
 
