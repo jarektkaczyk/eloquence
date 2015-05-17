@@ -13,7 +13,7 @@ Currently available extensions:
 4. `Mutable` - flexible attribute get/set mutators with quick setup (with help of [Romain Lanz](https://github.com/RomainLanz))
 5. `Mutator` - pipe-based mutating
 
-**Check the [documentation](https://github.com/jarektkaczyk/eloquence/wiki) for installation and usage info.**
+**Check the [documentation](https://github.com/jarektkaczyk/eloquence/wiki) for installation and usage info and [website](http://softonsofa.com/tag/eloquence/) for examples.**
 
 ## Contribution
 
