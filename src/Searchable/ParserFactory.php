@@ -11,7 +11,7 @@ class ParserFactory implements FactoryContract
      * @param  string  $wildcard
      * @return \Sofa\Eloquence\Contracts\Searchable\Parser
      */
-    public function make($weight = 1, $wildcard = '*')
+    public static function make($weight = 1, $wildcard = '*')
     {
         return new Parser($weight, $wildcard);
     }

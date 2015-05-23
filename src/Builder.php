@@ -164,7 +164,7 @@ class Builder extends EloquentBuilder
      * @param  array $words
      * @return array
      */
-    protected function searchSelect(SearchableSubquery $subquery, ColumnCollection $columns, array $words, $threshold)
+    protected function searchSelect(SearchableSubquery $subquery, ColumnCollection $columns, array $words)
     {
         $cases = $bindings = [];
 
@@ -325,10 +325,14 @@ class Builder extends EloquentBuilder
 
         $operator = $this->getLikeOperator();
 
-        $parser = static::$parser->make();
+        // $parser = static::$parser->make();
 
-        $bindings['select'] = $bindings['where'] = array_map(function ($word) use ($parser) {
-            return $parser->stripWildcards($word);
+        // $bindings['select'] = $bindings['where'] = array_map(function ($word) use ($parser) {
+        //     return $parser->stripWildcards($word);
+        // }, $words);
+
+        $bindings['select'] = $bindings['where'] = array_map(function ($word) {
+            return $this->caseBinding($word);
         }, $words);
 
         $case = $this->buildEqualsCase($column, $words);
@@ -339,7 +343,8 @@ class Builder extends EloquentBuilder
             foreach ($words as $key => $word) {
                 if ($this->isLeftMatching($word)) {
                     $leftMatching[] = sprintf('%s %s ?', $column->getWrapped(), $operator);
-                    $bindings['select'][] = $bindings['where'][$key] = $parser->stripWildcards($word).'%';
+                    // $bindings['select'][] = $bindings['where'][$key] = $parser->stripWildcards($word).'%';
+                    $bindings['select'][] = $bindings['where'][$key] = $this->caseBinding($word).'%';
                 }
             }
 
@@ -354,7 +359,8 @@ class Builder extends EloquentBuilder
             foreach ($words as $key => $word) {
                 if ($this->isWildcard($word)) {
                     $wildcards[] = sprintf('%s %s ?', $column->getWrapped(), $operator);
-                    $bindings['select'][] = $bindings['where'][$key] = '%'.$parser->stripWildcards($word).'%';
+                    // $bindings['select'][] = $bindings['where'][$key] = '%'.$parser->stripWildcards($word).'%';
+                    $bindings['select'][] = $bindings['where'][$key] = '%'.$this->caseBinding($word).'%';
                 }
             }
 
@@ -366,6 +372,13 @@ class Builder extends EloquentBuilder
         }
 
         return [$case, $bindings];
+    }
+
+    protected function caseBinding($word)
+    {
+        $parser = static::$parser->make();
+
+        return str_replace('?', '_', $parser->stripWildcards($word));
     }
 
     /**
@@ -925,7 +938,7 @@ class Builder extends EloquentBuilder
 
         $query = $builder->getQuery();
 
-        $this->query->wheres[] = compact('type', 'operator', 'query', 'boolean');
+        $this->query->wheres[] = compact('type', 'query', 'boolean');
 
         $this->query->mergeBindings($query);
 

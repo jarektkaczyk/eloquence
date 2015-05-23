@@ -116,7 +116,7 @@ class Parser implements ParserContract
         $token = $this->wildcard;
 
         return array_map(function ($word) use ($token) {
-            return "{$token}{$word}{$token}";
+            return preg_replace('/\*+/', '*', "{$token}{$word}{$token}");
         }, $words);
     }
 }

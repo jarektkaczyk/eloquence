@@ -24,7 +24,7 @@ class CreateMetaAttributesTable extends Migration
      */
     public function up()
     {
-        Schema::create($this->table, function (Blueprint $table) {
+        \Schema::create($this->table, function (Blueprint $table) {
             $table->increments('meta_id');
             $table->string('meta_key');
             $table->longText('meta_value');
@@ -32,7 +32,9 @@ class CreateMetaAttributesTable extends Migration
             $table->morphs('metable');
 
             $table->index('meta_key');
-            $table->index(['meta_key', 'meta_value']);
+
+            // Laravel doesn't handle index length, so we need raw statement for this one
+            \Schema::getConnection()->statement('create index blobs_index_value on blobs (id, value(10))');
         });
     }
 
@@ -43,6 +45,6 @@ class CreateMetaAttributesTable extends Migration
      */
     public function down()
     {
-        Schema::drop($this->table);
+        \Schema::drop($this->table);
     }
 }

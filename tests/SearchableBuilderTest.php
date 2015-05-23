@@ -29,6 +29,25 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function single_character_wildcards()
+    {
+        $sql = 'select * from (select `users`.*, max(case when `users`.`last_name` = ? then 150 else 0 end) '.
+               'as relevance from `users` where (`users`.`last_name` like ?) '.
+               'group by `users`.`primary_key`) as `users` where `relevance` >= 2.5 order by `relevance` desc';
+
+        $bindings = ['jaros_aw', 'jaros_aw'];
+
+        $model = $this->getModel();
+
+        $query = $model->search(' jaros?aw ', ['last_name' => 10], false);
+
+        $this->assertEquals($sql, $query->toSql());
+        $this->assertEquals($bindings, $query->getBindings());
+    }
+
+    /**
+     * @test
+     */
     public function it_moves_wheres_with_bindings_to_subquery_correctly()
     {
         $innerBindings = [

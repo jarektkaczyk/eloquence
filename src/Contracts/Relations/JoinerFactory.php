@@ -11,5 +11,5 @@ interface JoinerFactory
      * @param  \Illuminate\Database\Query\Builder $query
      * @return \Sofa\Eloquence\Contracts\Relations\Joiner
      */
-    public function make($query, Model $model = null);
+    public static function make($query, Model $model = null);
 }

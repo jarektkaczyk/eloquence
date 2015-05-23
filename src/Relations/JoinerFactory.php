@@ -12,7 +12,7 @@ class JoinerFactory implements FactoryContract
      * @param  \Illuminate\Database\Eloquent\Builder $query
      * @return \Sofa\Eloquence\Relations\Joiner
      */
-    public function make($query, Model $model = null)
+    public static function make($query, Model $model = null)
     {
         if ($query instanceof EloquentBuilder) {
             $model = $query->getModel();
