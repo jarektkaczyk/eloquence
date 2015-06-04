@@ -108,7 +108,7 @@ trait Mappable
         $columns = $args->get('columns');
 
         foreach ($columns as $key => $column) {
-            list($column, $alias) = $this->extractColumnAlias($column);
+            list($column) = $this->extractColumnAlias($column);
 
             // Each mapped column will be selected appropriately. If it's alias
             // then prefix it with current table and use original field name
@@ -576,9 +576,16 @@ trait Mappable
         $attribute = array_pop($segments);
 
         if ($target = $this->getTarget($this, $segments)) {
-            $this->targetsToSave[] = $target;
+            $this->addTargetToSave($target);
 
             $target->{$attribute} = $value;
+        }
+    }
+
+    protected function addTargetToSave($target)
+    {
+        if ($this !== $target) {
+            $this->targetsToSave[] = $target;
         }
     }
 
