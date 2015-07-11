@@ -141,6 +141,11 @@ class Builder extends EloquentBuilder
     ) {
         $whereBindings = $this->searchSelect($subquery, $columns, $words, $threshold);
 
+        // For morphOne/morphMany support we need to port the bindings from JoinClauses.
+        $joinBindings = array_flatten(array_fetch((array)$subquery->getQuery()->joins, 'bindings'));
+
+        $this->addBinding($joinBindings, 'select');
+
         // Developer may want to skip the score threshold filtering by passing zero
         // value as threshold in order to simply order full result by relevance.
         // Otherwise we are going to add where clauses for speed improvement.
