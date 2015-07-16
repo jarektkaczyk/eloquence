@@ -381,6 +381,16 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('new_bam_value', $this->model->mapAttribute('bam'));
     }
 
+    /**
+     * @test
+     */
+    public function mutating_mapped_attributes()
+    {
+        $model = new MappableEloquentStub;
+        $model->nick = 'foo';
+        $this->assertEquals('Foo', $model->mutated_nick);
+    }
+
     public function getModel()
     {
         $model = new MappableEloquentStub;
@@ -505,6 +515,11 @@ class MappableEloquentStub extends Model {
     public function userable()
     {
         return $this->morphTo();
+    }
+
+    public function setNickAttribute($value)
+    {
+        $this->attributes['mutated_nick'] = ucfirst($value);
     }
 }
 

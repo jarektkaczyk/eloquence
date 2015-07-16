@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Str;
+
 
 /**
  * @property array $maps
@@ -571,6 +573,11 @@ trait Mappable
      */
     protected function setMappedAttribute($key, $value)
     {
+        if (method_exists($this, 'hasSetMutator') && $this->hasSetMutator($key)) {
+            $method = 'set' . Str::studly($key) . 'Attribute';
+            return $this->{$method}($value);
+        }
+
         $segments = explode('.', $this->getMappingForAttribute($key));
 
         $attribute = array_pop($segments);
