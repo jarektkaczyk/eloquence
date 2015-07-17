@@ -300,13 +300,9 @@ trait Mappable
      */
     protected function alreadyJoined(Builder $query, $table)
     {
-        foreach ((array) $query->getQuery()->joins as $join) {
-            if ($join->table == $table) {
-                return true;
-            }
-        }
+        $joined = array_fetch((array) $query->getQuery()->joins, 'table');
 
-        return false;
+        return in_array($table, $joined);
     }
 
     /**
