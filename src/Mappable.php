@@ -150,7 +150,7 @@ trait Mappable
     {
         list($target, $column) = $this->parseMappedColumn($mapping);
 
-        if (in_array($method, ['pluck', 'aggregate', 'orderBy', 'lists'])) {
+        if (in_array($method, ['pluck', 'value', 'aggregate', 'orderBy', 'lists'])) {
             return $this->mappedJoinQuery($query, $method, $args, $target, $column);
         }
 
@@ -578,6 +578,11 @@ trait Mappable
         }
     }
 
+    /**
+     * Flag mapped model to be saved along with this model.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $target
+     */
     protected function addTargetToSave($target)
     {
         if ($this !== $target) {

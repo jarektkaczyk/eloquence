@@ -21,11 +21,21 @@ class ColumnCollection implements ArrayAccess, IteratorAggregate
         }
     }
 
+    /**
+     * Get columns as plain array.
+     *
+     * @return array
+     */
     public function getColumns()
     {
         return $this->columns;
     }
 
+    /**
+     * Add column to the collection.
+     *
+     * @param \Sofa\Eloquence\Searchable\Column $column
+     */
     public function add(Column $column)
     {
         $this->columns[$column->getMapping()] = $column;
@@ -83,21 +93,46 @@ class ColumnCollection implements ArrayAccess, IteratorAggregate
         }, $this->columns);
     }
 
+    /**
+     * Check if element exists at given offset.
+     *
+     * @param  string  $key
+     * @return boolean
+     */
     public function offsetExists($key)
     {
         return array_key_exists($key, $this->columns);
     }
 
+    /**
+     * Get element at given offset.
+     *
+     * @param  string $key
+     * @return \Sofa\Eloquence\Searchable\Column
+     */
     public function offsetGet($key)
     {
         return $this->columns[$key];
     }
 
+    /**
+     * Set element at given offset.
+     *
+     * @param  string $key    [description]
+     * @param  \Sofa\Eloquence\Searchable\Column $column
+     * @return void
+     */
     public function offsetSet($key, $column)
     {
         $this->add($column);
     }
 
+    /**
+     * Unset element at given offset.
+     *
+     * @param  string $key
+     * @return \Sofa\Eloquence\Searchable\Column
+     */
     public function offsetUnset($key)
     {
         unset($this->columns[$key]);

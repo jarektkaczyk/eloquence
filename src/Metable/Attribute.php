@@ -49,20 +49,20 @@ class Attribute extends Model implements AttributeContract
      * @var array
      */
     protected $getterMutators = [
-        'array'                              => 'json_decode',
-        'StdClass'                           => 'json_decode',
-        'DateTime'                           => 'asDateTime',
-        'Illuminate\Database\Eloquent\Model' => 'unserialize',
+        'array'      => 'json_decode',
+        'StdClass'   => 'json_decode',
+        'DateTime'   => 'asDateTime',
+        Model::class => 'unserialize',
     ];
 
     /**
      * @var array
      */
     protected $setterMutators = [
-        'array'                              => 'json_encode',
-        'StdClass'                           => 'json_encode',
-        'DateTime'                           => 'fromDateTime',
-        'Illuminate\Database\Eloquent\Model' => 'serialize',
+        'array'      => 'json_encode',
+        'StdClass'   => 'json_encode',
+        'DateTime'   => 'fromDateTime',
+        Model::class => 'serialize',
     ];
 
     /**

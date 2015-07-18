@@ -16,7 +16,7 @@ trait Metable
     protected $metaQueryable = [
         'where', 'whereBetween', 'whereIn', 'whereNull',
         'whereDate', 'whereYear', 'whereMonth', 'whereDay',
-        'orderBy', 'pluck', 'aggregate', 'lists'
+        'orderBy', 'pluck', 'value', 'aggregate', 'lists'
     ];
 
     /**
@@ -223,7 +223,7 @@ trait Metable
      */
     protected function metaQuery(Builder $query, $method, ArgumentBag $args)
     {
-        if (in_array($method, ['pluck', 'aggregate', 'orderBy', 'lists'])) {
+        if (in_array($method, ['pluck', 'value', 'aggregate', 'orderBy', 'lists'])) {
             return $this->metaJoinQuery($query, $method, $args);
         }
 

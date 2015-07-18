@@ -6,7 +6,13 @@ use Sofa\Eloquence\Contracts\Mutator as MutatorContract;
 use Sofa\Eloquence\AttributeCleaner\Observer as AttributeCleaner;
 
 /**
- * @version 0.4.9
+ * This trait is an entry point for all the hooks that we want to apply
+ * on the Eloquent Model and Builder in order to let the magic happen.
+ *
+ * It also provides hasColumn and getColumnListing helper methods
+ * so you can easily list or check columns in the model's table.
+ *
+ * @version 5.1
  *
  * @method \Illuminate\Database\Connection getConnection()
  * @method string getTable()

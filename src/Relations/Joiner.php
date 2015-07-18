@@ -63,7 +63,7 @@ class Joiner implements JoinerContract
      * Left join related tables.
      *
      * @param  string $target
-     * @return string
+     * @return \Illuminate\Database\Eloquent\Model
      */
     public function leftJoin($target)
     {
@@ -74,7 +74,7 @@ class Joiner implements JoinerContract
      * Right join related tables.
      *
      * @param  string $target
-     * @return string
+     * @return \Illuminate\Database\Eloquent\Model
      */
     public function rightJoin($target)
     {
@@ -87,7 +87,7 @@ class Joiner implements JoinerContract
      * @param  \Illuminate\Database\Eloquent\Model $parent
      * @param  string $segment
      * @param  string $type
-     * @return array
+     * @return \Illuminate\Database\Eloquent\Model
      */
     protected function joinSegment(Model $parent, $segment, $type)
     {
@@ -112,7 +112,7 @@ class Joiner implements JoinerContract
      * @param  \Illuminate\Database\Query\JoinClause $join
      * @return boolean
      */
-    protected function alreadyJoined($join)
+    protected function alreadyJoined(Join $join)
     {
         return in_array($join, (array) $this->query->joins);
     }
@@ -165,7 +165,7 @@ class Joiner implements JoinerContract
     }
 
     /**
-     * Get the keys from relation in order to join the table.
+     * Get pair of the keys from relation in order to join the table.
      *
      * @param  \Illuminate\Database\Eloquent\Relations\Relation $relation
      * @return array

@@ -13,10 +13,9 @@ class AttributeBag extends Collection implements AttributeBagContract
      */
     public function __construct($attributes = [])
     {
-        $this->loadAndIndex($attributes);
-        // foreach ($attributes as $attribute) {
-        //     $this->add($attribute);
-        // }
+        foreach ($attributes as $attribute) {
+            $this->add($attribute);
+        }
     }
 
     /**
@@ -51,7 +50,7 @@ class AttributeBag extends Collection implements AttributeBagContract
         if ($this->has($attribute->getMetaKey())) {
             $this->update($attribute);
         } else {
-            $this[$attribute->getMetaKey()] = $attribute;
+            $this->items[$attribute->getMetaKey()] = $attribute;
         }
 
         return $this;
@@ -201,29 +200,6 @@ class AttributeBag extends Collection implements AttributeBagContract
     public function __unset($key)
     {
         $this->forget($key);
-    }
-
-    /**
-     * Use attributes key as collection index.
-     *
-     * @param  array $items
-     * @return void
-     */
-    protected function loadAndIndex(array $items)
-    {
-        $retriever = $this->valueRetriever('meta_key');
-
-        $attributes = [];
-
-        foreach ($items as $item) {
-            if (!isset($item->meta_key) || !isset($item->meta_value)) {
-                throw new InvalidArgumentException("Attribute must contain meta_key and meta_value.");
-            }
-
-            $attributes[$retriever($item)] = $item;
-        }
-
-        $this->items = $attributes;
     }
 
     /**

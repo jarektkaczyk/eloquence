@@ -22,30 +22,6 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     *
-     * @dataProvider invalidAttributes
-     * @expectedException \InvalidArgumentException
-     */
-    public function it_rejects_invalid_attributes($attribute)
-    {
-        new AttributeBag([$attribute]);
-    }
-
-    /*
-     * data provider
-     */
-    public function invalidAttributes()
-    {
-        return [
-            [['foo' => 'name', 'value' => 'jarek']],
-            [['key' => 'name', 'foo' => 'jarek']],
-            [(object) ['foo' => 'name', 'value' => 'jarek']],
-            [(object) ['key' => 'name', 'foo' => 'jarek']],
-        ];
-    }
-
-    /**
-     * @test
      */
     public function it_handles_magic_calls()
     {

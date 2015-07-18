@@ -34,7 +34,7 @@ class CreateMetaAttributesTable extends Migration
             $table->index('meta_key');
 
             // Laravel doesn't handle index length, so we need raw statement for this one
-            \Schema::getConnection()->statement('create index blobs_index_value on blobs (id, value(10))');
+            \Schema::getConnection()->statement('create index meta_attributes_index_value on meta_attributes (meta_key, meta_value(20))');
         });
     }
 

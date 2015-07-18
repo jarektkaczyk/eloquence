@@ -58,7 +58,7 @@ class Builder extends EloquentBuilder
      * @var array
      */
     protected $passthru = array(
-        'toSql', 'lists', 'insert', 'insertGetId', 'pluck', 'count', 'raw',
+        'toSql', 'lists', 'insert', 'insertGetId', 'pluck', 'value', 'count', 'raw',
         'min', 'max', 'avg', 'sum', 'exists', 'getBindings', 'aggregate',
     );
 
@@ -142,7 +142,7 @@ class Builder extends EloquentBuilder
         $whereBindings = $this->searchSelect($subquery, $columns, $words, $threshold);
 
         // For morphOne/morphMany support we need to port the bindings from JoinClauses.
-        $joinBindings = array_flatten(array_fetch((array)$subquery->getQuery()->joins, 'bindings'));
+        $joinBindings = array_flatten(array_pluck((array)$subquery->getQuery()->joins, 'bindings'));
 
         $this->addBinding($joinBindings, 'select');
 
@@ -330,12 +330,6 @@ class Builder extends EloquentBuilder
 
         $operator = $this->getLikeOperator();
 
-        // $parser = static::$parser->make();
-
-        // $bindings['select'] = $bindings['where'] = array_map(function ($word) use ($parser) {
-        //     return $parser->stripWildcards($word);
-        // }, $words);
-
         $bindings['select'] = $bindings['where'] = array_map(function ($word) {
             return $this->caseBinding($word);
         }, $words);
@@ -348,7 +342,6 @@ class Builder extends EloquentBuilder
             foreach ($words as $key => $word) {
                 if ($this->isLeftMatching($word)) {
                     $leftMatching[] = sprintf('%s %s ?', $column->getWrapped(), $operator);
-                    // $bindings['select'][] = $bindings['where'][$key] = $parser->stripWildcards($word).'%';
                     $bindings['select'][] = $bindings['where'][$key] = $this->caseBinding($word).'%';
                 }
             }
@@ -364,7 +357,6 @@ class Builder extends EloquentBuilder
             foreach ($words as $key => $word) {
                 if ($this->isWildcard($word)) {
                     $wildcards[] = sprintf('%s %s ?', $column->getWrapped(), $operator);
-                    // $bindings['select'][] = $bindings['where'][$key] = '%'.$parser->stripWildcards($word).'%';
                     $bindings['select'][] = $bindings['where'][$key] = '%'.$this->caseBinding($word).'%';
                 }
             }
@@ -379,6 +371,12 @@ class Builder extends EloquentBuilder
         return [$case, $bindings];
     }
 
+    /**
+     * Replace '?' with single character SQL wildcards.
+     *
+     * @param  string $word
+     * @return string
+     */
     protected function caseBinding($word)
     {
         $parser = static::$parser->make();
@@ -985,12 +983,23 @@ class Builder extends EloquentBuilder
     }
 
     /**
-     * Pluck a single column from the database.
+     * Get a single column's value from the first result of a query.
      *
      * @param  string  $column
      * @return mixed
      */
     public function pluck($column)
+    {
+        return $this->value($column);
+    }
+
+    /**
+     * Get a single column's value from the first result of a query.
+     *
+     * @param  string  $column
+     * @return mixed
+     */
+    public function value($column)
     {
         return $this->callHook(__FUNCTION__, $this->packArgs(compact('column')));
     }
