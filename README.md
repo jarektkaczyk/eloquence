@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg?branch=0.4)](https://travis-ci.org/jarektkaczyk/eloquence) [![Coverage Status](https://coveralls.io/repos/jarektkaczyk/eloquence/badge.svg?branch=0.4)](https://coveralls.io/r/jarektkaczyk/eloquence?branch=0.4) [![Code Quality](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence/badges/quality-score.png?b=0.4)](https://scrutinizer-ci.com/g/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads)](https://packagist.org/packages/sofa/eloquence) [![stable](https://poser.pugx.org/sofa/eloquence/v/stable.svg)](https://packagist.org/packages/sofa/eloquence)
 
-Easy and flexible extensions for the Eloquent ORM (Laravel 5+).
+Easy and flexible extensions for the Eloquent ORM (Laravel 5.1+ LTS).
+
+For Illuminate/Laravel ver. 5.0.* please use [0.4](https://github.com/jarektkaczyk/eloquence/tree/0.4) branch.
 
 Currently available extensions: 
 
