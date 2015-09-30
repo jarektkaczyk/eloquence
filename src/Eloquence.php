@@ -1,5 +1,6 @@
 <?php namespace Sofa\Eloquence;
 
+use Sofa\Eloquence\Query\Builder as QueryBuilder;
 use Sofa\Eloquence\Mutator\Mutator;
 use Sofa\Eloquence\Pipeline\Pipeline;
 use Sofa\Eloquence\Contracts\Mutator as MutatorContract;
@@ -236,12 +237,26 @@ trait Eloquence
     /**
      * Create new Eloquence query builder for the instance.
      *
-     * @param  \Illuminate\Database\Query\Builder $query
+     * @param  \Sofa\Eloquence\Query\Builder
      * @return \Sofa\Eloquence\Builder
      */
     public function newEloquentBuilder($query)
     {
         return new Builder($query);
+    }
+
+    /**
+     * Get a new query builder instance for the connection.
+     *
+     * @return \Sofa\Eloquence\Query\Builder
+     */
+    protected function newBaseQueryBuilder()
+    {
+        $conn = $this->getConnection();
+
+        $grammar = $conn->getQueryGrammar();
+
+        return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
     }
 
     /**

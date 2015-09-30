@@ -5,7 +5,7 @@ use InvalidArgumentException;
 use Sofa\Eloquence\Contracts\Relations\JoinerFactory;
 use Sofa\Eloquence\Contracts\Searchable\ParserFactory;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
+use Sofa\Eloquence\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Grammars\PostgresGrammar;
 use Sofa\Eloquence\Searchable\Subquery as SearchableSubquery;
