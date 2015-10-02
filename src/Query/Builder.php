@@ -39,8 +39,9 @@ class Builder extends \Illuminate\Database\Query\Builder
 
         $this->columns = $previousColumns;
 
-        if (!$this->from instanceof Subquery)
+        if (!$this->from instanceof Subquery) {
             $this->bindings['select'] = $previousSelectBindings;
+        }
 
         if (isset($results[0])) {
             $result = array_change_key_case((array) $results[0]);
@@ -63,8 +64,9 @@ class Builder extends \Illuminate\Database\Query\Builder
         }
 
         $bindings = ['order'];
-        if (!$this->from instanceof Subquery)
+        if (!$this->from instanceof Subquery) {
             $bindings[] = 'select';
+        }
 
         foreach ($bindings as $key) {
             $this->bindingBackups[$key] = $this->bindings[$key];
@@ -85,8 +87,9 @@ class Builder extends \Illuminate\Database\Query\Builder
         }
 
         $bindings = ['order'];
-        if (!$this->from instanceof Subquery)
+        if (!$this->from instanceof Subquery) {
             $bindings[] = 'select';
+        }
 
         foreach ($bindings as $key) {
             $this->bindings[$key] = $this->bindingBackups[$key];
@@ -95,5 +98,4 @@ class Builder extends \Illuminate\Database\Query\Builder
         $this->backups = [];
         $this->bindingBackups = [];
     }
-
 }
