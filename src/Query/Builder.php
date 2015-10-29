@@ -2,12 +2,8 @@
 
 use Sofa\Eloquence\Subquery;
 
-/**
- * @method $this leftJoin($table, $one, $operator, $two)
- */
 class Builder extends \Illuminate\Database\Query\Builder
 {
-
     /**
      * Execute an aggregate function on the database.
      *
@@ -63,10 +59,7 @@ class Builder extends \Illuminate\Database\Query\Builder
             $this->{$field} = null;
         }
 
-        $bindings = ['order'];
-        if (!$this->from instanceof Subquery) {
-            $bindings[] = 'select';
-        }
+        $bindings = ($this->from instanceof Subquery) ? ['order'] : ['order', 'select'];
 
         foreach ($bindings as $key) {
             $this->bindingBackups[$key] = $this->bindings[$key];
@@ -82,20 +75,14 @@ class Builder extends \Illuminate\Database\Query\Builder
      */
     protected function restoreFieldsForCount()
     {
-        foreach (['orders', 'limit', 'offset', 'columns'] as $field) {
-            $this->{$field} = $this->backups[$field];
+        foreach ($this->backups as $field => $value) {
+            $this->{$field} = $value;
         }
 
-        $bindings = ['order'];
-        if (!$this->from instanceof Subquery) {
-            $bindings[] = 'select';
+        foreach ($this->bindingBackups as $key => $value) {
+            $this->bindings[$key] = $value;
         }
 
-        foreach ($bindings as $key) {
-            $this->bindings[$key] = $this->bindingBackups[$key];
-        }
-
-        $this->backups = [];
-        $this->bindingBackups = [];
+        $this->backups = $this->bindingBackups = [];
     }
 }

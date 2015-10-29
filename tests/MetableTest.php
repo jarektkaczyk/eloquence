@@ -207,7 +207,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
             ['Year' , '%Y'],
             ['Month', '%m'],
             ['Day'  , '%d'],
-            ['Date' , 'date']
+            ['Date' , '%Y-%m-%d']
         ];
     }
 
