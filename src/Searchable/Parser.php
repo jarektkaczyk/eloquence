@@ -72,7 +72,7 @@ class Parser implements ParserContract
      */
     public function stripWildcards($word)
     {
-        return str_replace($this->wildcard, '', $word);
+        return str_replace($this->wildcard, '%', trim($word, $this->wildcard));
     }
 
     /**
