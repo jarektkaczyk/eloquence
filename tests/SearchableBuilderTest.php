@@ -241,24 +241,28 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
      */
     public function wildcard_search()
     {
-        $sql = 'select * from (select `users`.*, max(case when `users`.`last_name` = ? or `users`.`last_name` = ? or `users`.`last_name` = ? then 150 else 0 end '.
-               '+ case when `users`.`last_name` like ? or `users`.`last_name` like ? then 50 else 0 end '.
-               '+ case when `users`.`last_name` like ? then 10 else 0 end '.
-               '+ case when `companies`.`name` = ? or `companies`.`name` = ? or `companies`.`name` = ? then 75 else 0 end '.
-               '+ case when `companies`.`name` like ? or `companies`.`name` like ? then 25 else 0 end '.
-               '+ case when `companies`.`name` like ? then 5 else 0 end) '.
-               'as relevance from `users` left join `company_user` on `company_user`.`user_id` = `users`.`primary_key` '.
-               'left join `companies` on `company_user`.`company_id` = `companies`.`id` '.
-               'where (`users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? '.
-               'or `companies`.`name` like ? or `companies`.`name` like ? or `companies`.`name` like ?) '.
-               'group by `users`.`primary_key`) as `users` where `relevance` >= 3.75 order by `relevance` desc';
+        $sql = 'select * from (select `users`.*, max(case when `users`.`last_name` = ? or `users`.`last_name` = ? or `users`.`last_name` = ? or `users`.`last_name` = ? or `users`.`last_name` = ? then 150 else 0 end '.
+              '+ case when `users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? then 50 else 0 end '.
+              '+ case when `users`.`last_name` like ? or `users`.`last_name` like ? then 10 else 0 end '.
+              '+ case when `companies`.`name` = ? or `companies`.`name` = ? or `companies`.`name` = ? or `companies`.`name` = ? or `companies`.`name` = ? then 75 else 0 end '.
+              '+ case when `companies`.`name` like ? or `companies`.`name` like ? or `companies`.`name` like ? then 25 else 0 end '.
+              '+ case when `companies`.`name` like ? or `companies`.`name` like ? then 5 else 0 end) as relevance from `users` '.
+              'left join `company_user` on `company_user`.`user_id` = `users`.`primary_key` left join `companies` on `company_user`.`company_id` = `companies`.`id` '.
+              'where (`users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? or `companies`.`name` like ? or `companies`.`name` like ? '.
+              'or `companies`.`name` like ? or `companies`.`name` like ? or `companies`.`name` like ?) group by `users`.`primary_key`) as `users` where `relevance` >= 3.75 order by `relevance` desc';
 
         $bindings = [
-            // select
-            'jarek', 'tkaczyk', 'sofa', 'jarek%', 'tkaczyk%', '%jarek%',
-            'jarek', 'tkaczyk', 'sofa', 'jarek%', 'tkaczyk%', '%jarek%',
-            // where
-            '%jarek%', 'tkaczyk%', 'sofa', '%jarek%', 'tkaczyk%', 'sofa',
+          // select
+          "jarek% tkaczyk% sofa", "jarek% tkaczyk", "jarek", "tkaczyk", "sofa",
+          "jarek% tkaczyk%", "jarek%", "tkaczyk%",
+          "%jarek% tkaczyk%", "%jarek%",
+          "jarek% tkaczyk% sofa", "jarek% tkaczyk", "jarek", "tkaczyk", "sofa",
+          "jarek% tkaczyk%", "jarek%", "tkaczyk%",
+          "%jarek% tkaczyk%", "%jarek%",
+
+          // where
+          "jarek% tkaczyk% sofa", "%jarek% tkaczyk%", "%jarek%", "tkaczyk%", "sofa", "jarek% tkaczyk% sofa", "%jarek% tkaczyk%", 
+          "%jarek%", "tkaczyk%", "sofa"
         ];
 
         $query = $this->getModel()->search('*jarek* tkaczyk* sofa', ['last_name' => 10, 'companies.name' => 5], false);
@@ -290,18 +294,24 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
      */
     public function explicit_search_on_joined_table()
     {
-        $sql = 'select * from (select `users`.*, max(case when `users`.`first_name` = ? or `users`.`first_name` = ? then 15 else 0 end '.
-               '+ case when `users`.`last_name` = ? or `users`.`last_name` = ? then 75 else 0 end '.
-               '+ case when `users`.`email` = ? or `users`.`email` = ? then 150 else 0 end '.
-               '+ case when `profiles`.`name` = ? or `profiles`.`name` = ? then 30 else 0 end) '.
-               'as relevance from `users` left join `profiles` on `users`.`profile_id` = `profiles`.`id` '.
-               'where (`users`.`first_name` like ? or `users`.`first_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? '.
-               'or `users`.`email` like ? or `users`.`email` like ? or `profiles`.`name` like ? or `profiles`.`name` like ?) '.
-               'group by `users`.`primary_key`) as `users` where `relevance` >= 4.5 order by `relevance` desc';
+        $sql = 'select * from (select `users`.*, max(case when `users`.`first_name` = ? or `users`.`first_name` = ? or `users`.`first_name` = ? then 15 else 0 end '.
+              '+ case when `users`.`last_name` = ? or `users`.`last_name` = ? or `users`.`last_name` = ? then 75 else 0 end '.
+              '+ case when `users`.`email` = ? or `users`.`email` = ? or `users`.`email` = ? then 150 else 0 end '.
+              '+ case when `profiles`.`name` = ? or `profiles`.`name` = ? or `profiles`.`name` = ? then 30 else 0 end) as relevance from `users` '.
+              'left join `profiles` on `users`.`profile_id` = `profiles`.`id` '.
+              'where (`users`.`first_name` like ? or `users`.`first_name` like ? or `users`.`first_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`email` like ? or '.
+              '`users`.`email` like ? or `users`.`email` like ? or `profiles`.`name` like ? or `profiles`.`name` like ? or `profiles`.`name` like ?) group by `users`.`primary_key`) as `users` where `relevance` >= 4.5 order by `relevance` desc';
 
         $bindings = [
-            'jarek', 'tkaczyk', 'jarek', 'tkaczyk', 'jarek', 'tkaczyk', 'jarek', 'tkaczyk',
-            'jarek', 'tkaczyk', 'jarek', 'tkaczyk', 'jarek', 'tkaczyk', 'jarek', 'tkaczyk',
+          // select
+          "jarek tkaczyk", "jarek", "tkaczyk",
+          "jarek tkaczyk", "jarek", "tkaczyk",
+          "jarek tkaczyk", "jarek", "tkaczyk", 
+          "jarek tkaczyk", "jarek", "tkaczyk",
+
+          // where
+          "jarek tkaczyk", "jarek", "tkaczyk", "jarek tkaczyk", "jarek", "tkaczyk", "jarek tkaczyk", 
+          "jarek", "tkaczyk", "jarek tkaczyk", "jarek", "tkaczyk"
         ];
 
         $query = $this->getModel()->search('jarek tkaczyk', false);
@@ -315,12 +325,12 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
      */
     public function explicit_search_on_single_table_with_provided_columns()
     {
-        $sql = 'select * from (select `users`.*, max(case when `users`.`first_name` = ? or `users`.`first_name` = ? then 15 else 0 end '.
-               '+ case when `users`.`last_name` = ? or `users`.`last_name` = ? then 30 else 0 end) as relevance from `users` '.
-               'where (`users`.`first_name` like ? or `users`.`first_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ?) '.
-               'group by `users`.`primary_key`) as `users` where `relevance` >= 0.75 order by `relevance` desc';
+      $sql = 'select * from (select `users`.*, max(case when `users`.`first_name` = ? or `users`.`first_name` = ? or `users`.`first_name` = ? then 15 else 0 end '.
+            '+ case when `users`.`last_name` = ? or `users`.`last_name` = ? or `users`.`last_name` = ? then 30 else 0 end) as relevance from `users` '.
+            'where (`users`.`first_name` like ? or `users`.`first_name` like ? or `users`.`first_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ? or `users`.`last_name` like ?) '.
+            'group by `users`.`primary_key`) as `users` where `relevance` >= 0.75 order by `relevance` desc';
 
-        $bindings = ['jarek', 'tkaczyk', 'jarek', 'tkaczyk', 'jarek', 'tkaczyk', 'jarek', 'tkaczyk'];
+        $bindings = ["jarek tkaczyk","jarek","tkaczyk","jarek tkaczyk","jarek","tkaczyk","jarek tkaczyk","jarek","tkaczyk","jarek tkaczyk","jarek","tkaczyk"];
 
         $query = $this->getModel()->search('jarek tkaczyk', ['first_name', 'last_name' => 2], false);
 
