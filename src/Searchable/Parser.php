@@ -107,8 +107,7 @@ class Parser implements ParserContract
         $matches = reset($matches);
         $temp = $matches;
 
-        while (sizeof($temp) > 1)
-        {
+        while (sizeof($temp) > 1) {
             $words[] = join(' ', $temp);
             array_pop($temp);
         }
