@@ -22,12 +22,6 @@
             "role": "Developer"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "/home/deczo/githubrepos/hookable"
-        }
-    ],
     "require": {
         "php": ">=5.5.9",
         "sofa/hookable": "~1.0",
