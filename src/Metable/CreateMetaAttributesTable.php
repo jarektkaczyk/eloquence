@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Metable;
+<?php
+
+namespace Sofa\Eloquence\Metable;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;

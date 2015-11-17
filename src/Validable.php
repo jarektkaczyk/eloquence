@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence;
+<?php
+
+namespace Sofa\Eloquence;
 
 use Sofa\Eloquence\Validable\Observer;
 use Illuminate\Contracts\Validation\Factory;

@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Query;
+<?php
+
+namespace Sofa\Eloquence\Query;
 
 use Sofa\Eloquence\Subquery;
 

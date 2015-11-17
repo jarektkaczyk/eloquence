@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Tests;
+<?php
+
+namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
 use Sofa\Eloquence\AttributeCleaner\Observer;

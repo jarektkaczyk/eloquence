@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Tests;
+<?php
+
+namespace Sofa\Eloquence\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Metable\AttributeBag;

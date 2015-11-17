@@ -1,13 +1,17 @@
-<?php namespace Sofa\Eloquence;
+<?php
+
+namespace Sofa\Eloquence;
 
 use LogicException;
-use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Sofa\Eloquence\Mappable\Hooks;
+use Sofa\Hookable\Contracts\ArgumentBag;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model as EloquentModel;
 
 /**
  * @property array $maps
@@ -19,7 +23,7 @@ trait Mappable
      *
      * @var array
      */
-    public static $mappedAttributes;
+    protected static $mappedAttributes;
 
     /**
      * Related mapped objects to save along with the mappable instance.
@@ -37,6 +41,8 @@ trait Mappable
      */
     public static function bootMappable()
     {
+        $hooks = new Hooks;
+
         foreach ([
                 'getAttribute',
                 'setAttribute',
@@ -45,34 +51,8 @@ trait Mappable
                 '__unset',
                 'queryHook',
             ] as $method) {
-            static::hook($method, "{$method}Mappable");
+            static::hook($method, $hooks->{$method}());
         }
-    }
-
-    /**
-     * Register hook on customWhere method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function queryHookMappable()
-    {
-        return function ($next, $query, $bag) {
-            $method = $bag->get('method');
-            $args   = $bag->get('args');
-            $column = $args->get('column');
-
-            if ($this->hasMapping($column)) {
-                return call_user_func_array([$this, 'mappedQuery'], [$query, $method, $args]);
-            }
-
-            if (in_array($method, ['select', 'addSelect'])) {
-                call_user_func_array([$this, 'mappedSelect'], [$query, $args]);
-            }
-
-            return $next($query, $bag);
-        };
     }
 
     /**
@@ -487,26 +467,6 @@ trait Mappable
     }
 
     /**
-     * Register hook on getAttribute method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function getAttributeMappable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasMapping($key)) {
-                $value = $this->mapAttribute($key);
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
      * Map an attribute to a value.
      *
      * @param  string $key
@@ -537,26 +497,6 @@ trait Mappable
         }
 
         return $target;
-    }
-
-    /**
-     * Register hook on setAttribute method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function setAttributeMappable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasMapping($key)) {
-                return $this->setMappedAttribute($key, $value);
-            }
-
-            return $next($value, $args);
-        };
     }
 
     /**
@@ -591,22 +531,6 @@ trait Mappable
     }
 
     /**
-     * Register hook on save method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function saveMappable()
-    {
-        return function ($next, $value, $args) {
-            $this->saveMapped();
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
      * Save mapped relations.
      *
      * @return void
@@ -618,46 +542,6 @@ trait Mappable
         }
 
         $this->targetsToSave = [];
-    }
-
-    /**
-     * Register hook on isset call.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function __issetMappable()
-    {
-        return function ($next, $isset, $args) {
-            $key = $args->get('key');
-
-            if (!$isset && $this->hasMapping($key)) {
-                return (bool) $this->mapAttribute($key);
-            }
-
-            return $next($isset, $args);
-        };
-    }
-
-    /**
-     * Register hook on unset call.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function __unsetMappable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasMapping($key)) {
-                return $this->forget($key);
-            }
-
-            return $next($value, $args);
-        };
     }
 
     /**

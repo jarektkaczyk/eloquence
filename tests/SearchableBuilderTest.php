@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Tests;
+<?php
+
+namespace Sofa\Eloquence\Tests;
 
 use Illuminate\Database\Query\Builder as Query;
 use Illuminate\Database\Query\Grammars\Grammar;
@@ -98,7 +100,9 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
         $bindings = ['jarek', 'jarek', 'tkaczyk', 10, 5];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($query, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()
+        ->with($query, $bindings, m::any())
+        ->andReturn([]);
 
         $model->whereHas('profile', function ($q) { $q->where('id', 5); }) // where with subquery - not moved
               ->where('last_name', 'tkaczyk') // where on this table's field - moved

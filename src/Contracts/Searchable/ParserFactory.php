@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Contracts\Searchable;
+<?php
+
+namespace Sofa\Eloquence\Contracts\Searchable;
 
 use Illuminate\Database\Eloquent\Builder;
 

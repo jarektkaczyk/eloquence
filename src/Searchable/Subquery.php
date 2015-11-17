@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Searchable;
+<?php
+
+namespace Sofa\Eloquence\Searchable;
 
 use Sofa\Eloquence\Subquery as BaseSubquery;
 

@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Searchable;
+<?php
+
+namespace Sofa\Eloquence\Searchable;
 
 use ArrayAccess;
 use ArrayIterator;

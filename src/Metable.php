@@ -1,7 +1,11 @@
-<?php namespace Sofa\Eloquence;
+<?php
 
+namespace Sofa\Eloquence;
+
+use Sofa\Eloquence\Metable\Hooks;
 use Sofa\Eloquence\Metable\Attribute;
 use Sofa\Eloquence\Metable\AttributeBag;
+use Sofa\Hookable\Contracts\ArgumentBag;
 
 /**
  * @property array $allowedMeta
@@ -28,6 +32,8 @@ trait Metable
      */
     public static function bootMetable()
     {
+        $hooks = new Hooks;
+
         foreach ([
                 'setAttribute',
                 'getAttribute',
@@ -38,168 +44,8 @@ trait Metable
                 '__unset',
                 'queryHook',
             ] as $method) {
-            static::hook($method, "{$method}Metable");
+            static::hook($method, $hooks->{$method}());
         }
-    }
-
-    /**
-     * Register hook on getAttribute method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function getAttributeMetable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if (is_null($value)) {
-                $value = $this->getMeta($key);
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on setAttribute method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function setAttributeMetable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if (!$this->hasColumn($key) && $this->allowsMeta($key) && !$this->hasSetMutator($key)) {
-                return $this->setMeta($key, $value);
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on toArray method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function toArrayMetable()
-    {
-        return function ($next, $attributes) {
-            unset($attributes['meta_attributes'], $attributes['metaAttributes']);
-
-            $attributes = array_merge($attributes, $this->getMetaAttributesArray());
-
-            return $next($attributes);
-        };
-    }
-
-    /**
-     * Register hook on replicate method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function replicateMetable()
-    {
-        return function ($next, $copy, $args) {
-            $metaAttributes = $args->get('original')
-                                    ->getMetaAttributes()
-                                    ->replicate($args->get('except'));
-
-            $copy->setRelation('metaAttributes', $metaAttributes);
-
-            return $next($copy);
-        };
-    }
-
-    /**
-     * Register hook on save method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function saveMetable()
-    {
-        return function ($next, $value, $args) {
-            $this->saveMeta();
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on isset call.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function __issetMetable()
-    {
-        return function ($next, $isset, $args) {
-            $key = $args->get('key');
-
-            if (!$isset) {
-                $isset = (bool) $this->hasMeta($key);
-            }
-
-            return $next($isset, $args);
-        };
-    }
-
-    /**
-     * Register hook on unset call.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function __unsetMetable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasMeta($key)) {
-                return $this->setMeta($key, null);
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on queryHook method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function queryHookMetable()
-    {
-        return function ($next, $query, $bag) {
-            $method = $bag->get('method');
-            $args   = $bag->get('args');
-            $column = $args->get('column');
-
-            if (!$this->hasColumn($column) && $this->allowsMeta($column) && $this->isMetaQueryable($method)) {
-                return call_user_func_array([$this, 'metaQuery'], [$query, $method, $args]);
-            }
-
-            if (in_array($method, ['select', 'addSelect'])) {
-                call_user_func_array([$this, 'metaSelect'], [$query, $args]);
-            }
-
-            return $next($query, $bag);
-        };
     }
 
     /**

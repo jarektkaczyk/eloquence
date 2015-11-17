@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Tests;
+<?php
+
+namespace Sofa\Eloquence\Tests;
 
 use Sofa\Eloquence\Mutator\Mutator;
 

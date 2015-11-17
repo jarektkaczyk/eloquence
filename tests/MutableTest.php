@@ -1,12 +1,14 @@
-<?php namespace Sofa\Eloquence\Tests;
+<?php
+
+namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mutable;
 
-class MutableTest extends \PHPUnit_Framework_TestCase {
-
+class MutableTest extends \PHPUnit_Framework_TestCase
+{
     public function tearDown()
     {
         m::close();
@@ -53,7 +55,8 @@ class MutableTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class MutableEloquentStub extends Model {
+class MutableEloquentStub extends Model
+{
     use Eloquence, Mutable;
 
     protected $getterMutators = [

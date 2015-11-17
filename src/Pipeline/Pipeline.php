@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Pipeline;
+<?php
+
+namespace Sofa\Eloquence\Pipeline;
 
 use Closure;
 use Sofa\Eloquence\Contracts\ArgumentBag;

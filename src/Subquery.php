@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence;
+<?php
+
+namespace Sofa\Eloquence;
 
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Builder as QueryBuilder;

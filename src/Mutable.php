@@ -1,5 +1,8 @@
-<?php namespace Sofa\Eloquence;
+<?php
 
+namespace Sofa\Eloquence;
+
+use Sofa\Eloquence\Mutable\Hooks;
 use Sofa\Eloquence\Mutator\Mutator;
 
 /**
@@ -17,65 +20,11 @@ trait Mutable
      */
     public static function bootMutable()
     {
+        $hooks = new Hooks;
+
         foreach (['setAttribute', 'getAttribute', 'toArray'] as $method) {
-            static::hook($method, "{$method}Mutable");
+            static::hook($method, $hooks->{$method}());
         }
-    }
-
-    /**
-     * Register hook on getAttribute method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function getAttributeMutable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasGetterMutator($key)) {
-                $value = $this->mutableMutate($key, $value, 'getter');
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on setAttribute method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function setAttributeMutable()
-    {
-        return function ($next, $value, $args) {
-            $key = $args->get('key');
-
-            if ($this->hasSetterMutator($key)) {
-                $value = $this->mutableMutate($key, $value, 'setter');
-            }
-
-            return $next($value, $args);
-        };
-    }
-
-    /**
-     * Register hook on toArray method.
-     *
-     * @codeCoverageIgnore
-     *
-     * @return \Closure
-     */
-    public function toArrayMutable()
-    {
-        return function ($next, $attributes) {
-            $attributes = $this->mutableAttributesToArray($attributes);
-
-            return $next($attributes);
-        };
     }
 
     /**

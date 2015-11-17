@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\AttributeCleaner;
+<?php
+
+namespace Sofa\Eloquence\AttributeCleaner;
 
 use Sofa\Eloquence\Contracts\CleansAttributes;
 

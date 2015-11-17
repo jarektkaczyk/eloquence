@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Metable;
+<?php
+
+namespace Sofa\Eloquence\Metable;
 
 use InvalidArgumentException;
 use Illuminate\Database\Eloquent\Collection;

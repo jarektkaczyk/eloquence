@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Relations;
+<?php
+
+namespace Sofa\Eloquence\Relations;
 
 use LogicException;
 use Illuminate\Database\Query\Builder;

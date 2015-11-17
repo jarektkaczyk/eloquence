@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Validable;
+<?php
+
+namespace Sofa\Eloquence\Validable;
 
 use Sofa\Eloquence\Contracts\Validable;
 

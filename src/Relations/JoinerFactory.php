@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Relations;
+<?php
+
+namespace Sofa\Eloquence\Relations;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;

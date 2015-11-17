@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Contracts;
+<?php
+
+namespace Sofa\Eloquence\Contracts;
 
 interface Mappable
 {

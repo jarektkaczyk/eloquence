@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Mutator;
+<?php
+
+namespace Sofa\Eloquence\Mutator;
 
 use ReflectionException;
 use ReflectionClass;
