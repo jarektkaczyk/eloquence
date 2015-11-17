@@ -59,8 +59,6 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      * @covers \Sofa\Eloquence\Eloquence::hook
-     * @covers \Sofa\Eloquence\Eloquence::wrapHook
-     * @covers \Sofa\Eloquence\Eloquence::unwrapHooks
      */
     public function it_registers_and_call_hooks_on_eloquent_methods()
     {
