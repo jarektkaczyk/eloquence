@@ -2,8 +2,6 @@
 
 namespace Sofa\Eloquence;
 
-use Closure;
-use InvalidArgumentException;
 use Sofa\Eloquence\Searchable\Column;
 use Illuminate\Database\Query\Expression;
 use Sofa\Hookable\Builder as HookableBuilder;
@@ -105,9 +103,9 @@ class Builder extends HookableBuilder
 
         $threshold = (is_null($threshold))
                         ? array_sum($columns->getWeights()) / 4
-                        : (float) $threshold ;
+                        : (float) $threshold;
 
-        $subquery->select($this->model->getTable().'.*')
+        $subquery->select($this->model->getTable() . '.*')
                  ->from($this->model->getTable())
                  ->groupBy($this->model->getQualifiedKeyName());
 
@@ -134,7 +132,7 @@ class Builder extends HookableBuilder
         $whereBindings = $this->searchSelect($subquery, $columns, $words, $threshold);
 
         // For morphOne/morphMany support we need to port the bindings from JoinClauses.
-        $joinBindings = array_flatten(array_pluck((array)$subquery->getQuery()->joins, 'bindings'));
+        $joinBindings = array_flatten(array_pluck((array) $subquery->getQuery()->joins, 'bindings'));
 
         $this->addBinding($joinBindings, 'select');
 
@@ -238,7 +236,7 @@ class Builder extends HookableBuilder
             if (in_array($type, $typesToMove) && $this->model->hasColumn($where['column'])) {
                 unset($this->query->wheres[$key]);
 
-                $where['column'] = $this->model->getTable().'.'.$where['column'];
+                $where['column'] = $this->model->getTable() . '.' . $where['column'];
 
                 $subquery->getQuery()->wheres[] = $where;
 
@@ -269,7 +267,7 @@ class Builder extends HookableBuilder
     protected function countBindings(array $where, $type)
     {
         if ($this->isHasWhere($where, $type)) {
-            return substr_count($where['column'].$where['value'], '?');
+            return substr_count($where['column'] . $where['value'], '?');
 
         } elseif ($type === 'basic') {
             return (int) !$where['value'] instanceof Expression;
@@ -334,7 +332,7 @@ class Builder extends HookableBuilder
             foreach ($words as $key => $word) {
                 if ($this->isLeftMatching($word)) {
                     $leftMatching[] = sprintf('%s %s ?', $column->getWrapped(), $operator);
-                    $bindings['select'][] = $bindings['where'][$key] = $this->caseBinding($word).'%';
+                    $bindings['select'][] = $bindings['where'][$key] = $this->caseBinding($word) . '%';
                 }
             }
 
@@ -349,7 +347,7 @@ class Builder extends HookableBuilder
             foreach ($words as $key => $word) {
                 if ($this->isWildcard($word)) {
                     $wildcards[] = sprintf('%s %s ?', $column->getWrapped(), $operator);
-                    $bindings['select'][] = $bindings['where'][$key] = '%'.$this->caseBinding($word).'%';
+                    $bindings['select'][] = $bindings['where'][$key] = '%'.$this->caseBinding($word) . '%';
                 }
             }
 
@@ -473,21 +471,23 @@ class Builder extends HookableBuilder
     /**
      * Prefix selected columns with table name in order to avoid collisions.
      *
-     * @return void
+     * @return $this
      */
     public function prefixColumnsForJoin()
     {
         if (!$columns = $this->query->columns) {
-            return $this->select($this->model->getTable().'.*');
+            return $this->select($this->model->getTable() . '.*');
         }
 
         foreach ($columns as $key => $column) {
             if ($this->model->hasColumn($column)) {
-                $columns[$key] = $this->model->getTable().'.'.$column;
+                $columns[$key] = $this->model->getTable() . '.' . $column;
             }
         }
 
         $this->query->columns = $columns;
+
+        return $this;
     }
 
     /**

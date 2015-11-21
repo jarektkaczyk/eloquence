@@ -16,7 +16,7 @@ class Mutator implements MutatorContract
      * Mutate value using provided methods.
      *
      * @param  mixed $value
-     * @param  string|array $mutators
+     * @param  string|array $callables
      * @return mixed
      *
      * @throws \LogicException

@@ -14,7 +14,7 @@ if (!function_exists('rules_for_update')) {
      * @link  http://laravel.com/docs/5.0/validation#rule-unique
      *
      * @param  array $rules
-     * @param  \Illuminate\Database\Eloquent\Model|string $id
+     * @param  \Illuminate\Database\Eloquent\Model|integer|string $id
      * @param  string $primaryKey
      * @return array
      */
