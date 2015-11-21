@@ -497,21 +497,6 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function it_checks_not_null_attributes()
-    {
-        $bag = $this->getBag();
-        $bag->shouldReceive('toArray')->twice()->andReturn(['color' => 'red', 'size' => null]);
-
-        $model = $this->getMetableStub();
-        $model->shouldReceive('getMetaAttributes')->andReturn($bag);
-
-        $this->assertTrue($model->hasMeta('color'));
-        $this->assertFalse($model->hasMeta('size'));
-    }
-
-    /**
-     * @test
-     */
     public function it_gets_attribute_from_the_bag()
     {
         $bag = $this->getBag();

@@ -129,9 +129,9 @@ class AttributeBag extends Collection implements AttributeBagContract
      */
     public function toArray()
     {
-        return array_map(function ($attribute) {
+        return array_filter(array_map(function ($attribute) {
             return $attribute->getValue();
-        }, $this->items);
+        }, $this->items));
     }
 
     /**
