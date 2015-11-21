@@ -500,7 +500,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_checks_not_null_attributes()
     {
         $bag = $this->getBag();
-        $bag->shouldReceive('lists')->with('meta_value', 'meta_key')->twice()->andReturn(['color' => 'red', 'size' => null]);
+        $bag->shouldReceive('toArray')->twice()->andReturn(['color' => 'red', 'size' => null]);
 
         $model = $this->getMetableStub();
         $model->shouldReceive('getMetaAttributes')->andReturn($bag);
@@ -543,7 +543,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_gets_meta_attributes_as_key_value_array()
     {
         $bag = $this->getBag();
-        $bag->shouldReceive('lists')->with('meta_value', 'meta_key')->once()->andReturn(['color' => 'red']);
+        $bag->shouldReceive('toArray')->once()->andReturn(['color' => 'red']);
 
         $model = $this->getMetableStub();
         $model->shouldReceive('getMetaAttributes')->andReturn($bag);

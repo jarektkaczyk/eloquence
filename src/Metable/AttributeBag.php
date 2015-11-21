@@ -123,6 +123,18 @@ class AttributeBag extends Collection implements AttributeBagContract
     }
 
     /**
+     * Get collection as key-value array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return array_map(function ($attribute) {
+            return $attribute->getValue();
+        }, $this->items);
+    }
+
+    /**
      * Unset attribute.
      *
      * @param  string $key

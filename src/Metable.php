@@ -458,7 +458,7 @@ trait Metable
      */
     public function getMetaAttributesArray()
     {
-        return array_filter($this->getMetaAttributes()->lists('meta_value', 'meta_key'));
+        return array_filter($this->getMetaAttributes()->toArray());
     }
 
     /**
