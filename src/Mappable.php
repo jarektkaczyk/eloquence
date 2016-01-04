@@ -50,6 +50,7 @@ trait Mappable
                 '__isset',
                 '__unset',
                 'queryHook',
+                'toArray'
             ] as $method) {
             static::hook($method, $hooks->{$method}());
         }
@@ -479,6 +480,19 @@ trait Mappable
         return $this->getTarget($this, $segments);
     }
 
+    /**
+     * Determine whether a column is mapped.
+     *
+     * @param $column
+     * @return string
+     */
+    public function isMapping($column)
+    {
+        if (is_null(static::$mappedAttributes)) {
+            $this->parseMappings();
+        }
+        return array_search($column, static::$mappedAttributes);
+    }
     /**
      * Get mapped value.
      *
