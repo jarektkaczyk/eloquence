@@ -1,50 +1,50 @@
 {
-    "name": "sofa/eloquence",
-    "description": "Flexible Searchable, Mappable, Metable, Validation and more extensions for Laravel Eloquent ORM.",
-    "license": "MIT",
-    "support": {
-        "issues": "https://github.com/jarektkaczyk/eloquence/issues",
-        "source": "https://github.com/jarektkaczyk/eloquence"
+  "name": "ultraware/sofa/eloquence",
+  "description": "Flexible Searchable, Mappable, Metable, Validation and more extensions for Laravel Eloquent ORM.",
+  "license": "MIT",
+  "support": {
+    "issues": "https://github.com/jarektkaczyk/eloquence/issues",
+    "source": "https://github.com/jarektkaczyk/eloquence"
+  },
+  "keywords": [
+    "laravel",
+    "eloquent",
+    "metable",
+    "searchable",
+    "mappable",
+    "mutable"
+  ],
+  "authors": [
+    {
+      "name": "Jarek Tkaczyk",
+      "email": "jarek@softonsofa.com",
+      "homepage": "http://softonsofa.com/",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "sofa/hookable": "~1.0",
+    "illuminate/contracts": "5.1.x",
+    "illuminate/database": "5.1.x"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.5.0",
+    "squizlabs/php_codesniffer": "2.3.3",
+    "mockery/mockery": "0.9.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Sofa\\Eloquence\\": "src"
     },
-    "keywords": [
-        "laravel",
-        "eloquent",
-        "metable",
-        "searchable",
-        "mappable",
-        "mutable"
-    ],
-    "authors": [
-        {
-            "name": "Jarek Tkaczyk",
-            "email": "jarek@softonsofa.com",
-            "homepage": "http://softonsofa.com/",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "php": ">=5.5.9",
-        "sofa/hookable": "~1.0",
-        "illuminate/contracts": "5.1.x",
-        "illuminate/database": "5.1.x"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "4.5.0",
-        "squizlabs/php_codesniffer": "2.3.3",
-        "mockery/mockery": "0.9.4"
-    },
-    "autoload": {
-        "psr-4": {
-            "Sofa\\Eloquence\\": "src"
-        },
-        "files": [
-            "src/helpers.php"
-        ]
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Sofa\\Eloquence\\Tests\\": "tests"
-        }
-    },
-    "minimum-stability": "stable"
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Sofa\\Eloquence\\Tests\\": "tests"
+    }
+  },
+  "minimum-stability": "stable"
 }
