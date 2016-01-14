@@ -94,8 +94,8 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
         $query = 'select * from (select `users`.*, '.
                  'max(case when `users`.`first_name` = ? then 15 else 0 end) as relevance from `users` '.
                  'where (`users`.`first_name` like ?) and `users`.`last_name` = ? and `users`.`id` > ? group by `users`.`primary_key`) '.
-                 'as `users` where (select count(*) from `profiles` where `users`.`profile_id` = `profiles`.`id` '.
-                 'and `id` = ?) >= 1 and `relevance` >= 0.25 order by `relevance` desc';
+                 'as `users` where exists (select * from `profiles` where `users`.`profile_id` = `profiles`.`id` '.
+                 'and `id` = ?) and `relevance` >= 0.25 order by `relevance` desc';
 
         $bindings = ['jarek', 'jarek', 'tkaczyk', 10, 5];
 

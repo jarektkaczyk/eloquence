@@ -39,7 +39,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function meta_lists_with_both_meta_column_and_key_joins_twice()
+    public function meta_pluck_with_both_meta_column_and_key_joins_twice()
     {
         $sql = 'select "meta_alias_1"."meta_value" as "size", "meta_alias_2"."meta_value" as "uuid" from "metables" '.
                 'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
@@ -52,13 +52,13 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
 
-        $model->lists('size', 'uuid');
+        $model->pluck('size', 'uuid');
     }
 
     /**
      * @test
      */
-    public function meta_lists_with_another_join()
+    public function meta_pluck_with_another_join()
     {
         $sql = 'select "meta_alias_1"."meta_value" as "size", "joined"."id" from "metables" '.
                 'inner join "another_table" as "joined" on "joined"."metable_id" = "metables"."id" '.
@@ -71,13 +71,13 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
         $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
 
         $model->join('another_table as joined', 'joined.metable_id', '=', 'metables.id')
-                ->lists('size', 'joined.id');
+                ->pluck('size', 'joined.id');
     }
 
     /**
      * @test
      */
-    public function meta_lists_prefixes_main_table_column()
+    public function meta_pluck_prefixes_main_table_column()
     {
         $sql = 'select "meta_alias_1"."meta_value" as "size", "metables"."id" from "metables" '.
                 'left join "meta_attributes" as "meta_alias_1" on "meta_alias_1"."metable_id" = "metables"."id" '.
@@ -88,7 +88,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
 
-        $model->lists('size', 'id');
+        $model->pluck('size', 'id');
     }
 
     /**
@@ -132,7 +132,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
 
-        $model->pluck('color');
+        $model->value('color');
     }
 
     /**
@@ -173,9 +173,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereExists()
     {
-        $sql = 'select * from "metables" where exists (select 1 from "metables" where (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where exists (select 1 from "metables" where exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" > 10) >= 1)';
+                'and "meta_key" = ? and "meta_value" > 10))';
 
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('raw')->once()->andReturnUsing(function ($value) { return new Expression($value); });
@@ -193,9 +193,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereDates($type, $placeholder)
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and strftime(\''.$placeholder.'\', "meta_value") = ?) >= 1';
+                'and "meta_key" = ? and strftime(\''.$placeholder.'\', "meta_value") = ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->{"where{$type}"}('published_at', '=', 'date_value');
 
@@ -218,9 +218,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhereNull()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or not exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ?) < 1';
+                'and "meta_key" = ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNull('color');
 
@@ -233,9 +233,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhereNotNull()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ?) >= 1';
+                'and "meta_key" = ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNotNull('color');
 
@@ -248,9 +248,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereNotNull()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ?) >= 1';
+                'and "meta_key" = ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNotNull('color');
 
@@ -263,9 +263,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereNull()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and not exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ?) < 1';
+                'and "meta_key" = ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNull('color');
 
@@ -278,9 +278,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereNotBetween()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and not exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) < 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNotBetween('size', ['5','10']);
 
@@ -293,9 +293,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereBetween_numeric()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" >= 5 and "meta_value" <= 10.5) >= 1';
+                'and "meta_key" = ? and "meta_value" >= 5 and "meta_value" <= 10.5)';
 
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('raw')->twice()->andReturnUsing(function ($value) { return new Expression($value); });
@@ -311,9 +311,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereBetween_string()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) >= 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->whereBetween('size', ['M','L']);
 
@@ -326,9 +326,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhereBetween()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) >= 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereBetween('size', ['M','L']);
 
@@ -341,9 +341,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhereNotBetween()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or not exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?) < 1';
+                'and "meta_key" = ? and "meta_value" >= ? and "meta_value" <= ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNotBetween('size', ['M','L']);
 
@@ -356,9 +356,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhereNotIn()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or not exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) < 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?))';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereNotIn('size', ['L', 'M', 'S']);
 
@@ -371,9 +371,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereNotIn()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and not exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) < 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?))';
 
         $query = $this->getModel()->where('name', 'jarek')->whereNotIn('size', ['L', 'M', 'S']);
 
@@ -386,9 +386,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_whereIn()
     {
-        $sql = 'select * from "metables" where "name" = ? and (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? and exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) >= 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?))';
 
         $query = $this->getModel()->where('name', 'jarek')->whereIn('size', ['L', 'M', 55]);
 
@@ -401,9 +401,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhereIn()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" in (?, ?, ?)) >= 1';
+                'and "meta_key" = ? and "meta_value" in (?, ?, ?))';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhereIn('size', ['L', 'M', 'S']);
 
@@ -416,9 +416,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_orWhere()
     {
-        $sql = 'select * from "metables" where "name" = ? or (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where "name" = ? or exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" = ?) >= 1';
+                'and "meta_key" = ? and "meta_value" = ?)';
 
         $query = $this->getModel()->where('name', 'jarek')->orWhere('color', 'red');
 
@@ -431,9 +431,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_where_numeric()
     {
-        $sql = 'select * from "metables" where (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" > 5) >= 1';
+                'and "meta_key" = ? and "meta_value" > 5)';
 
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('raw')->once()->andReturnUsing(function ($value) { return new Expression($value); });
@@ -449,9 +449,9 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
      */
     public function meta_where()
     {
-        $sql = 'select * from "metables" where (select count(*) from "meta_attributes" '.
+        $sql = 'select * from "metables" where exists (select * from "meta_attributes" '.
                 'where "meta_attributes"."metable_id" = "metables"."id" and "meta_attributes"."metable_type" = ? '.
-                'and "meta_key" = ? and "meta_value" = ?) >= 1';
+                'and "meta_key" = ? and "meta_value" = ?)';
 
         $query = $this->getModel()->where('color', 'red');
 

@@ -66,7 +66,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         // It's a MorphTo relation that is supported for mapping,
         // but due to the way it works it cannot be used for
         // query hooks, because it's impossible to join.
-        $this->getModel()->pluck('role');
+        $this->getModel()->value('role');
     }
 
     /**
@@ -84,7 +84,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
 
-        $model->pluck('brand');
+        $model->value('brand');
     }
 
     /**
@@ -100,13 +100,13 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
 
-        $model->pluck('avatar');
+        $model->value('avatar');
     }
 
     /**
      * @test
      */
-    public function mapped_lists_leaves_prefixed_keys_intact()
+    public function mapped_pluck_leaves_prefixed_keys_intact()
     {
         $sql = 'select "profiles"."last_name", "other_table"."id" from "users" '.
                 'left join "profiles" on "users"."profile_id" = "profiles"."id"';
@@ -114,13 +114,13 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
 
-        $model->lists('last_name', 'other_table.id');
+        $model->pluck('last_name', 'other_table.id');
     }
 
     /**
      * @test
      */
-    public function mapped_lists_prefixes_main_table_column()
+    public function mapped_pluck_prefixes_main_table_column()
     {
         $sql = 'select "profiles"."last_name", "users"."id" from "users" '.
                 'left join "profiles" on "users"."profile_id" = "profiles"."id"';
@@ -128,7 +128,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
 
-        $model->lists('last_name', 'id');
+        $model->pluck('last_name', 'id');
     }
 
     /**
@@ -192,8 +192,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_whereBetween()
     {
-        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "age" between ? and ?) >= 1';
+        $sql = 'select * from "users" where "email" = ? and exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "age" between ? and ?)';
 
         $query = $this->getModel()->where('email', 'some@email')->whereBetween('age', [20, 30]);
 
@@ -206,8 +206,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_whereNotBetween()
     {
-        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "age" between ? and ?) < 1';
+        $sql = 'select * from "users" where "email" = ? and not exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "age" between ? and ?)';
 
         $query = $this->getModel()->where('email', 'some@email')->whereNotBetween('age', [20, 30]);
 
@@ -220,8 +220,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_whereNotIn()
     {
-        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "first_name" in (?, ?)) < 1';
+        $sql = 'select * from "users" where "email" = ? and not exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" in (?, ?))';
 
         $query = $this->getModel()->where('email', 'some@email')->whereNotIn('first_name', ['Jarek', 'Marek']);
 
@@ -234,8 +234,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_whereNotNull()
     {
-        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "first_name" is not null) >= 1';
+        $sql = 'select * from "users" where "email" = ? and exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" is not null)';
 
         $query = $this->getModel()->where('email', 'some@email')->whereNotNull('first_name');
 
@@ -248,8 +248,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_whereNull()
     {
-        $sql = 'select * from "users" where "email" = ? and (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "first_name" is not null) < 1';
+        $sql = 'select * from "users" where "email" = ? and not exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" is not null)';
 
         $query = $this->getModel()->where('email', 'some@email')->whereNull('first_name');
 
@@ -262,8 +262,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_orWhere()
     {
-        $sql = 'select * from "users" where "email" = ? or (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "first_name" = ?) >= 1';
+        $sql = 'select * from "users" where "email" = ? or exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" = ?)';
 
         $query = $this->getModel()->where('email', 'some@email')->orWhere('first_name', 'Jarek');
 
@@ -276,8 +276,8 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_where()
     {
-        $sql = 'select * from "users" where (select count(*) from "profiles" '.
-                'where "users"."profile_id" = "profiles"."id" and "first_name" = ?) >= 1';
+        $sql = 'select * from "users" where exists (select * from "profiles" '.
+                'where "users"."profile_id" = "profiles"."id" and "first_name" = ?)';
 
         $query = $this->getModel()->where('first_name', 'Jarek');
 

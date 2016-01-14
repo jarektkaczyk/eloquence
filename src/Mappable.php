@@ -3,6 +3,7 @@
 namespace Sofa\Eloquence;
 
 use LogicException;
+use Illuminate\Support\Arr;
 use Sofa\Eloquence\Mappable\Hooks;
 use Sofa\Hookable\Contracts\ArgumentBag;
 use Illuminate\Contracts\Support\Arrayable;
@@ -155,7 +156,7 @@ trait Mappable
         // so it can be called directly on the builder.
         $method = $args->get('function') ?: $method;
 
-        return (in_array($method, ['orderBy', 'lists']))
+        return (in_array($method, ['orderBy', 'lists', 'pluck']))
             ? $this->{"{$method}Mapped"}($query, $args, $table, $column, $target)
             : $this->mappedSingleResult($query, $method, "{$table}.{$column}");
     }
@@ -177,6 +178,11 @@ trait Mappable
         return $query;
     }
 
+    protected function listsMapped(Builder $query, ArgumentBag $args, $table, $column)
+    {
+        return $this->pluckMapped($query, $args, $table, $column);
+    }
+
     /**
      * Get an array with the values of given mapped attribute.
      *
@@ -186,7 +192,7 @@ trait Mappable
      * @param  string $column
      * @return array
      */
-    protected function listsMapped(Builder $query, ArgumentBag $args, $table, $column)
+    protected function pluckMapped(Builder $query, ArgumentBag $args, $table, $column)
     {
         $query->select("{$table}.{$column}");
 
@@ -196,7 +202,7 @@ trait Mappable
 
         $args->set('column', $column);
 
-        return $query->callParent('lists', $args->all());
+        return $query->callParent('pluck', $args->all());
     }
 
     /**
@@ -280,7 +286,7 @@ trait Mappable
      */
     protected function alreadyJoined(Builder $query, $table)
     {
-        $joined = array_fetch((array) $query->getQuery()->joins, 'table');
+        $joined = Arr::pluck((array) $query->getQuery()->joins, 'table');
 
         return in_array($table, $joined);
     }

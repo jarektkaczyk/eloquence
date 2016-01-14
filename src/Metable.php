@@ -124,7 +124,7 @@ trait Metable
         // so it can be called directly on the builder.
         $method = $args->get('function') ?: $method;
 
-        return (in_array($method, ['orderBy', 'lists']))
+        return (in_array($method, ['orderBy', 'lists', 'pluck']))
             ? $this->{"{$method}Meta"}($query, $args, $alias)
             : $this->metaSingleResult($query, $method, $alias);
     }
@@ -144,6 +144,11 @@ trait Metable
         return $query;
     }
 
+    protected function listsMeta(Builder $query, ArgumentBag $args, $alias)
+    {
+        return $this->pluckMeta($query, $args, $alias);
+    }
+
     /**
      * Get an array with the values of given meta attribute.
      *
@@ -152,7 +157,7 @@ trait Metable
      * @param  string $alias
      * @return array
      */
-    protected function listsMeta(Builder $query, ArgumentBag $args, $alias)
+    protected function pluckMeta(Builder $query, ArgumentBag $args, $alias)
     {
         list($column, $key) = [$args->get('column'), $args->get('key')];
 
@@ -162,7 +167,7 @@ trait Metable
             $this->metaSelectListsKey($query, $key);
         }
 
-        return $query->callParent('lists', $args->all());
+        return $query->callParent('pluck', $args->all());
     }
 
     /**
