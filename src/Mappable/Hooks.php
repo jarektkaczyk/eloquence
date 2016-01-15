@@ -144,7 +144,7 @@ class Hooks
      * Register hook on toArray method.
      *
      * @codeCoverageIgnore
-     * 
+     *
      * @return \Closure
      */
     public function toArray()
