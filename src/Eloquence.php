@@ -63,7 +63,7 @@ trait Eloquence
      * Determine whether where should be treated as whereNull.
      *
      * @param  string $method
-     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  Sofa\Hookable\Contracts\ArgumentBag $args
      * @return boolean
      */
     protected function isWhereNull($method, ArgumentBag $args)
@@ -74,7 +74,7 @@ trait Eloquence
     /**
      * Determine whether where is a whereNull by the arguments passed to where method.
      *
-     * @param  \Sofa\Eloquence\ArgumentBag $args
+     * @param  Sofa\Hookable\Contracts\ArgumentBag $args
      * @return boolean
      */
     protected function isWhereNullByArgs(ArgumentBag $args)
@@ -127,7 +127,7 @@ trait Eloquence
     {
         static::loadColumnListing();
 
-        return in_array((string)$key, static::$columnListing);
+        return in_array((string) $key, static::$columnListing);
     }
 
     /**

@@ -264,7 +264,7 @@ trait Validable
     /**
      * Get all validation rules for update for given id.
      *
-     * @param  \Illuminate\Database\Eloquent\Model|string $id
+     * @param  \Illuminate\Database\Eloquent\Model|integer|string $id
      * @return array
      */
     public static function getUpdateRulesForId($id)
