@@ -140,4 +140,22 @@ class Hooks
 
         throw new BadMethodCallException("Method [{$method}] doesn't exist on this object.");
     }
+    /**
+     * Register hook on toArray method.
+     *
+     * @return \Closure
+     */
+    public function toArray()
+    {
+        return function ($next, $attributes) {
+            $mappedAttributes = [];
+            foreach ($attributes as $column => $value) {
+                if ($key = $this->isMapping($column)) {
+                    $column = $key;
+                }
+                $mappedAttributes[$column] = $value;
+            };
+            return $next($mappedAttributes);
+        };
+    }
 }
