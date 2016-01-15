@@ -383,6 +383,14 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('new_bam_value', $this->model->mapAttribute('bam'));
     }
 
+    /**
+     * @test
+     */
+    public function it_checks_attributed_is_mapping()
+    {
+        $this->assertEquals('alias', $this->model->isMapping('original'));
+    }
+
     public function getModel()
     {
         $model = new MappableEloquentStub;
