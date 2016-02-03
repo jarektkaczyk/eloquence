@@ -107,7 +107,7 @@ class Attribute extends Model implements AttributeContract
         parent::boot();
 
         if (!isset(static::$attributeMutator)) {
-            if (function_exists('app') && isset(app()['eloquence.mutator'])) {
+            if (function_exists('app') && app()->bound('eloquence.mutator')) {
                 static::$attributeMutator = app('eloquence.mutator');
             } else {
                 static::$attributeMutator = new Mutator;
