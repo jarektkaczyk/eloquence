@@ -51,7 +51,7 @@ trait Eloquence
         static::observe(new AttributeCleaner);
 
         if (!isset(static::$attributeMutator)) {
-            if (function_exists('app') && isset(app()['eloquence.mutator'])) {
+            if (function_exists('app') && app()->bound('eloquence.mutator')) {
                 static::setAttributeMutator(app('eloquence.mutator'));
             } else {
                 static::setAttributeMutator(new Mutator);
