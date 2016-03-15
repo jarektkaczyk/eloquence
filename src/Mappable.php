@@ -172,7 +172,12 @@ trait Mappable
      */
     protected function orderByMapped(Builder $query, ArgumentBag $args, $table, $column, $target)
     {
-        $query->with($target)->getQuery()->orderBy("{$table}.{$column}", $args->get('direction'));
+        if ($this->isCastable($column)) {
+            $query->orderBy($this->getMappingForAttribute($column));
+        } else {
+            $query->with($target)->getQuery()->orderBy("{$table}.{$column}", $args->get('direction'));
+
+        }
 
         return $query;
     }
@@ -586,4 +591,5 @@ trait Mappable
     {
         return (property_exists($this, 'maps')) ? $this->maps : [];
     }
+
 }

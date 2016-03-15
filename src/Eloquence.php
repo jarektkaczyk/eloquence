@@ -217,4 +217,14 @@ trait Eloquence
     {
         return static::$attributeMutator;
     }
+
+    /**
+     * @param $column
+     *
+     * @return bool
+     */
+    public function isCastable($column) {
+        $column = current(explode('.', $column, 2));
+        return (array_has($this->casts, $column));
+    }
 }
