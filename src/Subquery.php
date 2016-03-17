@@ -69,11 +69,11 @@ class Subquery extends Expression
         $sql = '('.$this->query->toSql().')';
 
         if ($this->alias) {
-            $alias = $this->query->getGrammar()->wrapTable($this->alias);
-
-            $sql .= ' as '.$alias;
+            // check for  "." in tableName replace with with "_"
+            $sql  .= ' as ' .$this->query->getGrammar()->wrapTable(
+                str_replace('.', '_', $this->alias)
+            );
         }
-
         return $sql;
     }
 
