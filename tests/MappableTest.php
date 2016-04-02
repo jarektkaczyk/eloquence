@@ -383,6 +383,48 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('new_bam_value', $this->model->mapAttribute('bam'));
     }
 
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable\Hooks::isDirty
+     */
+    public function mapped_attribute_is_dirty()
+    {
+        // $model->nick maps to $model->ign
+        $model = $this->getModel();
+        $model->nick = 'foo';
+
+        $this->assertTrue($model->isDirty(), 'model should be dirty when mapped attribute is changed');
+        $this->assertTrue($model->isDirty('nick'), 'mapped attribute should be dirty when changed');
+        $this->assertTrue($model->isDirty('ign'), 'original attribute should be dirty when mapped attribute is changed');
+
+        unset($model->nick);
+
+        $this->assertFalse($model->isDirty('nick'), 'mapped attribute should no longer be dirty');
+        $this->assertFalse($model->isDirty('ign'), 'original attribute should no longer be dirty');
+    }
+
+    /**
+     * @test
+     * @covers \Sofa\Eloquence\Mappable\Hooks::isDirty
+     */
+    public function mapped_attributes_multiple_is_dirty()
+    {
+        // $model->nick maps to $model->ign
+        $model = $this->getModel();
+        $model->nick = 'foo';
+
+        $this->assertFalse($model->isDirty('foo', 'bar'), 'should be clean when affected attributes are excluded');
+        $this->assertFalse($model->isDirty(['foo', 'bar']), 'should be clean when affected attributes are excluded');
+
+        $this->assertTrue($model->isDirty('bar', 'nick'), 'should be dirty when affected attribute is included');
+        $this->assertTrue($model->isDirty(['bar', 'nick']), 'should be dirty when affected attribute is included');
+
+        unset($model->nick);
+
+        $this->assertFalse($model->isDirty('nick', 'foo'), 'should not be dirty after affected attributed is cleared');
+        $this->assertFalse($model->isDirty('ign', 'foo'), 'should not be dirty after affected attributed is cleared');
+    }
+
     public function getModel()
     {
         $model = new MappableEloquentStub;

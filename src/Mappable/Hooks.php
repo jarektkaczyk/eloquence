@@ -36,6 +36,18 @@ class Hooks
         };
     }
 
+    public function isDirty()
+    {
+        return function ($next, $attributes = null, $bag) {
+            if (is_array($attributes)) {
+                $attributes = array_map(function ($attribute) {
+                    return $this->getMappingForAttribute($attribute) ?: $attribute;
+                }, $attributes);
+            }
+            return $next($attributes, $bag);
+        };
+    }
+
     /**
      * Register hook on save method.
      *

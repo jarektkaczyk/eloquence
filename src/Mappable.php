@@ -50,6 +50,7 @@ trait Mappable
                 '__isset',
                 '__unset',
                 'queryHook',
+                'isDirty',
             ] as $method) {
             static::hook($method, $hooks->{$method}());
         }
