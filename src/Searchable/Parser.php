@@ -103,7 +103,7 @@ class Parser implements ParserContract
      */
     protected function splitString($query)
     {
-        preg_match_all('/(?<=")[\w ][^"]+(?=")|(?<=\s|^)[^\s"]+(?=\s|$)/', $query, $matches);
+        preg_match_all('/(?<=")[\w ][^"]+(?=")|(?<=\s|^)[^\s"]+(?=\s|$)/u', $query, $matches);
 
         return reset($matches);
     }
