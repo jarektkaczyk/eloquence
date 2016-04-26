@@ -2,8 +2,10 @@
 
 namespace Sofa\Eloquence;
 
+use Illuminate\Database\PostgresConnection;
 use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Mutator\Mutator;
+use Sofa\Eloquence\Query\Grammars\PostgresGrammar;
 use Sofa\Eloquence\Relations\JoinerFactory;
 use Sofa\Eloquence\Searchable\ParserFactory;
 use Illuminate\Support\ServiceProvider as BaseProvider;
@@ -18,6 +20,10 @@ class ServiceProvider extends BaseProvider
         Builder::setJoinerFactory(new JoinerFactory);
 
         Builder::setParserFactory(new ParserFactory);
+
+        if(\DB::connection() instanceof PostgresConnection) {
+            \DB::connection()->setQueryGrammar(new PostgresGrammar());
+        }
     }
 
     /**
@@ -83,4 +89,5 @@ class ServiceProvider extends BaseProvider
     {
         return ['eloquence.mutator', 'eloquence.joiner', 'eloquence.parser'];
     }
+
 }
