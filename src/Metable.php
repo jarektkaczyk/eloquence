@@ -98,7 +98,7 @@ trait Metable
                 }
 
                 $columns[$key] = $select;
-            } elseif (is_string($column) && strpos($column, '.') === false) {
+            } elseif (is_string($column) && $column != '*' && strpos($column, '.') === false) {
                 $table = $this->joinMeta($query, $column);
 
                 $columns[$key] = "{$table}.meta_value as {$alias}";
