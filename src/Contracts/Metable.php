@@ -4,7 +4,7 @@ namespace Sofa\Eloquence\Contracts;
 
 interface Metable
 {
-    public static function hook($method, $hook);
+    public static function hook($method, Closure $hook);
     public function getAttribute($key);
     public function setAttribute($key, $value);
     public function getMetaAttributes();
