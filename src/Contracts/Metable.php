@@ -2,6 +2,8 @@
 
 namespace Sofa\Eloquence\Contracts;
 
+use Closure;
+
 interface Metable
 {
     public static function hook($method, Closure $hook);
