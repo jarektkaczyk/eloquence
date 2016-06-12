@@ -383,9 +383,9 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('new_bam_value', $this->model->mapAttribute('bam'));
     }
 
-    public function getModel()
+    public function getModel($model = null)
     {
-        $model = new MappableEloquentStub;
+        $model = $model ?: new MappableEloquentStub;
         $grammarClass = 'Illuminate\Database\Query\Grammars\SQLiteGrammar';
         $processorClass = 'Illuminate\Database\Query\Processors\SQLiteProcessor';
         $grammar = new $grammarClass;
