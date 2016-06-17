@@ -89,7 +89,7 @@ trait Mappable
         $columns = $args->get('columns');
 
         foreach ($columns as $key => $column) {
-            list($column) = $this->extractColumnAlias($column);
+            list($column, $as) = $this->extractColumnAlias($column);
 
             // Each mapped column will be selected appropriately. If it's alias
             // then prefix it with current table and use original field name
@@ -106,6 +106,10 @@ trait Mappable
                 }
 
                 $columns[$key] = "{$table}.{$mapped}";
+
+                if ($as !== $mapped) {
+                    $columns[$key] .= " as {$as}";
+                }
 
             // For non mapped columns present on this table we will simply
             // add the prefix, in order to avoid any column collisions,
