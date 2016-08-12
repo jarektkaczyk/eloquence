@@ -91,13 +91,11 @@ trait Eloquence
      */
     protected function extractColumnAlias($column)
     {
-        $alias = $column;
-
         if (strpos($column, ' as ') !== false) {
-            list($column, $alias) = explode(' as ', $column);
+            return explode(' as ', $column);
         }
 
-        return [$column, $alias];
+        return [$column, null];
     }
 
     /**

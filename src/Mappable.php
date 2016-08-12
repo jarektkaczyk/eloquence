@@ -107,7 +107,7 @@ trait Mappable
 
                 $columns[$key] = "{$table}.{$mapped}";
 
-                if ($as !== $mapped) {
+                if ($as !== null && $as !== $mapped) {
                     $columns[$key] .= " as {$as}";
                 }
 

@@ -93,7 +93,7 @@ trait Metable
             if ($this->hasColumn($column)) {
                 $select = "{$this->getTable()}.{$column}";
 
-                if ($column !== $alias) {
+                if ($alias !== null && $column !== $alias) {
                     $select .= " as {$alias}";
                 }
 
@@ -101,7 +101,7 @@ trait Metable
             } elseif (is_string($column) && $column != '*' && strpos($column, '.') === false) {
                 $table = $this->joinMeta($query, $column);
 
-                $columns[$key] = "{$table}.meta_value as {$alias}";
+                $columns[$key] = sprintf("%s.meta_value as %s", $table, ($alias ? $alias : $column));
             }
         }
 
