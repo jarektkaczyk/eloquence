@@ -24,7 +24,7 @@ trait Mappable
      *
      * @var array
      */
-    protected static $mappedAttributes;
+    protected $mappedAttributes;
 
     /**
      * Related mapped objects to save along with the mappable instance.
@@ -414,7 +414,7 @@ trait Mappable
     public function getMappingForAttribute($key)
     {
         if ($this->hasMapping($key)) {
-            return static::$mappedAttributes[$key];
+            return $this->mappedAttributes[$key];
         }
     }
 
@@ -437,11 +437,11 @@ trait Mappable
      */
     public function hasMapping($key)
     {
-        if (is_null(static::$mappedAttributes)) {
+        if (is_null($this->mappedAttributes)) {
             $this->parseMappings();
         }
 
-        return array_key_exists((string) $key, static::$mappedAttributes);
+        return array_key_exists((string) $key, $this->mappedAttributes);
     }
 
     /**
@@ -451,13 +451,13 @@ trait Mappable
      */
     protected function parseMappings()
     {
-        static::$mappedAttributes = [];
+        $this->mappedAttributes = [];
 
         foreach ($this->getMaps() as $attribute => $mapping) {
             if (is_array($mapping)) {
                 $this->parseImplicitMapping($mapping, $attribute);
             } else {
-                static::$mappedAttributes[$attribute] = $mapping;
+                $this->mappedAttributes[$attribute] = $mapping;
             }
         }
     }
@@ -472,7 +472,7 @@ trait Mappable
     protected function parseImplicitMapping($attributes, $target)
     {
         foreach ($attributes as $attribute) {
-            static::$mappedAttributes[$attribute] = "{$target}.{$attribute}";
+            $this->mappedAttributes[$attribute] = "{$target}.{$attribute}";
         }
     }
 
