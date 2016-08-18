@@ -24,10 +24,10 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
      */
     public function mapped_select()
     {
-        $sql = 'select "profiles"."last_name", "users"."id", "users"."ign" from "users" '.
+        $sql = 'select "profiles"."last_name", "users"."id", "users"."ign", "users"."gender" as "alias" from "users" '.
                 'left join "profiles" on "users"."profile_id" = "profiles"."id"';
 
-        $query = $this->getModel()->select('last_name', 'id', 'nick');
+        $query = $this->getModel()->select('last_name', 'id', 'nick', 'sex as alias');
 
         $this->assertEquals($sql, $query->toSql());
     }
@@ -496,6 +496,7 @@ class MappableEloquentStub extends Model {
         'first_name' => 'profile.first_name',
         'profile'    => ['last_name', 'age'],
         'nick'       => 'ign',
+        'sex'        => 'gender',
         'photo'      => 'account.photo',
         'address'    => 'account.address',
         'avatar'     => 'profile.image.path',
