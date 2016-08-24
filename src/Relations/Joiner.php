@@ -132,7 +132,7 @@ class Joiner implements JoinerContract
     {
         list($fk, $pk) = $this->getJoinKeys($relation);
 
-        $join = (new Join($type, $table))->on($fk, '=', $pk);
+        $join = (new Join($this->query, $type, $table))->on($fk, '=', $pk);
 
         if ($relation instanceof MorphOneOrMany) {
             $join->where($relation->getMorphType(), '=', $parent->getMorphClass());
@@ -161,7 +161,7 @@ class Joiner implements JoinerContract
 
         $pk = $parent->getQualifiedKeyName();
 
-        if (!$this->alreadyJoined($join = (new Join($type, $table))->on($fk, '=', $pk))) {
+        if (!$this->alreadyJoined($join = (new Join($this->query, $type, $table))->on($fk, '=', $pk))) {
             $this->query->joins[] = $join;
         }
     }
