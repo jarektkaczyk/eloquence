@@ -105,9 +105,22 @@ class Builder extends HookableBuilder
                         ? array_sum($columns->getWeights()) / 4
                         : (float) $threshold;
 
+        $modelTableName = $this->model->getTable();
+        
+        // If we are dealing with a SQL Server database, we need to group by all column names
+        if ( $this->model->getConnection()->getDriverName() == 'sqlsrv' ) {
+            $groupByColumns = $this->model->getConnection()->getSchemaBuilder()->getColumnListing($modelTableName);
+            // Force column names to be fully-qualified
+            foreach ($groupByColumns as &$column) {
+                $column = $modelTableName . '.' . $column;
+            }
+        } else {
+            $groupByColumns = $this->model->getQualifiedKeyName();
+        }
+
         $subquery->select($this->model->getTable() . '.*')
                  ->from($this->model->getTable())
-                 ->groupBy($this->model->getQualifiedKeyName());
+                 ->groupBy($groupByColumns);
 
         $this->addSearchClauses($subquery, $columns, $words, $threshold);
 
