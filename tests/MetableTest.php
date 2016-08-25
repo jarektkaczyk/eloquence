@@ -465,18 +465,18 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_saves_meta_attributes()
     {
         $size = m::mock('StdClass');
-        $size->shouldReceive('getValue')->andReturn(null);
+        $size->shouldReceive('getValue')->once()->andReturn(null);
         $size->shouldReceive('delete')->once();
 
         $color = m::mock('StdClass');
-        $color->shouldReceive('getValue')->andReturn('red');
+        $color->shouldReceive('getValue')->once()->andReturn('red');
 
         $relation = m::mock('StdClass');
         $relation->shouldReceive('save')->with($color);
 
         $model = m::mock('\Sofa\Eloquence\Tests\MetableEloquentStub')->makePartial();
-        $model->shouldReceive('getMetaAttributes')->andReturn([$color, $size]);
-        $model->shouldReceive('metaAttributes')->andReturn($relation);
+        $model->shouldReceive('getMetaAttributes')->once()->andReturn([$color, $size]);
+        $model->shouldReceive('metaAttributes')->once()->andReturn($relation);
         $model->exists = true;
 
         $model->save(['timestamps' => false, 'touch' => false]);
