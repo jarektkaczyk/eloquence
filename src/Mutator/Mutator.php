@@ -50,10 +50,8 @@ class Mutator implements MutatorContract
 
         if ($this->isClassMethod($callable)) {
             $callable = $this->parseClassMethod($callable);
-
         } elseif ($this->isMutatorMethod($callable)) {
             $callable = [$this, $callable];
-
         } elseif (!function_exists($callable)) {
             throw new InvalidCallableException("Function [{$callable}] not found.");
         }

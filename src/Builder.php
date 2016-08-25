@@ -106,9 +106,9 @@ class Builder extends HookableBuilder
                         : (float) $threshold;
 
         $modelTableName = $this->model->getTable();
-        
+
         // If we are dealing with a SQL Server database, we need to group by all column names
-        if ( $this->model->getConnection()->getDriverName() == 'sqlsrv' ) {
+        if ($this->model->getConnection()->getDriverName() == 'sqlsrv') {
             $groupByColumns = $this->model->getConnection()->getSchemaBuilder()->getColumnListing($modelTableName);
             // Force column names to be fully-qualified
             foreach ($groupByColumns as &$column) {
@@ -281,25 +281,18 @@ class Builder extends HookableBuilder
     {
         if ($this->isHasWhere($where, $type)) {
             return substr_count($where['column'] . $where['value'], '?');
-
         } elseif ($type === 'basic') {
             return (int) !$where['value'] instanceof Expression;
-
         } elseif (in_array($type, ['basic', 'date', 'year', 'month', 'day'])) {
             return (int) !$where['value'] instanceof Expression;
-
         } elseif (in_array($type, ['null', 'notnull'])) {
             return 0;
-
         } elseif ($type === 'between') {
             return 2;
-
         } elseif (in_array($type, ['in', 'notin'])) {
             return count($where['values']);
-
         } elseif ($type === 'raw') {
             return substr_count($where['sql'], '?');
-
         } elseif (in_array($type, ['nested', 'sub', 'exists', 'notexists', 'insub', 'notinsub'])) {
             return count($where['query']->getBindings());
         }
@@ -470,7 +463,6 @@ class Builder extends HookableBuilder
                 $columns->add(
                     new Column($grammar, $related->getTable(), $column, $mapping, $weight)
                 );
-
             } else {
                 $columns->add(
                     new Column($grammar, $this->model->getTable(), $mapping, $mapping, $weight)
