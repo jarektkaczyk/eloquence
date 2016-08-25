@@ -20,7 +20,7 @@ trait Metable
     protected $metaQueryable = [
         'where', 'whereBetween', 'whereIn', 'whereNull',
         'whereDate', 'whereYear', 'whereMonth', 'whereDay',
-        'orderBy', 'pluck', 'value', 'aggregate', 'lists'
+        'orderBy', 'pluck', 'value', 'aggregate',
     ];
 
     /**
@@ -142,11 +142,6 @@ trait Metable
         $query->with('metaAttributes')->getQuery()->orderBy("{$alias}.meta_value", $args->get('direction'));
 
         return $query;
-    }
-
-    protected function listsMeta(Builder $query, ArgumentBag $args, $alias)
-    {
-        return $this->pluckMeta($query, $args, $alias);
     }
 
     /**

@@ -3,16 +3,24 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
+use Sofa\Eloquence\Builder;
+use Sofa\Eloquence\Metable;
+use Sofa\Eloquence\Eloquence;
+use Sofa\Eloquence\ArgumentBag;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Builder as Query;
 use Illuminate\Database\Query\Grammars\Grammar;
-use Illuminate\Database\Query\Expression;
-use Sofa\Eloquence\Builder;
-use Sofa\Eloquence\Eloquence;
-use Sofa\Eloquence\Metable;
-use Sofa\Eloquence\ArgumentBag;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class MetableTest extends \PHPUnit_Framework_TestCase {
+
+    public function setUp()
+    {
+        Relation::morphMap([
+            'Metable' => MetableEloquentStub::class,
+        ]);
+    }
 
     public function tearDown()
     {
@@ -465,18 +473,18 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_saves_meta_attributes()
     {
         $size = m::mock('StdClass');
-        $size->shouldReceive('getValue')->andReturn(null);
+        $size->shouldReceive('getValue')->once()->andReturn(null);
         $size->shouldReceive('delete')->once();
 
         $color = m::mock('StdClass');
-        $color->shouldReceive('getValue')->andReturn('red');
+        $color->shouldReceive('getValue')->once()->andReturn('red');
 
         $relation = m::mock('StdClass');
-        $relation->shouldReceive('save')->with($color);
+        $relation->shouldReceive('save')->once()->with($color);
 
         $model = m::mock('\Sofa\Eloquence\Tests\MetableEloquentStub')->makePartial();
-        $model->shouldReceive('getMetaAttributes')->andReturn([$color, $size]);
-        $model->shouldReceive('metaAttributes')->andReturn($relation);
+        $model->shouldReceive('getMetaAttributes')->once()->andReturn([$color, $size]);
+        $model->shouldReceive('metaAttributes')->once()->andReturn($relation);
         $model->exists = true;
 
         $model->save(['timestamps' => false, 'touch' => false]);
@@ -611,11 +619,17 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class MetableEloquentStub extends Model {
+class ParentModel extends Model {
+    public function save()
+    {
+        return true;
+    }
+}
+
+class MetableEloquentStub extends ParentModel {
     use Eloquence, Metable;
 
     protected $table = 'metables';
-    protected $morphClass = 'Metable';
 
     public $aliases = [];
 

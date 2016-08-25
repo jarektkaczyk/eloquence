@@ -85,7 +85,6 @@ class Attribute extends Model implements AttributeContract
         // default behaviour
         if (is_array($key)) {
             parent::__construct($key);
-
         } else {
             parent::__construct();
 
@@ -221,7 +220,6 @@ class Attribute extends Model implements AttributeContract
 
         if ($this->hasMutator($value, 'setter')) {
             $value = $this->mutateValue($value, 'setter');
-
         } elseif (!$this->isStringable($value) && !is_null($value)) {
             throw new InvalidTypeException(
                 "Unsupported meta value type [{$this->getValueType($value)}]."

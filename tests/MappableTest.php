@@ -3,14 +3,18 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
-use Illuminate\Database\Eloquent\Model;
-use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
+use Sofa\Eloquence\Eloquence;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class MappableTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp()
     {
+        Relation::morphMap([
+            'UserMorph' => MappableEloquentStub::class,
+        ]);
         $this->model = new MappableStub;
     }
 
@@ -386,7 +390,7 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
-    public function it_inherits_base_model_proper()
+    public function it_inherits_base_model_properly()
     {
         $q = $this->getModel(new UserStub)->select(['id', 'name'])->where('id', '>', 0);
         $expectedSql = 'select "user_stubs"."usr_id", "user_stubs"."usr_name" from "user_stubs" where "usr_id" > ?';
@@ -491,7 +495,6 @@ class MappableEloquentStub extends Model {
     use Eloquence, Mappable;
 
     protected $table = 'users';
-    protected $morphClass = 'UserMorph';
     protected $maps = [
         'first_name' => 'profile.first_name',
         'profile'    => ['last_name', 'age'],
