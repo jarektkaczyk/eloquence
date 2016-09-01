@@ -133,7 +133,7 @@ class Builder extends HookableBuilder
 
         // For morphOne/morphMany support we need to port the bindings from JoinClauses.
         $joinBindings = collect($subquery->getQuery()->joins)->flatMap(function ($join) {
-            $join->getBindings();
+            return $join->getBindings();
         })->all();
 
         $this->addBinding($joinBindings, 'select');
