@@ -34,12 +34,12 @@ class CreateMetaAttributesTable extends Migration
             $table->morphs('metable');
 
             $table->index('meta_key');
-
-            // Laravel doesn't handle index length, so we need raw statement for this one
-            \Schema::getConnection()->statement(
-                'create index meta_attributes_index_value on meta_attributes (meta_key, meta_value(20))'
-            );
         });
+        
+        // Laravel doesn't handle index length, so we need raw statement for this one
+        \Schema::getConnection()->statement(
+            'create index meta_attributes_index_value on  (meta_key, meta_value(20))'
+        );
     }
 
     /**
