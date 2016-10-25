@@ -4,6 +4,8 @@
 
 Easy and flexible extensions for the [Eloquent ORM (Laravel 5.3)](https://laravel.com/docs/5.3/eloquent).
 
+**If I'm saving you some time with my work, you can back me up on [Patreon page](https://patreon.com/jarektkaczyk).**
+
 For older versions of Illuminate/Laravel please use:
 - 5.2.* -> [5.2](https://github.com/jarektkaczyk/eloquence/tree/5.2) branch.
 - 5.1.* -> [5.1](https://github.com/jarektkaczyk/eloquence/tree/5.1) branch.
