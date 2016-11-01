@@ -620,7 +620,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
 }
 
 class ParentModel extends Model {
-    public function save()
+    public function save(array $options = [])
     {
         return true;
     }
