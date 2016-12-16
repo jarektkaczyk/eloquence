@@ -105,7 +105,18 @@ class Parser implements ParserContract
     {
         preg_match_all('/(?<=")[\w ][^"]+(?=")|(?<=\s|^)[^\s"]+(?=\s|$)/', $query, $matches);
 
-        return reset($matches);
+        $words = [];
+        $matches = reset($matches);
+        $temp = $matches;
+
+        while (sizeof($temp) > 1) {
+            $words[] = join(' ', $temp);
+            array_pop($temp);
+        }
+
+        $words = array_merge($words, $matches);
+
+        return $words;
     }
 
     /**
