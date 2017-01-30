@@ -105,9 +105,10 @@ class Builder extends HookableBuilder
                         ? array_sum($columns->getWeights()) / 4
                         : (float) $threshold;
 
-        $subquery->select($this->model->getTable() . '.*')
-                 ->from($this->model->getTable())
-                 ->groupBy($this->model->getQualifiedKeyName());
+        $modelTable = $this->model->getTable();
+        $subquery->select($modelTable . '.*')
+                 ->from($modelTable)
+                 ->groupBy($this->getQualifiedColumnsName($modelTable));
 
         $this->addSearchClauses($subquery, $columns, $words, $threshold);
 
@@ -552,5 +553,18 @@ class Builder extends HookableBuilder
     public static function setJoinerFactory(JoinerFactory $factory)
     {
         static::$joinerFactory = $factory;
+    }
+
+    /**
+     * Get full names all columns the table for model
+     * @param string $modelTable
+     * @return array
+     */
+    protected function getQualifiedColumnsName($modelTable): array
+    {
+        return collect($this->model->getConnection()->getSchemaBuilder()->getColumnListing($modelTable))
+            ->map(function ($item) use ($modelTable) {
+                return "{$modelTable}.{$item}";
+            })->all();
     }
 }
