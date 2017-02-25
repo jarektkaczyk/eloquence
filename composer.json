@@ -1,10 +1,10 @@
 {
-    "name": "sofa/eloquence",
+    "name": "mintcs/eloquence",
     "description": "Flexible Searchable, Mappable, Metable, Validation and more extensions for Laravel Eloquent ORM.",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/jarektkaczyk/eloquence/issues",
-        "source": "https://github.com/jarektkaczyk/eloquence"
+        "issues": "https://github.com/mintcs/eloquence/issues",
+        "source": "https://github.com/mintcs/eloquence"
     },
     "keywords": [
         "laravel",
@@ -19,7 +19,11 @@
             "name": "Jarek Tkaczyk",
             "email": "jarek@softonsofa.com",
             "homepage": "http://softonsofa.com/",
-            "role": "Developer"
+            "role": "Original Developer"
+        },
+        {
+            "name": "mintcs",
+            "role": "Branch maintainer"
         }
     ],
     "require": {
