@@ -24,7 +24,7 @@
     ],
     "require": {
         "php": ">=5.6.4",
-        "sofa/hookable": "5.3.*",
+        "mintcs/hookable": "5.3.*",
         "illuminate/database": "5.3.*|5.4.*"
     },
     "require-dev": {
