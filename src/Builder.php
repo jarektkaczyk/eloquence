@@ -82,8 +82,6 @@ class Builder extends HookableBuilder
 
         if (count($words) && count($columns)) {
             $this->query->from($this->buildSubquery($words, $columns, $threshold));
-            
-            $this->query->addBinding($this->getBindings(), 'select');
         }
 
         return $this;
@@ -177,7 +175,7 @@ class Builder extends HookableBuilder
 
         $subquery->selectRaw("max({$select}) as relevance");
 
-        $this->addBinding($bindings['select'], 'where');
+        $this->addBinding($bindings['select'], 'select');
 
         return $bindings['where'];
     }
