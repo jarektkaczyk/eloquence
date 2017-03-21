@@ -273,7 +273,7 @@ trait Mappable
                         ? $parent->getMorphClass()
                         : $related->getMorphClass();
 
-                    $join->where($relation->getMorphType(), '=', $morphClass);
+                    $join->where($relation->getQualifiedMorphType(), '=', $morphClass);
                 }
             });
         }
