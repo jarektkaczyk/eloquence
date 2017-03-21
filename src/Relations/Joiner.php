@@ -135,7 +135,7 @@ class Joiner implements JoinerContract
         $join = (new Join($this->query, $type, $table))->on($fk, '=', $pk);
 
         if ($relation instanceof MorphOneOrMany) {
-            $join->where($table . '.' . $relation->getMorphType(), '=', $parent->getMorphClass());
+            $join->where($relation->getQualifiedMorphType(), '=', $parent->getMorphClass());
         }
 
         return $join;
