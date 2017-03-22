@@ -19,7 +19,7 @@ class ServiceProvider extends BaseProvider
 
         Builder::setParserFactory(new ParserFactory);
 
-        $this->loadMigrationsFrom(__DIR__.'/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../migrations');
     }
 
     /**
