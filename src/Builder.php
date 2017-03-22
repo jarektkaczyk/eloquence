@@ -132,7 +132,9 @@ class Builder extends HookableBuilder
         $whereBindings = $this->searchSelect($subquery, $columns, $words, $threshold);
 
         // For morphOne/morphMany support we need to port the bindings from JoinClauses.
-        $joinBindings = array_flatten(array_pluck((array) $subquery->getQuery()->joins, 'bindings'));
+        $joinBindings = collect($subquery->getQuery()->joins)->flatMap(function ($join) {
+            return $join->getBindings();
+        })->all();
 
         $this->addBinding($joinBindings, 'select');
 
@@ -268,25 +270,18 @@ class Builder extends HookableBuilder
     {
         if ($this->isHasWhere($where, $type)) {
             return substr_count($where['column'] . $where['value'], '?');
-
         } elseif ($type === 'basic') {
             return (int) !$where['value'] instanceof Expression;
-
         } elseif (in_array($type, ['basic', 'date', 'year', 'month', 'day'])) {
             return (int) !$where['value'] instanceof Expression;
-
         } elseif (in_array($type, ['null', 'notnull'])) {
             return 0;
-
         } elseif ($type === 'between') {
             return 2;
-
         } elseif (in_array($type, ['in', 'notin'])) {
             return count($where['values']);
-
         } elseif ($type === 'raw') {
             return substr_count($where['sql'], '?');
-
         } elseif (in_array($type, ['nested', 'sub', 'exists', 'notexists', 'insub', 'notinsub'])) {
             return count($where['query']->getBindings());
         }
@@ -457,7 +452,6 @@ class Builder extends HookableBuilder
                 $columns->add(
                     new Column($grammar, $related->getTable(), $column, $mapping, $weight)
                 );
-
             } else {
                 $columns->add(
                     new Column($grammar, $this->model->getTable(), $mapping, $mapping, $weight)

@@ -125,7 +125,7 @@ class JoinerUserStub extends Model {
         return $this->hasManyThrough($related, $through, 'user_id', 'company_id');
     }
 
-    public function getForeignKey()
+    public function getQualifiedForeignKeyName()
     {
         return 'user_id';
     }
@@ -158,7 +158,7 @@ class JoinerProfileStub extends Model {
 class JoinerCompanyStub extends Model {
     protected $table = 'companies';
 
-    public function getForeignKey()
+    public function getQualifiedForeignKeyName()
     {
         return 'company_id';
     }

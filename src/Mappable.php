@@ -24,7 +24,7 @@ trait Mappable
      *
      * @var array
      */
-    protected static $mappedAttributes;
+    protected $mappedAttributes;
 
     /**
      * Related mapped objects to save along with the mappable instance.
@@ -89,7 +89,7 @@ trait Mappable
         $columns = $args->get('columns');
 
         foreach ($columns as $key => $column) {
-            list($column) = $this->extractColumnAlias($column);
+            list($column, $as) = $this->extractColumnAlias($column);
 
             // Each mapped column will be selected appropriately. If it's alias
             // then prefix it with current table and use original field name
@@ -106,6 +106,10 @@ trait Mappable
                 }
 
                 $columns[$key] = "{$table}.{$mapped}";
+
+                if ($as !== $column) {
+                    $columns[$key] .= " as {$as}";
+                }
 
             // For non mapped columns present on this table we will simply
             // add the prefix, in order to avoid any column collisions,
@@ -269,7 +273,7 @@ trait Mappable
                         ? $parent->getMorphClass()
                         : $related->getMorphClass();
 
-                    $join->where($relation->getMorphType(), '=', $morphClass);
+                    $join->where($relation->getQualifiedMorphType(), '=', $morphClass);
                 }
             });
         }
@@ -302,11 +306,11 @@ trait Mappable
     protected function getJoinKeys(Relation $relation)
     {
         if ($relation instanceof HasOne || $relation instanceof MorphOne) {
-            return [$relation->getForeignKey(), $relation->getQualifiedParentKeyName()];
+            return [$relation->getQualifiedForeignKeyName(), $relation->getQualifiedParentKeyName()];
         }
 
         if ($relation instanceof BelongsTo && !$relation instanceof MorphTo) {
-            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOtherKeyName()];
+            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOwnerKeyName()];
         }
 
         $class = get_class($relation);
@@ -410,7 +414,7 @@ trait Mappable
     public function getMappingForAttribute($key)
     {
         if ($this->hasMapping($key)) {
-            return static::$mappedAttributes[$key];
+            return $this->mappedAttributes[$key];
         }
     }
 
@@ -433,11 +437,11 @@ trait Mappable
      */
     public function hasMapping($key)
     {
-        if (is_null(static::$mappedAttributes)) {
+        if (is_null($this->mappedAttributes)) {
             $this->parseMappings();
         }
 
-        return array_key_exists((string) $key, static::$mappedAttributes);
+        return array_key_exists((string) $key, $this->mappedAttributes);
     }
 
     /**
@@ -447,13 +451,13 @@ trait Mappable
      */
     protected function parseMappings()
     {
-        static::$mappedAttributes = [];
+        $this->mappedAttributes = [];
 
         foreach ($this->getMaps() as $attribute => $mapping) {
             if (is_array($mapping)) {
                 $this->parseImplicitMapping($mapping, $attribute);
             } else {
-                static::$mappedAttributes[$attribute] = $mapping;
+                $this->mappedAttributes[$attribute] = $mapping;
             }
         }
     }
@@ -468,7 +472,7 @@ trait Mappable
     protected function parseImplicitMapping($attributes, $target)
     {
         foreach ($attributes as $attribute) {
-            static::$mappedAttributes[$attribute] = "{$target}.{$attribute}";
+            $this->mappedAttributes[$attribute] = "{$target}.{$attribute}";
         }
     }
 

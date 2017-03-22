@@ -3,14 +3,18 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
-use Illuminate\Database\Eloquent\Model;
-use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
+use Sofa\Eloquence\Eloquence;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class MappableTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp()
     {
+        Relation::morphMap([
+            'UserMorph' => MappableEloquentStub::class,
+        ]);
         $this->model = new MappableStub;
     }
 
@@ -383,9 +387,23 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('new_bam_value', $this->model->mapAttribute('bam'));
     }
 
-    public function getModel()
+    /**
+     * @test
+     */
+    public function it_inherits_base_model_properly()
     {
-        $model = new MappableEloquentStub;
+        $q = $this->getModel(new UserStub)->select(['id', 'name'])->where('id', '>', 0);
+        $expectedSql = 'select "user_stubs"."usr_id", "user_stubs"."usr_name" from "user_stubs" where "usr_id" > ?';
+        $this->assertEquals($expectedSql, $q->toSql());
+
+        $q = $this->getModel(new BookStub)->select(['id', 'name', 'pages'])->where('id', '>', 0);
+        $expectedSql = 'select "book_stubs"."bk_id", "book_stubs"."bk_name", "book_stubs"."bk_pages" from "book_stubs" where "bk_id" > ?';
+        $this->assertEquals($expectedSql, $q->toSql());
+    }
+
+    public function getModel($model = null)
+    {
+        $model = $model ?: new MappableEloquentStub;
         $grammarClass = 'Illuminate\Database\Query\Grammars\SQLiteGrammar';
         $processorClass = 'Illuminate\Database\Query\Processors\SQLiteProcessor';
         $grammar = new $grammarClass;
@@ -477,7 +495,6 @@ class MappableEloquentStub extends Model {
     use Eloquence, Mappable;
 
     protected $table = 'users';
-    protected $morphClass = 'UserMorph';
     protected $maps = [
         'first_name' => 'profile.first_name',
         'profile'    => ['last_name', 'age'],
@@ -529,4 +546,25 @@ class MappableFarRelatedStub extends Model {
 
 class MappablePolymorphicStub extends Model {
     protected $table = 'companies';
+}
+
+
+
+class BaseModelStub extends Model {
+    use Eloquence, Mappable;
+}
+
+class UserStub extends BaseModelStub {
+    protected $maps = [
+        'id' => 'usr_id',
+        'name' => 'usr_name',
+    ];
+}
+
+class BookStub extends BaseModelStub {
+    protected $maps = [
+        'id' => 'bk_id',
+        'name' => 'bk_name',
+        'pages' => 'bk_pages',
+    ];
 }

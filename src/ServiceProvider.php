@@ -18,6 +18,8 @@ class ServiceProvider extends BaseProvider
         Builder::setJoinerFactory(new JoinerFactory);
 
         Builder::setParserFactory(new ParserFactory);
+
+        $this->loadMigrationsFrom(__DIR__.'/../migrations');
     }
 
     /**
