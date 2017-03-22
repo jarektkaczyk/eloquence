@@ -1,7 +1,6 @@
 <?php
 
-namespace Sofa\Eloquence\Metable;
-
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
@@ -26,7 +25,7 @@ class CreateMetaAttributesTable extends Migration
      */
     public function up()
     {
-        \Schema::create($this->table, function (Blueprint $table) {
+        Schema::create($this->table, function (Blueprint $table) {
             $table->increments('meta_id');
             $table->string('meta_key');
             $table->longText('meta_value');
@@ -34,12 +33,12 @@ class CreateMetaAttributesTable extends Migration
             $table->morphs('metable');
 
             $table->index('meta_key');
-
-            // Laravel doesn't handle index length, so we need raw statement for this one
-            \Schema::getConnection()->statement(
-                'create index meta_attributes_index_value on meta_attributes (meta_key, meta_value(20))'
-            );
         });
+
+        // Laravel doesn't handle index length, so we need raw statement for this one
+        Schema::getConnection()->statement(
+            'create index meta_attributes_index_value on meta_attributes (meta_key, meta_value(20))'
+        );
     }
 
     /**
@@ -49,6 +48,6 @@ class CreateMetaAttributesTable extends Migration
      */
     public function down()
     {
-        \Schema::drop($this->table);
+        Schema::dropIfExists($this->table);
     }
 }
