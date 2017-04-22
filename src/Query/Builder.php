@@ -87,4 +87,20 @@ class Builder extends \Illuminate\Database\Query\Builder
 
         $this->backups = $this->bindingBackups = [];
     }
+
+    /**
+     * Run a pagination count query.
+     *
+     * @param  array  $columns
+     * @return array
+     */
+    protected function runPaginationCountQuery($columns = ['*'])
+    {
+        $bindings = $this->from instanceof Subquery ? ['order'] : ['select', 'order'];
+
+        return $this->cloneWithout(['columns', 'orders', 'limit', 'offset'])
+                    ->cloneWithoutBindings($bindings)
+                    ->setAggregate('count', $this->withoutSelectAliases($columns))
+                    ->get()->all();
+    }
 }
