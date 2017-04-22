@@ -135,7 +135,7 @@ class Joiner implements JoinerContract
         $join = (new Join($this->query, $type, $table))->on($fk, '=', $pk);
 
         if ($relation instanceof MorphOneOrMany) {
-            $join->where($relation->getMorphType(), '=', $parent->getMorphClass());
+            $join->where($relation->getQualifiedMorphType(), '=', $parent->getMorphClass());
         }
 
         return $join;
@@ -153,10 +153,10 @@ class Joiner implements JoinerContract
     {
         if ($relation instanceof BelongsToMany) {
             $table = $relation->getTable();
-            $fk    = $relation->getForeignKey();
+            $fk = $relation->getQualifiedForeignKeyName();
         } else {
             $table = $relation->getParent()->getTable();
-            $fk    = $table.'.'.$parent->getForeignKey();
+            $fk = $relation->getQualifiedFirstKeyName();
         }
 
         $pk = $parent->getQualifiedKeyName();
@@ -181,19 +181,19 @@ class Joiner implements JoinerContract
         }
 
         if ($relation instanceof HasOneOrMany) {
-            return [$relation->getForeignKey(), $relation->getQualifiedParentKeyName()];
+            return [$relation->getQualifiedForeignKeyName(), $relation->getQualifiedParentKeyName()];
         }
 
         if ($relation instanceof BelongsTo) {
-            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOtherKeyName()];
+            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOwnerKeyName()];
         }
 
         if ($relation instanceof BelongsToMany) {
-            return [$relation->getOtherKey(), $relation->getRelated()->getQualifiedKeyName()];
+            return [$relation->getQualifiedRelatedKeyName(), $relation->getRelated()->getQualifiedKeyName()];
         }
 
         if ($relation instanceof HasManyThrough) {
-            $fk = $relation->getRelated()->getTable().'.'.$relation->getParent()->getForeignKey();
+            $fk = $relation->getQualifiedFarKeyName();
 
             return [$fk, $relation->getParent()->getQualifiedKeyName()];
         }

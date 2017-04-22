@@ -343,6 +343,7 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
         $schema->shouldReceive('getColumnListing')->andReturn(['id', 'first_name', 'last_name']);
         $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
         $connection->shouldReceive('getSchemaBuilder')->andReturn($schema);
+        $connection->shouldReceive('getName')->andReturn($driver);
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
         $class = get_class($model);
         $class::setConnectionResolver($resolver);
