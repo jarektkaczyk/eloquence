@@ -25,7 +25,12 @@ interface Attribute
      * @return string
      */
     public function getKey();
-
+    /**
+     * Get the meta attribute group.
+     *
+     * @return string
+     */
+    public function getMetaGroup();
     /**
      * Set value of the meta attribute.
      *

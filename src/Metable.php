@@ -404,7 +404,16 @@ trait Metable
     {
         return $this->getMetaAttributes()->getValue($key);
     }
-
+    /**
+     * Get meta attribute values by group.
+     *
+     * @param  string $key
+     * @return mixed
+     */
+    public function getMetaByGroup($group)
+    {
+        return $this->getMetaAttributes()->getMetaByGroup($group);
+    }
     /**
      * Set meta attribute.
      *
@@ -412,9 +421,9 @@ trait Metable
      * @param  mixed  $value
      * @return void
      */
-    public function setMeta($key, $value)
+    public function setMeta($key, $value, $group = null)
     {
-        $this->getMetaAttributes()->set($key, $value);
+        $this->getMetaAttributes()->set($key, $value, $group);
     }
 
     /**

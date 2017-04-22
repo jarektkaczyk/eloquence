@@ -31,6 +31,7 @@ class CreateMetaAttributesTable extends Migration
             $table->string('meta_key');
             $table->longText('meta_value');
             $table->string('meta_type')->default('string');
+            $table->string('meta_group')->nullable();
             $table->morphs('metable');
 
             $table->index('meta_key');
