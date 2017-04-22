@@ -273,7 +273,7 @@ trait Mappable
                         ? $parent->getMorphClass()
                         : $related->getMorphClass();
 
-                    $join->where($relation->getMorphType(), '=', $morphClass);
+                    $join->where($relation->getQualifiedMorphType(), '=', $morphClass);
                 }
             });
         }
@@ -306,11 +306,11 @@ trait Mappable
     protected function getJoinKeys(Relation $relation)
     {
         if ($relation instanceof HasOne || $relation instanceof MorphOne) {
-            return [$relation->getForeignKey(), $relation->getQualifiedParentKeyName()];
+            return [$relation->getQualifiedForeignKeyName(), $relation->getQualifiedParentKeyName()];
         }
 
         if ($relation instanceof BelongsTo && !$relation instanceof MorphTo) {
-            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOtherKeyName()];
+            return [$relation->getQualifiedForeignKey(), $relation->getQualifiedOwnerKeyName()];
         }
 
         $class = get_class($relation);

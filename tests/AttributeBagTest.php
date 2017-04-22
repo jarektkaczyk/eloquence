@@ -97,6 +97,18 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
     /**
      * @test
      */
+    public function it_gets_attributes_by_group()
+    {
+        $bag = $this->getBag();
+
+        $this->assertEquals([
+            'baz' => $bag->get('baz'),
+            'bar' => $bag->get('bar'),
+        ], $bag->getMetaByGroup('group')->toArray());
+    }
+    /**
+     * @test
+     */
     public function it_accepts_only_valid_attribute()
     {
         $bag = $this->getBag();
@@ -110,7 +122,8 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
     {
         return new AttributeBag([
             new Attribute('foo', 'bar'),
-            new Attribute('baz', 'bax')
+            new Attribute('baz', 'bax','group'),
+            new Attribute('bar', 'baz','group'),
         ]);
     }
 }

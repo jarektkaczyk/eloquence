@@ -72,7 +72,7 @@ class Attribute extends Model implements AttributeContract
      *
      * @var array
      */
-    protected $visible = ['meta_key', 'meta_value', 'meta_type'];
+    protected $visible = ['meta_key', 'meta_value', 'meta_type', 'meta_group'];
 
     /**
      * Create new attribute instance.
@@ -80,7 +80,7 @@ class Attribute extends Model implements AttributeContract
      * @param string|array  $key
      * @param mixed  $value
      */
-    public function __construct($key = null, $value = null)
+    public function __construct($key = null, $value = null, $group = null)
     {
         // default behaviour
         if (is_array($key)) {
@@ -89,7 +89,7 @@ class Attribute extends Model implements AttributeContract
             parent::__construct();
 
             if (is_string($key)) {
-                $this->set($key, $value);
+                $this->set($key, $value, $group);
             }
         }
     }
@@ -119,11 +119,13 @@ class Attribute extends Model implements AttributeContract
      *
      * @param string $key
      * @param mixed  $value
+     * @param string $group
      */
-    protected function set($key, $value)
+    protected function set($key, $value, $group = 'default')
     {
         $this->setMetaKey($key);
         $this->setValue($value);
+        $this->setMetaGroup($group);
     }
 
     /**
@@ -162,6 +164,15 @@ class Attribute extends Model implements AttributeContract
     }
 
     /**
+     * Get the meta attribute group.
+     *
+     * @return string
+     */
+    public function getMetaGroup()
+    {
+        return $this->attributes['meta_group'];
+    }
+    /**
      * Cast value to proper type.
      *
      * @return mixed
@@ -194,7 +205,21 @@ class Attribute extends Model implements AttributeContract
 
         $this->attributes['meta_key'] = $key;
     }
+    /**
+     * Set group of the meta attribute.
+     *
+     * @param string $group
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function setMetaGroup($group = null)
+    {
+        if (!preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $group) && $group !== null) {
+            throw new InvalidArgumentException("Provided group [{$group}] is not valid variable name.");
+        }
 
+        $this->attributes['meta_group'] = $group;
+    }
     /**
      * Set type of the meta attribute.
      *

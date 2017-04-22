@@ -27,16 +27,16 @@ class AttributeBag extends Collection implements AttributeBagContract
      * @param  mixed $value
      * @return $this
      */
-    public function set($key, $value = null)
+    public function set($key, $value = null, $group = null)
     {
         if ($key instanceof Attribute) {
             return $this->setInstance($key);
         }
 
         if ($this->has($key)) {
-            $this->update($key, $value);
+            $this->update($key, $value, $group);
         } else {
-            $this->items[$key] = $this->newAttribute($key, $value);
+            $this->items[$key] = $this->newAttribute($key, $value, $group);
         }
 
         return $this;
@@ -85,14 +85,16 @@ class AttributeBag extends Collection implements AttributeBagContract
      * @param  mixed  $value
      * @return $this
      */
-    protected function update($key, $value = null)
+    protected function update($key, $value = null, $group = null)
     {
         if ($key instanceof Attribute) {
             $value = $key->getValue();
+            $group = $key->getMetaGroup();
             $key = $key->getMetaKey();
         }
 
         $this->get($key)->setValue($value);
+        $this->get($key)->setMetaGroup($group);
 
         return $this;
     }
@@ -104,9 +106,9 @@ class AttributeBag extends Collection implements AttributeBagContract
      * @param  mixed  $value
      * @return \Sofa\Eloquence\Metable\Attribute
      */
-    protected function newAttribute($key, $value)
+    protected function newAttribute($key, $value, $group = null)
     {
-        return new Attribute($key, $value);
+        return new Attribute($key, $value, $group);
     }
 
     /**
@@ -121,7 +123,16 @@ class AttributeBag extends Collection implements AttributeBagContract
             return $attribute->getValue();
         }
     }
-
+    /**
+     * Get attribute values by group.
+     *
+     * @param  string $group
+     * @return mixed
+     */
+    public function getMetaByGroup($group)
+    {
+        return $this->where('meta_group', $group);
+    }
     /**
      * Get collection as key-value array.
      *
