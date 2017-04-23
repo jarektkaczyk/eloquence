@@ -7,6 +7,7 @@ use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Metable;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\ArgumentBag;
+use Sofa\Eloquence\Metable\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Builder as Query;
@@ -522,7 +523,7 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
     public function it_sets_attribute_on_the_bag()
     {
         $bag = $this->getBag();
-        $bag->shouldReceive('set')->with('color', 'red')->once();
+        $bag->shouldReceive('set')->with('color', 'red', NULL)->once();
 
         $model = $this->getMetableStub();
         $model->shouldReceive('getMetaAttributes')->andReturn($bag);
@@ -542,6 +543,34 @@ class MetableTest extends \PHPUnit_Framework_TestCase {
         $model->shouldReceive('getMetaAttributes')->andReturn($bag);
 
         $this->assertEquals(['color' => 'red'], $model->getMetaAttributesArray());
+    }
+
+    /**
+     * @test
+     */
+    public function it_sets_attribute_with_group_on_the_bag()
+    {
+        $bag = $this->getBag();
+        $bag->shouldReceive('set')->with('color', 'red', 'group')->once();
+
+        $model = $this->getMetableStub();
+        $model->shouldReceive('getMetaAttributes')->andReturn($bag);
+
+        $model->setMeta('color', 'red', 'group');
+    }
+
+    /**
+     * @test
+     */
+    public function it_gets_attribute_with_group_on_the_bag()
+    {
+        $model = $this->getModel();
+
+        $model->setMeta('test','1','group');
+        $model->setMeta('test2','2',null);
+
+        $this->assertEquals($model->getMetaByGroup('group')->toArray(), ['test' => new Attribute('test','1','group')]);
+
     }
 
     /**

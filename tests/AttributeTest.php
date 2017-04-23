@@ -99,6 +99,13 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
 
         $this->assertEquals('color', $attribute->getMetaKey());
         $this->assertEquals('red', $attribute->getValue());
+        $this->assertEquals(NULL, $attribute->getMetaGroup());
+
+        $attribute = $this->getAttributeWithGroup('group');
+
+        $this->assertEquals('color', $attribute->getMetaKey());
+        $this->assertEquals('red', $attribute->getValue());
+        $this->assertEquals('group', $attribute->getMetaGroup());
     }
 
     /**
@@ -131,6 +138,11 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     protected function getAttribute()
     {
         return new Attribute('color', 'red');
+    }
+
+    protected function getAttributeWithGroup($group = null)
+    {
+        return new Attribute('color', 'red', $group);
     }
 }
 
