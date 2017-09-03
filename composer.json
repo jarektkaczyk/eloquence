@@ -14,6 +14,12 @@
         "mappable",
         "mutable"
     ],
+    "repositories": [  
+        {  
+            "type": "vcs",  
+            "url": "https://github.com/gtapps/hookable"  
+        }  
+    ], 
     "authors": [
         {
             "name": "Jarek Tkaczyk",
@@ -24,7 +30,7 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "sofa/hookable": "5.4.*",
+        "sofa/hookable": "dev-5.5",
         "illuminate/database": "5.5.*"
     },
     "require-dev": {
