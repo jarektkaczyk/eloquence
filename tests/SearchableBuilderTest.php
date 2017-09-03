@@ -178,12 +178,12 @@ class SearchableBuilderTest extends \PHPUnit_Framework_TestCase {
                  'as relevance from `users` where (`users`.`last_name` like ?) '.
                  'group by `users`.`primary_key`) as `users` where `relevance` >= 2.5';
 
-        $bindings = ['jarek', 'jarek%', '%jarek%', '%jarek%'];
+        $bindings = ['jarek123', 'jarek123%', '%jarek123%'];
 
         $model = $this->getModel();
         $model->getConnection()->shouldReceive('select')->once()->with($query, $bindings, m::any())->andReturn([]);
 
-        $model->search(' jarek ', ['last_name' => 10])->getCountForPagination();
+        $model->search(' jarek123 ', ['last_name' => 10])->getCountForPagination();
     }
 
     /**

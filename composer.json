@@ -30,13 +30,13 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "sofa/hookable": "dev-5.5",
+        "sofa/hookable": "5.5.x-dev",
         "illuminate/database": "5.5.*"
     },
     "require-dev": {
         "phpunit/phpunit": "~6.0",
         "squizlabs/php_codesniffer": "2.3.3",
-        "mockery/mockery": "0.9.4"
+        "mockery/mockery": "^0.9.9"
     },
     "autoload": {
         "psr-4": {
