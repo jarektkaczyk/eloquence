@@ -61,13 +61,15 @@ class Builder extends \Illuminate\Database\Query\Builder
             $this->{$field} = null;
         }
 
-        $bindings = ($this->from instanceof Subquery) ? ['order'] : ['order', 'select'];
+        $bindings = ($this->from instanceof Subquery) ? ['order', 'select'] : ['order', 'select'];
 
         foreach ($bindings as $key) {
             $this->bindingBackups[$key] = $this->bindings[$key];
 
             $this->bindings[$key] = [];
         }
+        
+        return $this;
     }
 
     /**
@@ -86,5 +88,23 @@ class Builder extends \Illuminate\Database\Query\Builder
         }
 
         $this->backups = $this->bindingBackups = [];
+        
+        return $this;
+    }
+    
+    /**
+     * Override function to run a pagination count query.
+     *
+     * @param  array  $columns
+     * @return array
+     */
+    protected function runPaginationCountQuery($columns = ['*'])
+    {
+        return $this->cloneWithout(['columns', 'orders', 'limit', 'offset'])
+                    ->backupFieldsForCount()
+                    ->cloneWithoutBindings(['select', 'order'])
+                    ->restoreFieldsForCount()
+                    ->setAggregate('count', $this->withoutSelectAliases($columns))
+                    ->get()->all();
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mutable;
 
-class MutableTest extends \PHPUnit_Framework_TestCase
+class MutableTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown()
     {

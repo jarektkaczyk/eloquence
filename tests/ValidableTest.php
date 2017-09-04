@@ -7,7 +7,7 @@ use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Validable;
 use Sofa\Eloquence\Validable\Observer;
 
-class ValidableTest extends \PHPUnit_Framework_TestCase {
+class ValidableTest extends \PHPUnit\Framework\TestCase {
 
     public function setUp()
     {

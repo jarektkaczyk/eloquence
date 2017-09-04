@@ -8,7 +8,7 @@ use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-class MappableTest extends \PHPUnit_Framework_TestCase {
+class MappableTest extends \PHPUnit\Framework\TestCase {
 
     public function setUp()
     {

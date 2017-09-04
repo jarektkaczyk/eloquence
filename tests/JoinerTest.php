@@ -9,7 +9,7 @@ use Sofa\Eloquence\Relations\JoinerFactory;
 
 use Mockery as m;
 
-class JoinerTest extends \PHPUnit_Framework_TestCase {
+class JoinerTest extends \PHPUnit\Framework\TestCase {
 
     public function setUp()
     {

@@ -13,7 +13,7 @@ use Illuminate\Database\Query\Builder as Query;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-class MetableTest extends \PHPUnit_Framework_TestCase {
+class MetableTest extends \PHPUnit\Framework\TestCase {
 
     public function setUp()
     {
