@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Sofa\Eloquence\Metable\Attribute;
 use Sofa\Eloquence\Metable\AttributeBag;
 
-class AttributeTest extends \PHPUnit_Framework_TestCase {
+class AttributeTest extends \PHPUnit\Framework\TestCase {
 
     /**
      * @test

@@ -6,7 +6,7 @@ use Sofa\Eloquence\Subquery;
 
 use Mockery as m;
 
-class SubqueryTest extends \PHPUnit_Framework_TestCase {
+class SubqueryTest extends \PHPUnit\Framework\TestCase {
 
     public function tearDown()
     {

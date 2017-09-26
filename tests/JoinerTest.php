@@ -9,7 +9,7 @@ use Sofa\Eloquence\Relations\JoinerFactory;
 
 use Mockery as m;
 
-class JoinerTest extends \PHPUnit_Framework_TestCase {
+class JoinerTest extends \PHPUnit\Framework\TestCase {
 
     public function setUp()
     {
@@ -125,11 +125,6 @@ class JoinerUserStub extends Model {
         return $this->hasManyThrough($related, $through, 'user_id', 'company_id');
     }
 
-    public function getForeignKey()
-    {
-        return 'user_id';
-    }
-
     public function posts()
     {
         return $this->hasMany('Sofa\Eloquence\Tests\JoinerPostStub', 'user_id');
@@ -157,11 +152,6 @@ class JoinerProfileStub extends Model {
 
 class JoinerCompanyStub extends Model {
     protected $table = 'companies';
-
-    public function getForeignKey()
-    {
-        return 'company_id';
-    }
 }
 
 class JoinerPostStub extends Model {

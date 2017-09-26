@@ -4,7 +4,7 @@ namespace Sofa\Eloquence\Tests;
 
 use Sofa\Eloquence\Mutator\Mutator;
 
-class MutatorTest extends \PHPUnit_Framework_TestCase {
+class MutatorTest extends \PHPUnit\Framework\TestCase {
 
     public function setUp()
     {

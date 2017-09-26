@@ -51,7 +51,7 @@ trait Validable
         static::observe(new Observer);
 
         if (!static::$validatorFactory) {
-            if (function_exists('app') && isset(app()['validator'])) {
+            if (function_exists('app') && app()->bound('validator')) {
                 static::setValidatorFactory(app('validator'));
             }
         }

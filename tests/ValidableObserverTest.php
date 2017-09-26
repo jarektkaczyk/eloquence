@@ -5,7 +5,7 @@ namespace Sofa\Eloquence\Tests;
 use Mockery as m;
 use Sofa\Eloquence\Validable\Observer;
 
-class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
+class ValidableObserverTest extends \PHPUnit\Framework\TestCase {
 
     public function tearDown()
     {

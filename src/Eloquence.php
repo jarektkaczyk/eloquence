@@ -16,7 +16,7 @@ use Sofa\Eloquence\AttributeCleaner\Observer as AttributeCleaner;
  * It also provides hasColumn and getColumnListing helper methods
  * so you can easily list or check columns in the model's table.
  *
- * @version 5.1
+ * @version 5.3
  *
  * @method \Illuminate\Database\Connection getConnection()
  * @method string getTable()
@@ -51,7 +51,7 @@ trait Eloquence
         static::observe(new AttributeCleaner);
 
         if (!isset(static::$attributeMutator)) {
-            if (function_exists('app') && isset(app()['eloquence.mutator'])) {
+            if (function_exists('app') && app()->bound('eloquence.mutator')) {
                 static::setAttributeMutator(app('eloquence.mutator'));
             } else {
                 static::setAttributeMutator(new Mutator);
