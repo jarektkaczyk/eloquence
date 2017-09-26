@@ -182,6 +182,14 @@ trait Mappable
         return $query;
     }
 
+  /**
+   * @param  \Sofa\Eloquence\Builder $query
+   * @param  \Sofa\Hookable\Contracts\ArgumentBag $args
+   * @param  string $table
+   * @param  string $column
+   *
+   * @return array
+   */
     protected function listsMapped(Builder $query, ArgumentBag $args, $table, $column)
     {
         return $this->pluckMapped($query, $args, $table, $column);
@@ -573,6 +581,9 @@ trait Mappable
 
     /**
      * @codeCoverageIgnore
+     *
+     * @param  string  $key
+     * @param  mixed  $value
      *
      * @inheritdoc
      */

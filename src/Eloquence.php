@@ -2,6 +2,7 @@
 
 namespace Sofa\Eloquence;
 
+use Illuminate\Database\Connection;
 use Sofa\Hookable\Hookable;
 use Sofa\Eloquence\Mutator\Mutator;
 use Sofa\Hookable\Contracts\ArgumentBag;
@@ -18,7 +19,7 @@ use Sofa\Eloquence\AttributeCleaner\Observer as AttributeCleaner;
  *
  * @version 5.3
  *
- * @method \Illuminate\Database\Connection getConnection()
+ * @method Connection getConnection()
  * @method string getTable()
  */
 trait Eloquence
@@ -63,7 +64,7 @@ trait Eloquence
      * Determine whether where should be treated as whereNull.
      *
      * @param  string $method
-     * @param  Sofa\Hookable\Contracts\ArgumentBag $args
+     * @param  ArgumentBag $args
      * @return boolean
      */
     protected function isWhereNull($method, ArgumentBag $args)
@@ -74,7 +75,7 @@ trait Eloquence
     /**
      * Determine whether where is a whereNull by the arguments passed to where method.
      *
-     * @param  Sofa\Hookable\Contracts\ArgumentBag $args
+     * @param  ArgumentBag $args
      * @return boolean
      */
     protected function isWhereNullByArgs(ArgumentBag $args)
@@ -171,7 +172,7 @@ trait Eloquence
     /**
      * Create new Eloquence query builder for the instance.
      *
-     * @param  \Sofa\Eloquence\Query\Builder
+     * @param  \Sofa\Eloquence\Query\Builder $query
      * @return \Sofa\Eloquence\Builder
      */
     public function newEloquentBuilder($query)
