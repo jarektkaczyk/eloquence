@@ -76,7 +76,7 @@ class Hooks
 
             $copy->setRelation('metaAttributes', $metaAttributes);
 
-            return $next($copy);
+            return $next($copy, $args);
         };
     }
 
