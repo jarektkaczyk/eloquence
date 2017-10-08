@@ -45,6 +45,13 @@
             "Sofa\\Eloquence\\Tests\\": "tests"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sofa\\Eloquence\\ServiceProvider"
+            ]
+        }
+    },
     "minimum-stability": "stable",
     "scripts": {
         "test": "phpunit && ./vendor/bin/phpcs src --standard=psr2 --report=diff --colors",
