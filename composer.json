@@ -23,8 +23,8 @@
         }
     ],
     "require": {
-        "php": ">=5.6.4",
-        "sofa/hookable": "5.4.*",
+        "php": ">=7.0.0",
+        "sofa/hookable": "5.5.*",
         "illuminate/database": "5.5.*"
     },
     "require-dev": {
