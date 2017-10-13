@@ -153,7 +153,7 @@ class Joiner implements JoinerContract
     {
         if ($relation instanceof BelongsToMany) {
             $table = $relation->getTable();
-            $fk = $relation->getQualifiedForeignKeyName();
+            $fk = $relation->getQualifiedForeignPivotKeyName();
         } else {
             $table = $relation->getParent()->getTable();
             $fk = $relation->getQualifiedFirstKeyName();
@@ -189,7 +189,7 @@ class Joiner implements JoinerContract
         }
 
         if ($relation instanceof BelongsToMany) {
-            return [$relation->getQualifiedRelatedKeyName(), $relation->getRelated()->getQualifiedKeyName()];
+            return [$relation->getQualifiedRelatedPivotKeyName(), $relation->getRelated()->getQualifiedKeyName()];
         }
 
         if ($relation instanceof HasManyThrough) {
