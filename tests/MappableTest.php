@@ -38,6 +38,20 @@ class MappableTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
+     */
+    public function mapped_groupBy()
+    {
+        $sql = 'select count(*) as aggregate from "users" '.
+                'group by "profile"."first_name", "profile"."age", "ign"';
+
+        $model = $this->getModel();
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+
+        $model->groupBy('first_name', 'age', 'nick')->count();
+    }
+
+    /**
+     * @test
      *
      * @dataProvider aggregateFunctions
      */
