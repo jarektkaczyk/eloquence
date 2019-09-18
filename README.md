@@ -4,8 +4,6 @@
 
 Easy and flexible extensions for the [Eloquent ORM](https://laravel.com/docs/eloquent).
 
-**If I'm saving you some time with my work, you can back me up on [Patreon page](https://patreon.com/jarektkaczyk).**
-
 Currently available extensions:
 
 1. [Searchable](https://github.com/jarektkaczyk/eloquence-base) query - crazy-simple fulltext search through any related model 
