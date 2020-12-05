@@ -1,6 +1,6 @@
 # Sofa/Eloquence
 
-[![Build Status](https://travis-ci.org/jarektkaczyk/eloquence.svg)](https://travis-ci.org/jarektkaczyk/eloquence) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads)](https://packagist.org/packages/sofa/eloquence) [![stable](https://poser.pugx.org/sofa/eloquence/v/stable.svg)](https://packagist.org/packages/sofa/eloquence)
+[![GitHub Tests Action Status](https://github.com/jarektkaczyk/eloquence/workflows/Tests/badge.svg)](https://github.com/jarektkaczyk/eloquence/actions?query=workflow%3Atests+branch%3Amaster) [![Downloads](https://poser.pugx.org/sofa/eloquence/downloads)](https://packagist.org/packages/sofa/eloquence) [![stable](https://poser.pugx.org/sofa/eloquence/v/stable.svg)](https://packagist.org/packages/sofa/eloquence)
 
 Easy and flexible extensions for the [Eloquent ORM](https://laravel.com/docs/eloquent).
 
