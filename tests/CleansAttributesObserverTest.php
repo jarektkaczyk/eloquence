@@ -3,18 +3,17 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\AttributeCleaner\Observer;
 
-class CleansAttributesObserverTest extends \PHPUnit_Framework_TestCase {
-
-    public function tearDown()
+class CleansAttributesObserverTest extends TestCase
+{
+    protected function tearDown(): void
     {
         m::close();
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function saving_with_incorrect_attributes()
     {
         $dirty = ['name' => 'Jarek Tkaczyk', '_method' => 'patch', 'incorrect_field' => 'value'];

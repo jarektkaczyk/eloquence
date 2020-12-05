@@ -2,15 +2,13 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Illuminate\Database\Eloquent\Model;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Metable\AttributeBag;
 use Sofa\Eloquence\Metable\Attribute;
 
-class AttributeBagTest extends \PHPUnit_Framework_TestCase {
-
-    /**
-     * @test
-     */
+class AttributeBagTest extends TestCase
+{
+    /** @test */
     public function it_replicates()
     {
         $original = $this->getBag();
@@ -22,9 +20,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
         $this->assertNotSame($original->first(), $copy->first());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_handles_magic_calls()
     {
         $bag = $this->getBag();
@@ -42,9 +38,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($bag->color);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_sets_value_to_null_when_unsetting()
     {
         $bag = $this->getBag()->set('key', 'value');
@@ -57,9 +51,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($bag->getValue('foo'));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_updates_existing_attribute()
     {
         $bag = $this->getbag()->set('foo', 'new_bar');
@@ -72,9 +64,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('new_value', $bag->getValue('key'));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_gets_null_for_non_existent_attributes()
     {
         $bag = $this->getBag();
@@ -83,9 +73,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($bag->getValue('wrong'));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_gets_raw_attribute_value()
     {
         $bag = $this->getBag();
@@ -94,9 +82,7 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('bax', $bag->getValue('baz'));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_gets_attributes_by_group()
     {
         $bag = $this->getBag();
@@ -106,26 +92,13 @@ class AttributeBagTest extends \PHPUnit_Framework_TestCase {
             'bar' => $bag->get('bar'),
         ], $bag->getMetaByGroup('group')->toArray());
     }
-    /**
-     * @test
-     */
-    public function it_accepts_only_valid_attribute()
-    {
-        $bag = $this->getBag();
-
-        $bag->add(new Attribute('key', 'value'));
-
-        $newBag = new AttributeBag([new Attribute('key', 'value')]);
-    }
 
     protected function getBag()
     {
         return new AttributeBag([
             new Attribute('foo', 'bar'),
-            new Attribute('baz', 'bax','group'),
-            new Attribute('bar', 'baz','group'),
+            new Attribute('baz', 'bax', 'group'),
+            new Attribute('bar', 'baz', 'group'),
         ]);
     }
 }
-
-class AttributeBagModelStub extends Model {}

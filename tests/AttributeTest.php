@@ -2,15 +2,13 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Metable\Attribute;
-use Sofa\Eloquence\Metable\AttributeBag;
 
-class AttributeTest extends \PHPUnit_Framework_TestCase {
-
-    /**
-     * @test
-     */
+class AttributeTest extends TestCase
+{
+    /** @test */
     public function it_instantiates_as_eloquent_by_default()
     {
         $emptyModel = new Attribute;
@@ -20,13 +18,11 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals([], $arrayModel->getAttributes());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_handles_casting_to_string()
     {
-        $color  = new Attribute('color', 'red');
-        $array  = new Attribute('array', [1,2,3]);
+        $color = new Attribute('color', 'red');
+        $array = new Attribute('array', [1, 2, 3]);
         $object = new Attribute('array', (object) ['foo', 'bar']);
 
         $this->assertEquals('red', (string) $color);
@@ -34,72 +30,46 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('', (string) $object);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_calls_instance_mutators()
     {
-        $attribute = new AttributeNoMutatorsStub('foo', [1,2]);
+        $attribute = new AttributeNoMutatorsStub('foo', [1, 2]);
         $attribute->getterMutators = ['array' => 'customMutator'];
         $this->assertEquals('mutated_value', $attribute->getValue());
     }
 
-    /**
-     * @test
-     *
-     * @expectedException \InvalidArgumentException
-     */
+    /** @test */
     public function it_rejects_invalid_variable_name_as_key()
     {
-        $attribute = new Attribute('foo-bar', 'value');
+        $this->expectException(InvalidArgumentException::class);
+        new Attribute('foo-bar', 'value');
     }
 
-    /**
-     * @test
-     *
-     * @expectedException \InvalidArgumentException
-     */
+    /** @test */
     public function it_rejects_user_types_without_mutator()
     {
-        $attribute = new Attribute('foo', $this->getAttribute()->newCollection());
+        $this->expectException(InvalidArgumentException::class);
+        new Attribute('foo', $this->getAttribute()->newCollection());
     }
 
-    /**
-     * @test
-     *
-     * @dataProvider validTypes
-     */
-    public function it_casts_values_to_proper_types($typeAttribute)
+    /** @test */
+    public function it_casts_values_to_proper_types()
     {
-        list($type, $attribute) = $typeAttribute;
-
-        $this->assertInternalType($type, $attribute->getValue());
+        $this->assertTrue(is_int((new AttributeNoMutatorsStub('key', 1))->getValue()));
+        $this->assertTrue(is_float((new AttributeNoMutatorsStub('key', 1.5))->getValue()));
+        $this->assertTrue(is_bool((new AttributeNoMutatorsStub('key', true))->getValue()));
+        $this->assertTrue(is_null((new AttributeNoMutatorsStub('key', null))->getValue()));
+        $this->assertTrue(is_array((new AttributeNoMutatorsStub('key', [1, 2]))->getValue()));
     }
 
-    /**
-     * dataProvider
-     */
-    public function validTypes()
-    {
-        return [
-            [['int',    new AttributeNoMutatorsStub('key', 1)]],
-            [['float',  new AttributeNoMutatorsStub('key', 1.5)]],
-            [['bool',   new AttributeNoMutatorsStub('key', true)]],
-            [['array',  new AttributeNoMutatorsStub('key', [1,2])]],
-            [['null',   new AttributeNoMutatorsStub('key', null)]],
-        ];
-    }
-
-    /**
-     * @test
-     */
+    /** @test */
     public function getters()
     {
         $attribute = $this->getAttribute();
 
         $this->assertEquals('color', $attribute->getMetaKey());
         $this->assertEquals('red', $attribute->getValue());
-        $this->assertEquals(NULL, $attribute->getMetaGroup());
+        $this->assertEquals(null, $attribute->getMetaGroup());
 
         $attribute = $this->getAttributeWithGroup('group');
 
@@ -108,9 +78,7 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('group', $attribute->getMetaGroup());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_uses_attribute_bag()
     {
         $bag = $this->getAttribute()->newBag();
@@ -146,11 +114,13 @@ class AttributeTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class AttributeStub extends Attribute {
+class AttributeStub extends Attribute
+{
     protected static $customTable;
 }
 
-class AttributeNoMutatorsStub extends Attribute {
+class AttributeNoMutatorsStub extends Attribute
+{
     public $getterMutators = [];
 
     public function customMutator($value)

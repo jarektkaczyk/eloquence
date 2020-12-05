@@ -2,32 +2,34 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Illuminate\Database\Query\Builder as Query;
-use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Grammars\SQLiteGrammar;
+use Illuminate\Database\Query\Processors\SQLiteProcessor;
+use LogicException;
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Relations\JoinerFactory;
 
-use Mockery as m;
+class JoinerTest extends TestCase
+{
+    private $factory;
 
-class JoinerTest extends \PHPUnit_Framework_TestCase {
-
-    public function setUp()
+    protected function setUp(): void
     {
         $this->factory = new JoinerFactory;
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_joins_dot_nested_relations()
     {
-        $sql = 'select * from "users" '.
-               'inner join "profiles" on "users"."profile_id" = "profiles"."id" '.
+        $sql = 'select * from "users" ' .
+               'inner join "profiles" on "users"."profile_id" = "profiles"."id" ' .
                'inner join "companies" on "companies"."morphable_id" = "profiles"."id" and "companies"."morphable_type" = ?';
 
         $query = $this->getQuery();
@@ -38,26 +40,21 @@ class JoinerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($sql, $query->toSql());
     }
 
-    /**
-     * @test
-     *
-     * @expectedException \LogicException
-     */
+    /** @test */
     public function it_cant_join_morphTo()
     {
+        $this->expectException(LogicException::class);
         $query = $this->getQuery();
         $joiner = $this->factory->make($query);
 
         $joiner->join('morphs');
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_joins_relations_on_query_builder()
     {
-        $sql = 'select * from "users" '.
-               'right join "company_user" on "company_user"."user_id" = "users"."id" '.
+        $sql = 'select * from "users" ' .
+               'right join "company_user" on "company_user"."user_id" = "users"."id" ' .
                'right join "companies" on "company_user"."company_id" = "companies"."id"';
 
         $eloquent = $this->getQuery();
@@ -70,13 +67,11 @@ class JoinerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($sql, $query->toSql());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_joins_relations_on_eloquent_builder()
     {
-        $sql = 'select * from "users" '.
-               'left join "companies" on "companies"."user_id" = "users"."id" '.
+        $sql = 'select * from "users" ' .
+               'left join "companies" on "companies"."user_id" = "users"."id" ' .
                'left join "profiles" on "profiles"."company_id" = "companies"."id"';
 
         $query = $this->getQuery();
@@ -90,21 +85,19 @@ class JoinerTest extends \PHPUnit_Framework_TestCase {
     public function getQuery()
     {
         $model = new JoinerUserStub;
-        $grammarClass = "Illuminate\Database\Query\Grammars\SQLiteGrammar";
-        $processorClass = "Illuminate\Database\Query\Processors\SQLiteProcessor";
-        $grammar = new $grammarClass;
-        $processor = new $processorClass;
-        $schema = m::mock('StdClass');
+        $grammar = new SQLiteGrammar;
+        $processor = new SQLiteProcessor;
         $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
+        $connection->shouldReceive('query')->andReturn(new Builder($connection, $grammar, $processor));
         $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
-        $class = get_class($model);
-        $class::setConnectionResolver($resolver);
+        JoinerUserStub::setConnectionResolver($resolver);
+
         return $model->newQuery();
     }
 }
 
-class JoinerUserStub extends Model {
-
+class JoinerUserStub extends Model
+{
     protected $table = 'users';
 
     public function profile()
@@ -122,6 +115,7 @@ class JoinerUserStub extends Model {
         // due to lack of getters on HasManyThrough this relation works only with default fk!
         $related = 'Sofa\Eloquence\Tests\JoinerProfileStub';
         $through = 'Sofa\Eloquence\Tests\JoinerCompanyStub';
+
         return $this->hasManyThrough($related, $through, 'user_id', 'company_id');
     }
 
@@ -141,7 +135,8 @@ class JoinerUserStub extends Model {
     }
 }
 
-class JoinerProfileStub extends Model {
+class JoinerProfileStub extends Model
+{
     protected $table = 'profiles';
 
     public function company()
@@ -150,14 +145,17 @@ class JoinerProfileStub extends Model {
     }
 }
 
-class JoinerCompanyStub extends Model {
+class JoinerCompanyStub extends Model
+{
     protected $table = 'companies';
 }
 
-class JoinerPostStub extends Model {
+class JoinerPostStub extends Model
+{
     protected $table = 'posts';
 }
 
-class MorphOneStub extends Model {
+class MorphOneStub extends Model
+{
     protected $table = 'morphs';
 }

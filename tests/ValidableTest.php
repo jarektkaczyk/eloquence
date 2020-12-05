@@ -1,4 +1,6 @@
-<?php namespace Sofa\Eloquence\Tests;
+<?php
+
+namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
@@ -7,9 +9,9 @@ use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Validable;
 use Sofa\Eloquence\Validable\Observer;
 
-class ValidableTest extends \PHPUnit_Framework_TestCase {
-
-    public function setUp()
+class ValidableTest extends \PHPUnit\Framework\TestCase
+{
+    protected function setUp(): void
     {
         $validator = m::mock('StdClass');
         $validator->shouldReceive('passes')->andReturn(true);
@@ -20,32 +22,28 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         ValidableEloquentStub::setValidatorFactory($factory);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function rules_for_update_helper()
     {
         $rules = [
             'email' => 'required|email|unique:users',
-            'name'  => ['required', 'max:10', 'unique:users,username,null,id,account_id,5'],
+            'name' => ['required', 'max:10', 'unique:users,username,null,id,account_id,5'],
         ];
 
         $rulesAdjusted = [
             'email' => ['required', 'email', 'unique:users,email,10,primary_key'],
-            'name'  => ['required', 'max:10', 'unique:users,username,10,primary_key,account_id,5'],
+            'name' => ['required', 'max:10', 'unique:users,username,10,primary_key,account_id,5'],
         ];
 
         $this->assertEquals($rulesAdjusted, rules_for_update($rules, 10, 'primary_key'));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function validation_disabling_and_enabling()
     {
         $model = $this->getModel();
@@ -58,9 +56,7 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($model->validationEnabled());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function validation_skipping()
     {
         $model = $this->getModel();
@@ -68,24 +64,20 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(Observer::SKIP_ONCE, $model->skipsValidation());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_adjusts_unique_rules_for_a_model_correctly()
     {
         $model = $this->getModel();
         $model->setRawAttributes(['id' => 10]);
 
         $emailRules = ['required', 'email', 'unique:users,email,10,id', 'max:255'];
-        $nameRules  = ['required', 'max:10', 'unique:users,username,10,id,account_id,5', 'max:255'];
+        $nameRules = ['required', 'max:10', 'unique:users,username,10,id,account_id,5', 'max:255'];
 
         $this->assertEquals($emailRules, $model->getUpdateRules()['email']);
-        $this->assertEquals($nameRules,  $model->getUpdateRules()['name']);
+        $this->assertEquals($nameRules, $model->getUpdateRules()['name']);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_gets_invalid_attributes_from_validator_instance()
     {
         $messageBag = new MessageBag(['name' => 'name is required']);
@@ -96,9 +88,7 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(['name'], $model->getInvalidAttributes());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_gets_error_messages_from_validator_instance()
     {
         $messageBag = new MessageBag(['name' => 'name is required']);
@@ -109,24 +99,20 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(new MessageBag(['name' => 'name is required']), $model->getValidationErrors());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_gathers_all_rules_from_all_groups()
     {
         $rulesMerged = [
-            'email'     => ['required', 'email', 'unique:users', 'max:255'],
-            'name'      => ['required', 'max:10', 'unique:users,username,null,id,account_id,5', 'max:255'],
-            'age'       => ['min:5'],
+            'email' => ['required', 'email', 'unique:users', 'max:255'],
+            'name' => ['required', 'max:10', 'unique:users,username,null,id,account_id,5', 'max:255'],
+            'age' => ['min:5'],
             'last_name' => ['max:255'],
         ];
 
         $this->assertEquals($rulesMerged, $this->getModel()->getCreateRules());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_checks_all_the_attributes()
     {
         $model = $this->getModel();
@@ -134,9 +120,7 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($model->isValid());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_uses_rules_from_all_groups()
     {
         $model = $this->getModel();
@@ -149,23 +133,24 @@ class ValidableTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class ValidableEloquentStub extends Model {
+class ValidableEloquentStub extends Model
+{
     use Eloquence, Validable;
 
     protected $table = 'users';
 
     protected static $rules = [
         'email' => 'required|email|unique',
-        'name'  => ['required', 'max:10', 'unique:users,username,null,id,account_id,5'],
+        'name' => ['required', 'max:10', 'unique:users,username,null,id,account_id,5'],
     ];
 
     protected static $businessRules = [
-        'age'   => ['min:5']
+        'age' => ['min:5'],
     ];
 
     protected static $dataRules = [
-        'email'     => 'max:255',
-        'name'      => ['max:255'],
+        'email' => 'max:255',
+        'name' => ['max:255'],
         'last_name' => ['max:255'],
     ];
 }

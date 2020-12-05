@@ -2,66 +2,46 @@
 
 namespace Sofa\Eloquence\Tests;
 
+use Illuminate\Database\Query\Grammars\Grammar;
+use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Eloquence;
-use Sofa\Eloquence\Mappable;
-
 use Illuminate\Database\Query\Builder as Query;
 use Illuminate\Database\Eloquent\Model;
-
 use Mockery as m;
+use Sofa\Eloquence\Searchable\ParserFactory;
 
-class BuilderTest extends \PHPUnit_Framework_TestCase {
-
-    public function tearDown()
+class BuilderTest extends TestCase
+{
+    protected function tearDown(): void
     {
         m::close();
     }
 
-    /**
-     * @test
-     */
-    public function it_joins_relations_as_strings_or_array()
-    {
-        $builder = $this->getBuilder();
-
-        $builder->leftJoinRelations('foo', 'bar');
-        $builder->rightJoinRelations(['foo', 'bar']);
-        $builder->joinRelations('foo', 'bar');
-        $builder->joinRelations(['foo', 'bar']);
-    }
-
-    /**
-     * @test
-     *
-     * @expectedException \InvalidArgumentException
-     */
+    /** @test */
     public function it_takes_exactly_two_values_for_whereBetween()
     {
+        $this->expectException(InvalidArgumentException::class);
         $builder = $this->getBuilder();
-
-        $builder->whereBetween('size', [1,2,3]);
+        $builder->whereBetween('size', [1, 2, 3]);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_calls_eloquent_method_if_called()
     {
         $builder = $this->getBuilder();
-
         $sql = $builder->callParent('where', ['foo', 'value'])->toSql();
-
         $this->assertEquals('select * from "table" where "foo" = ?', $sql);
     }
 
     protected function getBuilder()
     {
-        $grammar    = new \Illuminate\Database\Query\Grammars\Grammar;
+        $grammar = new Grammar;
         $connection = m::mock('\Illuminate\Database\ConnectionInterface');
-        $processor  = m::mock('\Illuminate\Database\Query\Processors\Processor');
-        $query      = new Query($connection, $grammar, $processor);
-        $builder    = new Builder($query);
+        $processor = m::mock('\Illuminate\Database\Query\Processors\Processor');
+        $query = new Query($connection, $grammar, $processor);
+        $builder = new Builder($query);
 
         $joiner = m::mock('stdClass');
         $joiner->shouldReceive('join')->with('foo', m::any());
@@ -70,7 +50,7 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
         $factory->shouldReceive('make')->andReturn($joiner);
         Builder::setJoinerFactory($factory);
 
-        Builder::setParserFactory(new \Sofa\Eloquence\Searchable\ParserFactory);
+        Builder::setParserFactory(new ParserFactory);
 
         $model = new BuilderModelStub;
         $builder->setModel($model);
@@ -79,8 +59,8 @@ class BuilderTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class BuilderModelStub extends Model {
-
+class BuilderModelStub extends Model
+{
     use Eloquence;
 
     protected $table = 'table';

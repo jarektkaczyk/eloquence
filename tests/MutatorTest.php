@@ -2,11 +2,13 @@
 
 namespace Sofa\Eloquence\Tests;
 
+use LogicException;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Mutator\Mutator;
 
-class MutatorTest extends \PHPUnit_Framework_TestCase {
-
-    public function setUp()
+class MutatorTest extends TestCase
+{
+    protected function setUp(): void
     {
         $this->m = new MutatorStub;
     }
@@ -88,12 +90,11 @@ class MutatorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @test
-     *
      * @dataProvider wrongCallables
-     * @expectedException \LogicException
      */
     public function wrong_callable($callable)
     {
+        $this->expectException(LogicException::class);
         $this->m->mutate('quick red fox', $callable);
     }
 
@@ -110,14 +111,16 @@ class MutatorTest extends \PHPUnit_Framework_TestCase {
     }
 }
 
-class MutatorStub extends Mutator {
+class MutatorStub extends Mutator
+{
     public function clip($string, $length = 5)
     {
         return substr($string, 0, $length);
     }
 }
 
-class MutatorDummyInstantiable {
+class MutatorDummyInstantiable
+{
     public static function multiply($value, $multiplier = 2)
     {
         return $value * $multiplier;
@@ -139,17 +142,18 @@ class MutatorDummyInstantiable {
     }
 }
 
-abstract class MutatorDummyNotInstantiable {
+abstract class MutatorDummyNotInstantiable
+{
     public function repeat($value, $multiplier = 2)
     {
         return $value * $multiplier;
     }
 }
 
-class MutatorDummyRequiredArgs {
+class MutatorDummyRequiredArgs
+{
     public function __construct($arg)
     {
-
     }
 
     public function repeat($value, $multiplier = 2)

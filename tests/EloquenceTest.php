@@ -3,17 +3,18 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
-class EloquenceTest extends \PHPUnit_Framework_TestCase
+class EloquenceTest extends TestCase
 {
-    public function setUp()
+    protected function setUp(): void
     {
         EloquenceStub::clearHooks();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
@@ -24,7 +25,7 @@ class EloquenceTest extends \PHPUnit_Framework_TestCase
      */
     public function it_uses_custom_builder()
     {
-        $query   = m::mock('\Illuminate\Database\Query\Builder');
+        $query = m::mock('\Illuminate\Database\Query\Builder');
         $builder = (new EloquenceStub)->newEloquentBuilder($query);
 
         $this->assertInstanceOf('\Sofa\Eloquence\Builder', $builder);

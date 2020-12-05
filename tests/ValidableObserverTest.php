@@ -3,18 +3,17 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Validable\Observer;
 
-class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
-
-    public function tearDown()
+class ValidableObserverTest extends TestCase
+{
+    protected function tearDown(): void
     {
         m::close();
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function saved_validation_disabled()
     {
         $observer = new Observer;
@@ -26,9 +25,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $observer->saved($validable);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function saved_after_skipping_once()
     {
         $observer = new Observer;
@@ -40,9 +37,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $observer->saved($validable);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function updating_invalid()
     {
         $observer = new Observer;
@@ -61,9 +56,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $this->assertFalse($observer->updating($validable));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function updating_validation_disabled()
     {
         $observer = new Observer;
@@ -74,9 +67,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($observer->updating($validable));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function updating_valid()
     {
         $observer = new Observer;
@@ -95,9 +86,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($observer->updating($validable));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function creating_invalid()
     {
         $observer = new Observer;
@@ -109,9 +98,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $this->assertFalse($observer->creating($validable));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function creating_validation_disabled()
     {
         $observer = new Observer;
@@ -122,9 +109,7 @@ class ValidableObserverTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($observer->creating($validable));
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function creating_valid()
     {
         $observer = new Observer;

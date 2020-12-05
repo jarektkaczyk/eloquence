@@ -2,20 +2,18 @@
 
 namespace Sofa\Eloquence\Tests;
 
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Subquery;
 
-use Mockery as m;
-
-class SubqueryTest extends \PHPUnit_Framework_TestCase {
-
-    public function tearDown()
+class SubqueryTest extends TestCase
+{
+    protected function tearDown(): void
     {
         m::close();
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_forwards_calls_to_the_builder()
     {
         $builder = m::mock('\Illuminate\Database\Query\Builder');
@@ -30,9 +28,7 @@ class SubqueryTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('table', $sub->from);
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_prints_as_aliased_query_in_parentheses()
     {
         $grammar = m::mock('StdClass');
@@ -50,9 +46,7 @@ class SubqueryTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('table_alias', $sub->getAlias());
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_accepts_eloquent_and_query_builder()
     {
         $builder = m::mock('\Illuminate\Database\Query\Builder');
