@@ -2,7 +2,7 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Mockery as m;
+use Mockery;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\MessageBag;
 use Sofa\Eloquence\Eloquence;
@@ -13,10 +13,10 @@ class ValidableTest extends \PHPUnit\Framework\TestCase
 {
     protected function setUp(): void
     {
-        $validator = m::mock('StdClass');
+        $validator = Mockery::mock('StdClass');
         $validator->shouldReceive('passes')->andReturn(true);
 
-        $factory = m::mock('\Illuminate\Contracts\Validation\Factory');
+        $factory = Mockery::mock('\Illuminate\Contracts\Validation\Factory');
         $factory->shouldReceive('make')->andReturn($validator);
 
         ValidableEloquentStub::setValidatorFactory($factory);

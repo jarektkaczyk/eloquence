@@ -2,7 +2,7 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Mockery as m;
+use Mockery;
 use Sofa\Eloquence\Validable\Observer;
 
 class ValidableObserverTest extends TestCase
@@ -12,7 +12,7 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('skipsValidation')->once()->andReturn(Observer::SKIP_ALWAYS);
         $validable->shouldReceive('enableValidation')->never();
 
@@ -24,7 +24,7 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('skipsValidation')->once()->andReturn(Observer::SKIP_ONCE);
         $validable->shouldReceive('enableValidation')->once();
 
@@ -36,11 +36,11 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validator = m::mock('\Illuminate\Contracts\Validation\Validator');
+        $validator = Mockery::mock('\Illuminate\Contracts\Validation\Validator');
         $validator->shouldReceive('setRules')->once()->with(['update_rules'])->andReturn($validator);
         $validator->shouldReceive('setRules')->once()->with(['create_rules'])->andReturn($validator);
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('validationEnabled')->once()->andReturn(true);
         $validable->shouldReceive('getValidator')->twice()->andReturn($validator);
         $validable->shouldReceive('getUpdateRules')->once()->andReturn(['update_rules']);
@@ -55,7 +55,7 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('validationEnabled')->once()->andReturn(false);
 
         $this->assertNull($observer->updating($validable));
@@ -66,11 +66,11 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validator = m::mock('\Illuminate\Contracts\Validation\Validator');
+        $validator = Mockery::mock('\Illuminate\Contracts\Validation\Validator');
         $validator->shouldReceive('setRules')->once()->with(['update_rules'])->andReturn($validator);
         $validator->shouldReceive('setRules')->once()->with(['create_rules'])->andReturn($validator);
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('validationEnabled')->once()->andReturn(true);
         $validable->shouldReceive('getValidator')->twice()->andReturn($validator);
         $validable->shouldReceive('getUpdateRules')->once()->andReturn(['update_rules']);
@@ -85,7 +85,7 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('validationEnabled')->once()->andReturn(true);
         $validable->shouldReceive('isValid')->once()->andReturn(false);
 
@@ -97,7 +97,7 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('validationEnabled')->once()->andReturn(false);
 
         $this->assertNull($observer->creating($validable));
@@ -108,7 +108,7 @@ class ValidableObserverTest extends TestCase
     {
         $observer = new Observer;
 
-        $validable = m::mock('\Sofa\Eloquence\Contracts\Validable');
+        $validable = Mockery::mock('\Sofa\Eloquence\Contracts\Validable');
         $validable->shouldReceive('validationEnabled')->once()->andReturn(true);
         $validable->shouldReceive('isValid')->once()->andReturn(true);
 

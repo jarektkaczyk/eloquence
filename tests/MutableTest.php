@@ -2,8 +2,8 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
+use Mockery;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mutable;
 
@@ -36,7 +36,7 @@ class MutableTest extends TestCase
 
     protected function getModel()
     {
-        $mutator = m::mock('\Sofa\Eloquence\Contracts\Mutator');
+        $mutator = Mockery::mock('\Sofa\Eloquence\Contracts\Mutator');
 
         $model = new MutableEloquentStub;
         $model->setRawAttributes(['first_name' => 'jarek', 'last_name' => 'tkaczyk', 'email' => 'JAREK@SOFTONSOFA.COM']);

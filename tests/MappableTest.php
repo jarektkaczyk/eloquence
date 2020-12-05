@@ -7,7 +7,7 @@ use Illuminate\Database\ConnectionResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use LogicException;
-use Mockery as m;
+use Mockery;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mappable;
 
@@ -44,7 +44,7 @@ class MappableTest extends TestCase
                 'left join "images" on "images"."profile_id" = "profiles"."id"';
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], Mockery::any())->andReturn([]);
 
         $model->{$function}('avatar');
     }
@@ -77,7 +77,7 @@ class MappableTest extends TestCase
         $bindings = ['UserMorph'];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, Mockery::any())->andReturn([]);
 
         $model->value('brand');
     }
@@ -91,7 +91,7 @@ class MappableTest extends TestCase
                 'limit 1';
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], Mockery::any())->andReturn([]);
 
         $model->value('avatar');
     }
@@ -103,7 +103,7 @@ class MappableTest extends TestCase
                 'left join "profiles" on "users"."profile_id" = "profiles"."id"';
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], Mockery::any())->andReturn([]);
 
         $model->pluck('last_name', 'other_table.id');
     }
@@ -115,7 +115,7 @@ class MappableTest extends TestCase
                 'left join "profiles" on "users"."profile_id" = "profiles"."id"';
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, [], Mockery::any())->andReturn([]);
 
         $model->pluck('last_name', 'id');
     }
@@ -260,7 +260,7 @@ class MappableTest extends TestCase
     {
         $model = new MappableStub;
 
-        $model->bar = m::mock('StdClass');
+        $model->bar = Mockery::mock('StdClass');
         $model->bar->shouldReceive('save')->once()->andReturn(true);
 
         $model->setMappedAttribute('foo', 'new_value');
@@ -369,13 +369,13 @@ class MappableTest extends TestCase
         $processorClass = 'Illuminate\Database\Query\Processors\SQLiteProcessor';
         $grammar = new $grammarClass;
         $processor = new $processorClass;
-        $schema = m::mock('StdClass');
+        $schema = Mockery::mock('StdClass');
         $schema->shouldReceive('getColumnListing')->andReturn(['id', 'email', 'ign']);
-        $connection = m::mock(Connection::class)->makePartial();
+        $connection = Mockery::mock(Connection::class)->makePartial();
         $connection->shouldReceive('getQueryGrammar')->andReturn($grammar);
         $connection->shouldReceive('getPostProcessor')->andReturn($processor);
         $connection->shouldReceive('getSchemaBuilder')->andReturn($schema);
-        $resolver = m::mock(ConnectionResolver::class)->makePartial();
+        $resolver = Mockery::mock(ConnectionResolver::class)->makePartial();
         $resolver->shouldReceive('connection')->andReturn($connection);
         $class = get_class($model);
         $class::setConnectionResolver($resolver);

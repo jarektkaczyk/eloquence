@@ -2,7 +2,7 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Mockery as m;
+use Mockery;
 use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,7 +19,7 @@ class EloquenceTest extends TestCase
          */
     public function it_uses_custom_builder()
     {
-        $query = m::mock('\Illuminate\Database\Query\Builder');
+        $query = Mockery::mock('\Illuminate\Database\Query\Builder');
         $builder = (new EloquenceStub)->newEloquentBuilder($query);
 
         $this->assertInstanceOf('\Sofa\Eloquence\Builder', $builder);
@@ -33,13 +33,13 @@ class EloquenceTest extends TestCase
      */
     public function it_loads_and_checks_the_column_listing()
     {
-        $schema = m::mock('StdClass');
+        $schema = Mockery::mock('StdClass');
         $schema->shouldReceive('getColumnListing')->once()->andReturn(['foo', 'bar', 'baz']);
 
-        $connection = m::mock('StdClass');
+        $connection = Mockery::mock('StdClass');
         $connection->shouldReceive('getSchemaBuilder')->once()->andReturn($schema);
 
-        $resolver = m::mock('\Illuminate\Database\ConnectionResolverInterface');
+        $resolver = Mockery::mock('\Illuminate\Database\ConnectionResolverInterface');
         $resolver->shouldReceive('connection')->once()->andReturn($connection);
 
         EloquenceStub::setConnectionResolver($resolver);

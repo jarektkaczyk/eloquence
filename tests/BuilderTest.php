@@ -2,13 +2,13 @@
 
 namespace Sofa\Eloquence\Tests;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as Query;
 use Illuminate\Database\Query\Grammars\Grammar;
 use InvalidArgumentException;
+use Mockery;
 use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Eloquence;
-use Illuminate\Database\Query\Builder as Query;
-use Illuminate\Database\Eloquent\Model;
-use Mockery as m;
 use Sofa\Eloquence\Searchable\ParserFactory;
 
 class BuilderTest extends TestCase
@@ -32,15 +32,15 @@ class BuilderTest extends TestCase
     protected function getBuilder()
     {
         $grammar = new Grammar;
-        $connection = m::mock('\Illuminate\Database\ConnectionInterface');
-        $processor = m::mock('\Illuminate\Database\Query\Processors\Processor');
+        $connection = Mockery::mock('\Illuminate\Database\ConnectionInterface');
+        $processor = Mockery::mock('\Illuminate\Database\Query\Processors\Processor');
         $query = new Query($connection, $grammar, $processor);
         $builder = new Builder($query);
 
-        $joiner = m::mock('stdClass');
-        $joiner->shouldReceive('join')->with('foo', m::any());
-        $joiner->shouldReceive('join')->with('bar', m::any());
-        $factory = m::mock('\Sofa\Eloquence\Relations\JoinerFactory');
+        $joiner = Mockery::mock('stdClass');
+        $joiner->shouldReceive('join')->with('foo', Mockery::any());
+        $joiner->shouldReceive('join')->with('bar', Mockery::any());
+        $factory = Mockery::mock('\Sofa\Eloquence\Relations\JoinerFactory');
         $factory->shouldReceive('make')->andReturn($joiner);
         Builder::setJoinerFactory($factory);
 

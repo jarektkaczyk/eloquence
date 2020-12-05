@@ -7,7 +7,7 @@ use Illuminate\Database\ConnectionResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
-use Mockery as m;
+use Mockery;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Metable;
 use Sofa\Eloquence\Metable\Attribute;
@@ -48,7 +48,7 @@ class MetableTest extends TestCase
         $bindings = ['Metable', 'size', 'Metable', 'uuid'];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, Mockery::any())->andReturn([]);
 
         $model->pluck('size', 'uuid');
     }
@@ -64,7 +64,7 @@ class MetableTest extends TestCase
         $bindings = ['Metable', 'size'];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, Mockery::any())->andReturn([]);
 
         $model->join('another_table as joined', 'joined.metable_id', '=', 'metables.id')
                 ->pluck('size', 'joined.id');
@@ -80,7 +80,7 @@ class MetableTest extends TestCase
         $bindings = ['Metable', 'size'];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, Mockery::any())->andReturn([]);
 
         $model->pluck('size', 'id');
     }
@@ -99,7 +99,7 @@ class MetableTest extends TestCase
         $bindings = ['Metable', 'size'];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, Mockery::any())->andReturn([]);
 
         $model->{$function}('size');
     }
@@ -122,7 +122,7 @@ class MetableTest extends TestCase
         $bindings = ['Metable', 'color'];
 
         $model = $this->getModel();
-        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, m::any())->andReturn([]);
+        $model->getConnection()->shouldReceive('select')->once()->with($sql, $bindings, Mockery::any())->andReturn([]);
 
         $model->value('color');
     }
@@ -185,7 +185,7 @@ class MetableTest extends TestCase
     {
         $sql = 'select * from "metables" where "name" = ? and exists (select * from "meta_attributes" ' .
                 'where "metables"."id" = "meta_attributes"."metable_id" and "meta_attributes"."metable_type" = ? ' .
-                'and "meta_key" = ? and strftime(\'' . $placeholder . '\', "meta_value") = ?)';
+                'and "meta_key" = ? and strftime(\'' . $placeholder . '\', "meta_value") = cast(? as text))';
 
         $query = $this->getModel()->where('name', 'jarek')->{"where{$type}"}('published_at', '=', 'date_value');
 
@@ -424,17 +424,17 @@ class MetableTest extends TestCase
     /** @test */
     public function it_saves_meta_attributes()
     {
-        $size = m::mock('StdClass');
+        $size = Mockery::mock('StdClass');
         $size->shouldReceive('getValue')->once()->andReturn(null);
         $size->shouldReceive('delete')->once();
 
-        $color = m::mock('StdClass');
+        $color = Mockery::mock('StdClass');
         $color->shouldReceive('getValue')->once()->andReturn('red');
 
-        $relation = m::mock('StdClass');
+        $relation = Mockery::mock('StdClass');
         $relation->shouldReceive('save')->once()->with($color);
 
-        $model = m::mock('\Sofa\Eloquence\Tests\MetableEloquentStub')->makePartial();
+        $model = Mockery::mock('\Sofa\Eloquence\Tests\MetableEloquentStub')->makePartial();
         $model->shouldReceive('getMetaAttributes')->once()->andReturn([$color, $size]);
         $model->shouldReceive('metaAttributes')->once()->andReturn($relation);
         $model->exists = true;
@@ -529,8 +529,8 @@ class MetableTest extends TestCase
 
     protected function getMetableStubLoadingRelation()
     {
-        $bag = m::mock('StdClass');
-        $collection = m::mock('StdClass');
+        $bag = Mockery::mock('StdClass');
+        $collection = Mockery::mock('StdClass');
 
         $collection->shouldReceive('all')->andReturn([]);
 
@@ -539,7 +539,7 @@ class MetableTest extends TestCase
         $model->relations = [];
         $model->shouldReceive('load')->with('metaAttributes')->once()->andReturn($model);
         $model->shouldReceive('getRelation')->with('metaAttributes')->once()->andReturn($collection);
-        $model->shouldReceive('setRelation')->with('metaAttributes', m::any())->once();
+        $model->shouldReceive('setRelation')->with('metaAttributes', Mockery::any())->once();
         $model->shouldReceive('getRelation')->with('metaAttributes')->once()->andReturn($bag);
 
         return [$model, $bag];
@@ -554,12 +554,12 @@ class MetableTest extends TestCase
 
     public function getMetableStub()
     {
-        return m::mock('\Sofa\Eloquence\Tests\MetableStub')->makePartial();
+        return Mockery::mock('\Sofa\Eloquence\Tests\MetableStub')->makePartial();
     }
 
     public function getBag()
     {
-        return m::mock('\Sofa\Eloquence\Metable\AttributeBag');
+        return Mockery::mock('\Sofa\Eloquence\Metable\AttributeBag');
     }
 
     public function getModel()
@@ -569,13 +569,13 @@ class MetableTest extends TestCase
         $processorClass = 'Illuminate\Database\Query\Processors\SQLiteProcessor';
         $grammar = new $grammarClass;
         $processor = new $processorClass;
-        $schema = m::mock('StdClass');
+        $schema = Mockery::mock('StdClass');
         $schema->shouldReceive('getColumnListing')->andReturn(['id', 'name']);
-        $connection = m::mock(Connection::class)->makePartial();
+        $connection = Mockery::mock(Connection::class)->makePartial();
         $connection->shouldReceive('getQueryGrammar')->andReturn($grammar);
         $connection->shouldReceive('getPostProcessor')->andReturn($processor);
         $connection->shouldReceive('getSchemaBuilder')->andReturn($schema);
-        $resolver = m::mock(ConnectionResolver::class)->makePartial();
+        $resolver = Mockery::mock(ConnectionResolver::class)->makePartial();
         $resolver->shouldReceive('connection')->andReturn($connection);
         $class = get_class($model);
         $class::setConnectionResolver($resolver);

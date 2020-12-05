@@ -2,7 +2,7 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Mockery as m;
+use Mockery;
 use Sofa\Eloquence\Subquery;
 
 class SubqueryTest extends TestCase
@@ -10,7 +10,7 @@ class SubqueryTest extends TestCase
     /** @test */
     public function it_forwards_calls_to_the_builder()
     {
-        $builder = m::mock('\Illuminate\Database\Query\Builder');
+        $builder = Mockery::mock('\Illuminate\Database\Query\Builder');
         $builder->shouldReceive('where')->once()->with('foo', 'bar')->andReturn($builder);
 
         $sub = new Subquery($builder);
@@ -25,9 +25,9 @@ class SubqueryTest extends TestCase
     /** @test */
     public function it_prints_as_aliased_query_in_parentheses()
     {
-        $grammar = m::mock('StdClass');
+        $grammar = Mockery::mock('StdClass');
         $grammar->shouldReceive('wrapTable')->with('table_alias')->once()->andReturn('"table_alias"');
-        $builder = m::mock('\Illuminate\Database\Query\Builder');
+        $builder = Mockery::mock('\Illuminate\Database\Query\Builder');
         $builder->shouldReceive('getGrammar')->once()->andReturn($grammar);
         $sub = new Subquery($builder);
         $sub->getQuery()->shouldReceive('toSql')->andReturn('select * from "table" where id = ?');
@@ -43,10 +43,10 @@ class SubqueryTest extends TestCase
     /** @test */
     public function it_accepts_eloquent_and_query_builder()
     {
-        $builder = m::mock('\Illuminate\Database\Query\Builder');
+        $builder = Mockery::mock('\Illuminate\Database\Query\Builder');
         $sub = new Subquery($builder);
 
-        $eloquent = m::mock('\Illuminate\Database\Eloquent\Builder');
+        $eloquent = Mockery::mock('\Illuminate\Database\Eloquent\Builder');
         $eloquent->shouldReceive('getQuery')->andReturn($builder);
         $sub = new Subquery($eloquent);
     }

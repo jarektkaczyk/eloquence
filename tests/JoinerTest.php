@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use Illuminate\Database\Query\Processors\SQLiteProcessor;
 use LogicException;
-use Mockery as m;
+use Mockery;
 use Sofa\Eloquence\Relations\JoinerFactory;
 
 class JoinerTest extends TestCase
@@ -82,10 +82,10 @@ class JoinerTest extends TestCase
         $model = new JoinerUserStub;
         $grammar = new SQLiteGrammar;
         $processor = new SQLiteProcessor;
-        $connection = m::mock(Connection::class)->makePartial();
+        $connection = Mockery::mock(Connection::class)->makePartial();
         $connection->shouldReceive('getQueryGrammar')->andReturn($grammar);
         $connection->shouldReceive('getPostProcessor')->andReturn($processor);
-        $resolver = m::mock(ConnectionResolver::class)->makePartial();
+        $resolver = Mockery::mock(ConnectionResolver::class)->makePartial();
         $resolver->shouldReceive('connection')->andReturn($connection);
         JoinerUserStub::setConnectionResolver($resolver);
 

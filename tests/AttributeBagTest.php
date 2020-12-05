@@ -2,8 +2,8 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use Sofa\Eloquence\Metable\AttributeBag;
 use Sofa\Eloquence\Metable\Attribute;
+use Sofa\Eloquence\Metable\AttributeBag;
 
 class AttributeBagTest extends TestCase
 {
