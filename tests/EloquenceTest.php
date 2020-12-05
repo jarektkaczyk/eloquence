@@ -3,7 +3,6 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,15 +13,10 @@ class EloquenceTest extends TestCase
         EloquenceStub::clearHooks();
     }
 
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     /**
-     * @test
-     * @covers \Sofa\Eloquence\Eloquence::newEloquentBuilder
-     */
+         * @test
+         * @covers \Sofa\Eloquence\Eloquence::newEloquentBuilder
+         */
     public function it_uses_custom_builder()
     {
         $query = m::mock('\Illuminate\Database\Query\Builder');

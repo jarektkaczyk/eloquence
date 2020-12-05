@@ -3,16 +3,10 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Subquery;
 
 class SubqueryTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     /** @test */
     public function it_forwards_calls_to_the_builder()
     {

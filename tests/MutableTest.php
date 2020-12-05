@@ -4,17 +4,11 @@ namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
 use Illuminate\Database\Eloquent\Model;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Mutable;
 
 class MutableTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     /** @test */
     public function it_mutates_attributes_on_set()
     {

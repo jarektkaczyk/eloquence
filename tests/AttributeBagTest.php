@@ -2,7 +2,6 @@
 
 namespace Sofa\Eloquence\Tests;
 
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Metable\AttributeBag;
 use Sofa\Eloquence\Metable\Attribute;
 

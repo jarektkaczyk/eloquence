@@ -5,7 +5,6 @@ namespace Sofa\Eloquence\Tests;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Expression;
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Relations\JoinerFactory;
@@ -17,11 +16,6 @@ class SearchableBuilderTest extends TestCase
     {
         Builder::setParserFactory(new ParserFactory);
         Builder::setJoinerFactory(new JoinerFactory);
-    }
-
-    protected function tearDown(): void
-    {
-        m::close();
     }
 
     /** @test */

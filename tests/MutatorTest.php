@@ -3,14 +3,16 @@
 namespace Sofa\Eloquence\Tests;
 
 use LogicException;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Mutator\Mutator;
 
 class MutatorTest extends TestCase
 {
+    private $mutator;
+
     protected function setUp(): void
     {
-        $this->m = new MutatorStub;
+        parent::setUp();
+        $this->mutator = new MutatorStub;
     }
 
     /** @test */
@@ -18,7 +20,7 @@ class MutatorTest extends TestCase
     {
         $callable = 'strtoupper';
 
-        $this->assertEquals('FOO', $this->m->mutate('foo', $callable));
+        $this->assertEquals('FOO', $this->mutator->mutate('foo', $callable));
     }
 
     /** @test */
@@ -26,7 +28,7 @@ class MutatorTest extends TestCase
     {
         $callable = 'clip';
 
-        $this->assertEquals('quick', $this->m->mutate('quick red fox', $callable));
+        $this->assertEquals('quick', $this->mutator->mutate('quick red fox', $callable));
     }
 
     /** @test */
@@ -34,7 +36,7 @@ class MutatorTest extends TestCase
     {
         $callable = 'Sofa\Eloquence\Tests\MutatorDummyInstantiable@multiply';
 
-        $this->assertEquals(4, $this->m->mutate(2, $callable));
+        $this->assertEquals(4, $this->mutator->mutate(2, $callable));
     }
 
     /** @test */
@@ -42,7 +44,7 @@ class MutatorTest extends TestCase
     {
         $callable = 'Sofa\Eloquence\Tests\MutatorDummyInstantiable@divide';
 
-        $this->assertEquals(5, $this->m->mutate(10, $callable));
+        $this->assertEquals(5, $this->mutator->mutate(10, $callable));
     }
 
     /** @test */
@@ -50,7 +52,7 @@ class MutatorTest extends TestCase
     {
         $callable = 'substr:2,3';
 
-        $this->assertEquals('ick', $this->m->mutate('quick red fox', $callable));
+        $this->assertEquals('ick', $this->mutator->mutate('quick red fox', $callable));
     }
 
     /** @test */
@@ -58,7 +60,7 @@ class MutatorTest extends TestCase
     {
         $callable = 'substr:0,5|strtoupper';
 
-        $this->assertEquals('QUICK', $this->m->mutate('quick red fox', $callable));
+        $this->assertEquals('QUICK', $this->mutator->mutate('quick red fox', $callable));
     }
 
     /** @test */
@@ -71,7 +73,7 @@ class MutatorTest extends TestCase
             'Sofa\Eloquence\Tests\MutatorDummyInstantiable@repeat:3',
         ];
 
-        $this->assertEquals(' RED RED RED', $this->m->mutate('quick red fox', $callable));
+        $this->assertEquals(' RED RED RED', $this->mutator->mutate('quick red fox', $callable));
     }
 
     /** @test */
@@ -81,11 +83,11 @@ class MutatorTest extends TestCase
             'custom_uppercase',
         ];
 
-        $this->m->macro('custom_uppercase', function ($value) {
+        $this->mutator->macro('custom_uppercase', function ($value) {
             return strtoupper($value);
         });
 
-        $this->assertEquals('QUICK RED FOX', $this->m->mutate('quick red fox', $callable));
+        $this->assertEquals('QUICK RED FOX', $this->mutator->mutate('quick red fox', $callable));
     }
 
     /**
@@ -95,7 +97,7 @@ class MutatorTest extends TestCase
     public function wrong_callable($callable)
     {
         $this->expectException(LogicException::class);
-        $this->m->mutate('quick red fox', $callable);
+        $this->mutator->mutate('quick red fox', $callable);
     }
 
     public function wrongCallables()

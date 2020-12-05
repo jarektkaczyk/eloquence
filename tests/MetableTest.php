@@ -2,11 +2,12 @@
 
 namespace Sofa\Eloquence\Tests;
 
+use Illuminate\Database\Connection;
+use Illuminate\Database\ConnectionResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Eloquence;
 use Sofa\Eloquence\Metable;
 use Sofa\Eloquence\Metable\Attribute;
@@ -18,11 +19,6 @@ class MetableTest extends TestCase
         Relation::morphMap([
             'Metable' => MetableEloquentStub::class,
         ]);
-    }
-
-    protected function tearDown(): void
-    {
-        m::close();
     }
 
     /** @test */
@@ -575,9 +571,12 @@ class MetableTest extends TestCase
         $processor = new $processorClass;
         $schema = m::mock('StdClass');
         $schema->shouldReceive('getColumnListing')->andReturn(['id', 'name']);
-        $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
+        $connection = m::mock(Connection::class)->makePartial();
+        $connection->shouldReceive('getQueryGrammar')->andReturn($grammar);
+        $connection->shouldReceive('getPostProcessor')->andReturn($processor);
         $connection->shouldReceive('getSchemaBuilder')->andReturn($schema);
-        $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
+        $resolver = m::mock(ConnectionResolver::class)->makePartial();
+        $resolver->shouldReceive('connection')->andReturn($connection);
         $class = get_class($model);
         $class::setConnectionResolver($resolver);
 

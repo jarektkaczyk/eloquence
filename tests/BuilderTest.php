@@ -4,7 +4,6 @@ namespace Sofa\Eloquence\Tests;
 
 use Illuminate\Database\Query\Grammars\Grammar;
 use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Builder;
 use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Query\Builder as Query;
@@ -14,11 +13,6 @@ use Sofa\Eloquence\Searchable\ParserFactory;
 
 class BuilderTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     /** @test */
     public function it_takes_exactly_two_values_for_whereBetween()
     {

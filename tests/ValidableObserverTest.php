@@ -3,16 +3,10 @@
 namespace Sofa\Eloquence\Tests;
 
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Validable\Observer;
 
 class ValidableObserverTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     /** @test */
     public function saved_validation_disabled()
     {

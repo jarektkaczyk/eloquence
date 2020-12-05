@@ -22,11 +22,6 @@ class ValidableTest extends \PHPUnit\Framework\TestCase
         ValidableEloquentStub::setValidatorFactory($factory);
     }
 
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     /** @test */
     public function rules_for_update_helper()
     {

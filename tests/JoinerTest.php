@@ -2,13 +2,13 @@
 
 namespace Sofa\Eloquence\Tests;
 
+use Illuminate\Database\Connection;
+use Illuminate\Database\ConnectionResolver;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use Illuminate\Database\Query\Processors\SQLiteProcessor;
 use LogicException;
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Sofa\Eloquence\Relations\JoinerFactory;
 
 class JoinerTest extends TestCase
@@ -18,11 +18,6 @@ class JoinerTest extends TestCase
     protected function setUp(): void
     {
         $this->factory = new JoinerFactory;
-    }
-
-    protected function tearDown(): void
-    {
-        m::close();
     }
 
     /** @test */
@@ -87,9 +82,11 @@ class JoinerTest extends TestCase
         $model = new JoinerUserStub;
         $grammar = new SQLiteGrammar;
         $processor = new SQLiteProcessor;
-        $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
-        $connection->shouldReceive('query')->andReturn(new Builder($connection, $grammar, $processor));
-        $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
+        $connection = m::mock(Connection::class)->makePartial();
+        $connection->shouldReceive('getQueryGrammar')->andReturn($grammar);
+        $connection->shouldReceive('getPostProcessor')->andReturn($processor);
+        $resolver = m::mock(ConnectionResolver::class)->makePartial();
+        $resolver->shouldReceive('connection')->andReturn($connection);
         JoinerUserStub::setConnectionResolver($resolver);
 
         return $model->newQuery();
