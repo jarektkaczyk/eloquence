@@ -1,10 +1,10 @@
 {
-    "name": "sofa/eloquence",
+    "name": "wargog/eloquence",
     "description": "Flexible Searchable, Mappable, Metable, Validation and more extensions for Laravel Eloquent ORM.",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/jarektkaczyk/eloquence/issues",
-        "source": "https://github.com/jarektkaczyk/eloquence"
+        "issues": "https://github.com/wargog/eloquence/issues",
+        "source": "https://github.com/wargog/eloquence"
     },
     "keywords": [
         "laravel",
