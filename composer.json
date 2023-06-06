@@ -23,8 +23,8 @@
         }
     ],
     "require": {
-        "php": ">=7.1.0",
-        "sofa/eloquence-base": ">=5.5",
+        "php": ">=8.0",
+        "wargog/eloquence-base": "^6.0",
         "sofa/eloquence-metable": ">=5.5",
         "sofa/eloquence-mutable": ">=5.5",
         "sofa/eloquence-mappable": ">=5.5",
