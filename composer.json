@@ -25,10 +25,10 @@
     "require": {
         "php": ">=8.0",
         "wargog/eloquence-base": "^6.0",
-        "sofa/eloquence-metable": ">=5.5",
-        "sofa/eloquence-mutable": ">=5.5",
-        "sofa/eloquence-mappable": ">=5.5",
-        "sofa/eloquence-validable": ">=5.5"
+        "wargog/eloquence-metable": ">=6.0",
+        "wargog/eloquence-mutable": ">=6.0",
+        "wargog/eloquence-mappable": ">=6.0",
+        "wagog/eloquence-validable": ">=6.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
